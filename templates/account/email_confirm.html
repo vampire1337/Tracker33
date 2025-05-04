@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+
+{% block title %}Подтверждение email - Time Tracker{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Подтверждение email</h3>
+            </div>
+            <div class="card-body">
+                {% if confirmation %}
+                    <p>Пожалуйста, подтвердите, что <a href="mailto:{{ confirmation.email_address.email }}">{{ confirmation.email_address.email }}</a> является вашим email-адресом.</p>
+                    <form method="post" action="{% url 'account_confirm_email' confirmation.key %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-primary">Подтвердить</button>
+                    </form>
+                {% else %}
+                    <div class="alert alert-danger">
+                        <p>Ссылка для подтверждения email недействительна или срок её действия истёк.</p>
+                        <p>Пожалуйста, <a href="{% url 'account_email' %}">запросите новое подтверждение</a>.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

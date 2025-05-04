@@ -1,0 +1,2 @@
+{"message": "{\"timestamp\": \"2025-05-04T02:28:54.961599\", \"error_type\": \"SlowRequest\", \"error_message\": \"Slow request detected: 2.25s\", \"details\": {\"view_name\": \"dashboard\", \"method\": \"GET\", \"path\": \"/dashboard/\", \"n_queries\": 2}}"}
+{"message": "{\"timestamp\": \"2025-05-04T02:29:00.173443\", \"error_type\": \"SlowRequest\", \"error_message\": \"Slow request detected: 2.08s\", \"details\": {\"view_name\": \"dashboard\", \"method\": \"GET\", \"path\": \"/dashboard/\", \"n_queries\": 2}}"}

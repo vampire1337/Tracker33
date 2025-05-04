@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+
+{% block title %}Страница не найдена - Time Tracker{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Страница не найдена</h3>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-danger">
+                    <p>Запрошенная страница не существует или была перемещена.</p>
+                    <p>Пожалуйста, проверьте URL или вернитесь на главную страницу.</p>
+                </div>
+                <a href="{% url 'dashboard' %}" class="btn btn-primary">Вернуться на главную</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

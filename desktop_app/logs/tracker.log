@@ -1,0 +1,9 @@
+2025-05-03 01:09:16,987 - TimeTracker - ERROR - Ошибка при получении списка приложений: HTTPConnectionPool(host='localhost', port=8000): Max retries exceeded with url: /api/tracked-apps/active_apps/ (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x000002672A954980>: Failed to establish a new connection: [WinError 10061] Подключение не установлено, т.к. конечный компьютер отверг запрос на подключение'))
+2025-05-03 01:09:16,998 - TimeTracker - ERROR - Ошибка в процессе отправки данных: SQLite objects created in a thread can only be used in that same thread. The object was created in thread id 7808 and this is thread id 15020.
+2025-05-03 01:12:49,666 - TimeTracker - ERROR - Ошибка при получении списка приложений: 404 Client Error: Not Found for url: http://localhost:8000/api/tracked-apps/active_apps/
+2025-05-03 01:15:28,170 - TimeTracker - ERROR - Ошибка при получении списка приложений: 404 Client Error: Not Found for url: http://localhost:8000/api/tracked-apps/
+2025-05-03 01:16:56,748 - TimeTracker - ERROR - Ошибка при получении списка приложений: 404 Client Error: Not Found for url: http://localhost:8000/tracking/api/tracked-apps/
+2025-05-03 01:19:23,398 - TimeTracker - ERROR - Ошибка при получении списка приложений: 403 Client Error: Forbidden for url: http://localhost:8000/tracking/api/tracked-apps/
+2025-05-03 01:24:42,435 - TimeTracker - ERROR - Ошибка при получении списка приложений: 403 Client Error: Forbidden for url: http://localhost:8000/tracking/api/tracked-apps/
+2025-05-03 01:27:34,569 - TimeTracker - ERROR - Ошибка при получении списка приложений: 404 Client Error: Not Found for url: http://localhost:8000/api/tracked-apps/
+2025-05-03 01:39:40,561 - TimeTracker - ERROR - Ошибка при получении списка приложений: 403 Client Error: Forbidden for url: http://localhost:8000/api/tracked-apps/
