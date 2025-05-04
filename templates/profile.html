@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+
+{% block title %}Профиль - Time Tracker{% endblock %}
+
+{% block content %}
+<div class="container">
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+    
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Профиль пользователя</h3>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        {% if form.errors %}
+                            <div class="alert alert-danger">
+                                {% for field, errors in form.errors.items %}
+                                    {% for error in errors %}
+                                        {{ error }}<br>
+                                    {% endfor %}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="id_username" class="form-label">Имя пользователя</label>
+                                <input type="text" class="form-control" id="id_username" value="{{ user.username }}" readonly>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="id_email" class="form-label">Email</label>
+                                {{ form.email }}
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="id_department" class="form-label">Отдел</label>
+                                {{ form.department }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="id_position" class="form-label">Должность</label>
+                                {{ form.position }}
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <div class="form-check">
+                                {{ form.is_active_tracking }}
+                                <label class="form-check-label" for="id_is_active_tracking">
+                                    Активное отслеживание
+                                </label>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Сохранить изменения</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Безопасность</h3>
+                </div>
+                <div class="card-body">
+                    <a href="{% url 'password_change' %}" class="btn btn-warning mb-3">Изменить пароль</a>
+                    <p class="text-muted">Последний вход: {{ user.last_login|date:"d.m.Y H:i" }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

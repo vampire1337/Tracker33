@@ -1,0 +1,150 @@
+{% extends 'base.html' %}
+
+{% block title %}Логи - Time Tracker{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Активность пользователя</h3>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Время</th>
+                                <th>Действие</th>
+                                <th>Приложение</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for activity in activities %}
+                            <tr>
+                                <td>{{ activity.timestamp|date:"Y-m-d H:i:s" }}</td>
+                                <td>{{ activity.get_action_display }}</td>
+                                <td>{{ activity.application.name }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="3" class="text-center">Нет данных</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% if is_paginated %}
+                <nav aria-label="Page navigation">
+                    <ul class="pagination justify-content-center">
+                        {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Назад</a>
+                        </li>
+                        {% endif %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ page_obj.number }}</span>
+                        </li>
+                        {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}">Вперед</a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Клавиатурная активность</h3>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Время</th>
+                                <th>Нажатий</th>
+                                <th>Приложение</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for activity in keyboard_activities %}
+                            <tr>
+                                <td>{{ activity.timestamp|date:"Y-m-d H:i:s" }}</td>
+                                <td>{{ activity.keystrokes }}</td>
+                                <td>{{ activity.application.name }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="3" class="text-center">Нет данных</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Загрузка списка приложений
+    fetch('/api/tracking/applications/')
+        .then(response => response.json())
+        .then(data => {
+            const select = document.getElementById('application');
+            data.forEach(app => {
+                const option = document.createElement('option');
+                option.value = app.id;
+                option.textContent = app.name;
+                select.appendChild(option);
+            });
+        });
+
+    // Обработка формы фильтров
+    document.getElementById('filterForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        loadLogs();
+    });
+
+    function loadLogs() {
+        const dateFrom = document.getElementById('dateFrom').value;
+        const dateTo = document.getElementById('dateTo').value;
+        const application = document.getElementById('application').value;
+
+        // Здесь будет код для загрузки логов с учетом фильтров
+        // fetch(`/api/tracking/logs/?date_from=${dateFrom}&date_to=${dateTo}&application=${application}`)
+        //     .then(response => response.json())
+        //     .then(data => {
+        //         updateLogsTable(data);
+        //     });
+    }
+
+    function updateLogsTable(logs) {
+        const table = document.getElementById('logsTable');
+        table.innerHTML = '';
+        
+        logs.forEach(log => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${new Date(log.timestamp).toLocaleString()}</td>
+                <td>${log.application}</td>
+                <td>${log.duration}</td>
+                <td>${log.activity}</td>
+            `;
+            table.appendChild(row);
+        });
+    }
+
+    // Загрузка логов при открытии страницы
+    loadLogs();
+});
+</script>
+{% endblock %} 

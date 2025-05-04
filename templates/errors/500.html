@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+
+{% block title %}Внутренняя ошибка сервера - Time Tracker{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Внутренняя ошибка сервера</h3>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-danger">
+                    <p>Произошла внутренняя ошибка сервера. Мы уже работаем над её устранением.</p>
+                    <p>Пожалуйста, попробуйте повторить действие позже или обратитесь к администратору.</p>
+                </div>
+                <a href="{% url 'dashboard' %}" class="btn btn-primary">Вернуться на главную</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

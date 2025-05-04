@@ -1,0 +1,129 @@
+{% extends 'base.html' %}
+
+{% block title %}Главная - Time Tracker{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Активность</h3>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="card bg-primary text-white">
+                            <div class="card-body">
+                                <h5 class="card-title">Активные приложения</h5>
+                                <p class="card-text">
+                                    {% for app in active_apps %}
+                                        {{ app.name }}{% if not forloop.last %}, {% endif %}
+                                    {% empty %}
+                                        Нет активных приложений
+                                    {% endfor %}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card bg-success text-white">
+                            <div class="card-body">
+                                <h5 class="card-title">Время работы сегодня</h5>
+                                <p class="card-text">
+                                    {% with total=today_stats.apps|first %}
+                                        {{ total.total_time|default:"0:00:00" }}
+                                    {% endwith %}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card bg-info text-white">
+                            <div class="card-body">
+                                <h5 class="card-title">Клавиатурная активность</h5>
+                                <p class="card-text">{{ today_stats.keystrokes }} нажатий</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Последние действия</h3>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Время</th>
+                                <th>Приложение</th>
+                                <th>Длительность</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for activity in today_activity %}
+                            <tr>
+                                <td>{{ activity.start_time|date:"H:i:s" }}</td>
+                                <td>{{ activity.application.name }}</td>
+                                <td>{{ activity.duration }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="3" class="text-center">Нет данных</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Топ приложений сегодня</h3>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Приложение</th>
+                                <th>Время</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for app in today_stats.apps %}
+                            <tr>
+                                <td>{{ app.name }}</td>
+                                <td>{{ app.total_time|default:"0:00:00" }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="2" class="text-center">Нет данных</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Здесь будет код для загрузки данных через API
+    // и обновления элементов страницы
+});
+</script>
+{% endblock %} 

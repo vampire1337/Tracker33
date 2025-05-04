@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+
+{% block title %}Ошибка запроса - Time Tracker{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Ошибка запроса</h3>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-danger">
+                    <p>Произошла ошибка при обработке вашего запроса. Пожалуйста, проверьте введенные данные и попробуйте снова.</p>
+                </div>
+                <a href="{% url 'dashboard' %}" class="btn btn-primary">Вернуться на главную</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 
