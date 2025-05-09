@@ -39,11 +39,25 @@ class UserActivity(models.Model):
             self.duration = self.end_time - self.start_time
         super().save(*args, **kwargs)
         
-        # Очищаем кэш после сохранения
+        # Полная очистка кэша после сохранения
         from django.core.cache import cache
+        
+        # Очищаем кэш пользователя
         cache.delete(f'user_activity_{self.user.id}')
-        cache.delete(f'dashboard_{self.user.id}_{self.start_time.date()}')
+        
+        # Очищаем кэш за сегодня и вчера (на случай данных, пересекающих полночь)
+        today = timezone.now().date()
+        yesterday = today - timezone.timedelta(days=1)
+        
+        cache.delete(f'dashboard_{self.user.id}_{today}')
+        cache.delete(f'dashboard_{self.user.id}_{yesterday}')
+        
+        # Очищаем все возможные кэши статистики
         cache.delete(f'statistics_{self.user.id}_None_')
+        for days in [7, 14, 30, 90]:
+            cache.delete(f'statistics_{self.user.id}_{days}_')
+        
+        # Очищаем списки приложений
         cache.delete(f'application_list_{self.user.id}')
 
     class Meta:
