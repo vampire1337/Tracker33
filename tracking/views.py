@@ -85,12 +85,15 @@ class StatisticsView(LoginRequiredMixin, TemplateView):
         context = super().get_context_data(**kwargs)
         user = self.request.user
         
+        # Добавляем timestamp для предотвращения кэширования
+        context['timestamp'] = timezone.now().timestamp()
+        
         # Получаем количество дней для статистики из параметров запроса
         days = int(self.request.GET.get('days', 7))
         today = timezone.now().date()
         start_date = today - timedelta(days=days-1)  # -1 потому что сегодня тоже входит
         
-        # Получаем статистику за выбранный период
+        # Получаем статистику за выбранный период - принудительно обновляем
         activities = UserActivity.objects.filter(
             user=user,
             start_time__date__gte=start_date,
@@ -124,7 +127,7 @@ class StatisticsView(LoginRequiredMixin, TemplateView):
         
         average_daily_keystrokes = int(keyboard_activity / days) if days > 0 else 0
         
-        # Получаем все приложения пользователя за период
+        # Получаем все приложения пользователя за период - без кэширования
         apps = Application.objects.filter(
             useractivity__user=user,
             useractivity__start_time__date__gte=start_date,
@@ -204,7 +207,7 @@ class StatisticsView(LoginRequiredMixin, TemplateView):
                 app.name = self.app_name_mapping[process_name]
                 app.save()
         
-        # Получаем данные по дням для графика
+        # Получаем данные по дням для графика - принудительно обновляем
         daily_data = []
         for i in range(days):
             date = today - timedelta(days=days-1-i)
@@ -260,8 +263,7 @@ class StatisticsView(LoginRequiredMixin, TemplateView):
         context['average_daily_keystrokes'] = average_daily_keystrokes
         context['productivity_percent'] = productivity_percent
         
-        print(f"daily_data: {len(daily_data)} items")
-        print(f"apps: {len(apps)} items")
+        print(f"[DEBUG] Statistics Timestamp: {context['timestamp']}, Time: {formatted_time}, Keystrokes: {keyboard_activity}")
         
         return context
 
@@ -440,6 +442,9 @@ class DashboardView(LoginRequiredMixin, TemplateView):
         context = super().get_context_data(**kwargs)
         user = self.request.user
         today = timezone.now().date()
+        
+        # Добавляем timestamp для предотвращения кэширования
+        context['timestamp'] = timezone.now().timestamp()
 
         # Всегда загружаем свежие данные
         # Добавляем также последние активности для отображения в таблице "Последние действия"
@@ -456,7 +461,7 @@ class DashboardView(LoginRequiredMixin, TemplateView):
         
         # Обновляем названия активных приложений
         for app in active_apps:
-            process_name = app.process_name.lower()
+            process_name = app.process_name.lower() if app.process_name else ""
             if process_name in self.app_name_mapping:
                 app.name = self.app_name_mapping[process_name]
                 app.save()
@@ -527,7 +532,7 @@ class DashboardView(LoginRequiredMixin, TemplateView):
         
         # Обновляем названия приложений для отображения
         for app in apps:
-            process_name = app.process_name.lower()
+            process_name = app.process_name.lower() if app.process_name else ""
             if process_name in self.app_name_mapping:
                 # Обновляем название приложения в базе данных
                 app.name = self.app_name_mapping[process_name]
@@ -575,14 +580,16 @@ class DashboardView(LoginRequiredMixin, TemplateView):
             ).aggregate(total_keystrokes=Sum('keyboard_presses'))['total_keystrokes'] or 0,
         }
 
-        cached_data = {
+        # Готовим данные напрямую без кэширования
+        context.update({
             'active_apps': active_apps,
             'today_stats': today_stats,
             'today_activity': context['today_activity'],
             'hourly_activity': hourly_activity
-        }
-
-        context.update(cached_data)
+        })
+        
+        print(f"[DEBUG] Timestamp: {context['timestamp']}, Time: {formatted_time}, Keystrokes: {today_stats['keystrokes']}")
+        
         return context
 
 class LogsView(LoginRequiredMixin, ListView):
