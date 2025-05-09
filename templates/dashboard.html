@@ -16,11 +16,14 @@
                             <div class="card-body">
                                 <h5 class="card-title">Активные приложения</h5>
                                 <p class="card-text">
-                                    {% for app in active_apps %}
-                                        {{ app.name }}{% if not forloop.last %}, {% endif %}
-                                    {% empty %}
+                                    {% if active_apps %}
+                                        {% regroup active_apps by name as app_list %}
+                                        {% for app_group in app_list %}
+                                            {{ app_group.grouper }}{% if not forloop.last %}, {% endif %}
+                                        {% endfor %}
+                                    {% else %}
                                         Нет активных приложений
-                                    {% endfor %}
+                                    {% endif %}
                                 </p>
                             </div>
                         </div>
@@ -29,10 +32,12 @@
                         <div class="card bg-success text-white">
                             <div class="card-body">
                                 <h5 class="card-title">Время работы сегодня</h5>
-                                <p class="card-text">
-                                    {% with total=today_stats.apps|first %}
-                                        {{ total.total_time|default:"0:00:00" }}
-                                    {% endwith %}
+                                <p class="card-text" style="font-size: 24px; font-weight: bold;">
+                                    {% if today_stats.formatted_time %}
+                                        {{ today_stats.formatted_time }}
+                                    {% else %}
+                                        00:00:00
+                                    {% endif %}
                                 </p>
                             </div>
                         </div>
@@ -42,6 +47,25 @@
                             <div class="card-body">
                                 <h5 class="card-title">Клавиатурная активность</h5>
                                 <p class="card-text">{{ today_stats.keystrokes }} нажатий</p>
+                                <p class="card-text">Время: 
+                                    {% if today_stats.keystrokes_time %}
+                                        {{ today_stats.keystrokes_time|time:"H:i:s" }}
+                                    {% else %}
+                                        00:00:00
+                                    {% endif %}
+                                </p>
+                                
+                                <!-- Отладочная информация о клавиатурной активности -->
+                                <div class="small text-muted">
+                                    <p>Записи с нажатиями клавиш:</p>
+                                    <ul>
+                                    {% for item in today_stats.debug_keystrokes %}
+                                        <li>ID: {{ item.id }}, Нажатий: {{ item.keyboard_presses }}, Время: {{ item.start_time|date:"H:i:s" }} - {{ item.end_time|date:"H:i:s" }}</li>
+                                    {% empty %}
+                                        <li>Нет записей с нажатиями клавиш</li>
+                                    {% endfor %}
+                                    </ul>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -72,7 +96,13 @@
                             <tr>
                                 <td>{{ activity.start_time|date:"H:i:s" }}</td>
                                 <td>{{ activity.application.name }}</td>
-                                <td>{{ activity.duration }}</td>
+                                <td>
+                                    {% if activity.duration %}
+                                        {{ activity.duration|time:"H:i:s" }}
+                                    {% else %}
+                                        00:00:00
+                                    {% endif %}
+                                </td>
                             </tr>
                             {% empty %}
                             <tr>
@@ -100,10 +130,19 @@
                             </tr>
                         </thead>
                         <tbody>
-                            {% for app in today_stats.apps %}
+                            {% regroup today_stats.apps by name as app_list %}
+                            {% for app_group in app_list %}
                             <tr>
-                                <td>{{ app.name }}</td>
-                                <td>{{ app.total_time|default:"0:00:00" }}</td>
+                                <td>{{ app_group.grouper }}</td>
+                                <td>
+                                    {% with app=app_group.list.0 %}
+                                        {% if app.formatted_time %}
+                                            {{ app.formatted_time }}
+                                        {% else %}
+                                            00:00:00
+                                        {% endif %}
+                                    {% endwith %}
+                                </td>
                             </tr>
                             {% empty %}
                             <tr>
