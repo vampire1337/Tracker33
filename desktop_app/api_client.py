@@ -1,6 +1,6 @@
 import requests
 import json
-from typing import Dict, Optional
+from typing import Dict, Optional, Tuple, Any
 import logging
 from datetime import datetime, timedelta
 import jwt
@@ -30,6 +30,11 @@ class APIClient:
         self.config_dir = Path.home() / '.timetracker'
         self.config_dir.mkdir(exist_ok=True)
         self.token_file = self.config_dir / 'token.json'
+        
+        # Настройка сессии с таймаутами
+        self.session = requests.Session()
+        self.session.timeout = (5, 30)  # 5 секунд на соединение, 30 секунд на ответ
+        
         self.load_token()
 
     def load_token(self):
@@ -77,12 +82,13 @@ class APIClient:
     def authenticate(self, username: str, password: str) -> bool:
         """Аутентификация на сервере"""
         try:
-            response = requests.post(
+            response = self.session.post(
                 f"{self.base_url}/api/token/",
                 json={
                     'username': username,
                     'password': password
-                }
+                },
+                timeout=(5, 10)  # 5 секунд на соединение, 10 на ответ
             )
             
             if response.status_code == 200:
@@ -103,13 +109,41 @@ class APIClient:
                 
                 logger.info(f"Токен после логина: {self.token[:20]}... действителен до {self.token_expires}")
                 self.save_token()
+                
+                # Обновляем заголовки сессии
+                self.session.headers.update({'Authorization': f'Bearer {self.token}'})
+                
                 return True
             else:
                 logger.error(f"Ошибка аутентификации: {response.status_code} - {response.text}")
                 return False
+        except requests.exceptions.Timeout:
+            logger.error("Таймаут при попытке аутентификации")
+            raise
+        except requests.exceptions.ConnectionError as e:
+            logger.error(f"Ошибка соединения при аутентификации: {e}")
+            raise
         except Exception as e:
             logger.error(f"Ошибка при аутентификации: {e}")
             return False
+
+    def login(self, username: str, password: str) -> Tuple[bool, Any]:
+        """
+        Совместимый метод для существующего кода, использующий authenticate
+        Возвращает кортеж (success, data), где data либо токен, либо сообщение об ошибке
+        """
+        try:
+            success = self.authenticate(username, password)
+            if success:
+                return True, self.token
+            else:
+                return False, "Не удалось авторизоваться на сервере"
+        except requests.exceptions.Timeout:
+            return False, "Таймаут при попытке подключения к серверу"
+        except requests.exceptions.ConnectionError:
+            return False, "Не удалось установить соединение с сервером"
+        except Exception as e:
+            return False, str(e)
 
     def refresh_auth_token(self) -> bool:
         """Обновление токена"""
@@ -118,9 +152,10 @@ class APIClient:
             return False
             
         try:
-            response = requests.post(
+            response = self.session.post(
                 f"{self.base_url}/api/token/refresh/",
-                json={'refresh': self.refresh_token}
+                json={'refresh': self.refresh_token},
+                timeout=(5, 10)
             )
             
             if response.status_code == 200:
@@ -140,10 +175,20 @@ class APIClient:
                 
                 logger.info(f"Токен обновлен: {self.token[:20]}... действителен до {self.token_expires}")
                 self.save_token()
+                
+                # Обновляем заголовки сессии
+                self.session.headers.update({'Authorization': f'Bearer {self.token}'})
+                
                 return True
             else:
                 logger.error(f"Ошибка обновления токена: {response.status_code} - {response.text}")
                 return False
+        except requests.exceptions.Timeout:
+            logger.error("Таймаут при попытке обновления токена")
+            return False
+        except requests.exceptions.ConnectionError as e:
+            logger.error(f"Ошибка соединения при обновлении токена: {e}")
+            return False
         except Exception as e:
             logger.error(f"Ошибка при обновлении токена: {e}")
             return False
@@ -169,7 +214,6 @@ class APIClient:
                 return {}
         # Используем формат Bearer для JWT токенов
         headers = {'Authorization': f'Bearer {self.token}'}
-        logger.info(f"Используем заголовок: {headers}")
         return headers
 
     def send_activity(self, activity_data: Dict) -> bool:
@@ -183,13 +227,20 @@ class APIClient:
             logger.info(f"Заголовки для запроса: {headers}")
             # Проверяем, содержит ли base_url уже /api на конце
             api_prefix = '/api' if not self.base_url.endswith('/api') else ''
-            response = requests.post(
+            response = self.session.post(
                 f"{self.base_url}{api_prefix}/activities/",
                 json=activity_data,
-                headers=headers
+                headers=headers,
+                timeout=(5, 30)  # 5 секунд на соединение, 30 на ответ
             )
             logger.info(f"Ответ сервера: {response.status_code} {response.text}")
             return response.status_code == 201
+        except requests.exceptions.Timeout:
+            logger.error("Таймаут при отправке активности")
+            return False
+        except requests.exceptions.ConnectionError as e:
+            logger.error(f"Ошибка соединения при отправке активности: {e}")
+            return False
         except Exception as e:
             logger.error(f"Ошибка отправки активности: {e}")
             return False
@@ -209,4 +260,22 @@ class APIClient:
                 os.remove(self.token_file)
                 logger.info("Файл токена удален при выходе из системы")
             except Exception as e:
-                logger.error(f"Ошибка удаления файла токена: {e}") 
+                logger.error(f"Ошибка удаления файла токена: {e}")
+                
+    def test_connection(self) -> Tuple[bool, str]:
+        """Тестирование соединения с сервером"""
+        try:
+            response = self.session.get(
+                f"{self.base_url}/api/",
+                timeout=(3, 5)  # Короткие таймауты для быстрого теста
+            )
+            if response.status_code == 200:
+                return True, "Соединение успешно установлено"
+            else:
+                return False, f"Сервер ответил с кодом {response.status_code}"
+        except requests.exceptions.Timeout:
+            return False, "Превышено время ожидания ответа от сервера"
+        except requests.exceptions.ConnectionError:
+            return False, "Не удалось установить соединение с сервером"
+        except Exception as e:
+            return False, f"Ошибка при проверке соединения: {str(e)}" 
