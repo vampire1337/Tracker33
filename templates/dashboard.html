@@ -173,20 +173,24 @@ document.addEventListener('DOMContentLoaded', function() {
         hours.push(i + ':00');
     }
     
-    // Пример данных, в реальности будут загружаться с сервера
+    // Данные графика
+    const chartData = [
+        {% for hour_data in hourly_activity %}
+            {{ hour_data.minutes|default:0 }}{% if not forloop.last %},{% endif %}
+        {% empty %}
+            0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+        {% endfor %}
+    ];
+    
+    console.log("Chart data:", chartData); // Отладочная информация
+    
     const activityChart = new Chart(ctx, {
         type: 'bar',
         data: {
             labels: hours,
             datasets: [{
                 label: 'Активность (минуты)',
-                data: [
-                    {% for hour_data in hourly_activity %}
-                        {{ hour_data.minutes|default:0 }}{% if not forloop.last %},{% endif %}
-                    {% empty %}
-                        {% for i in "x"|rjust:"24" %}0,{% endfor %}
-                    {% endfor %}
-                ],
+                data: chartData,
                 backgroundColor: 'rgba(54, 162, 235, 0.5)',
                 borderColor: 'rgba(54, 162, 235, 1)',
                 borderWidth: 1

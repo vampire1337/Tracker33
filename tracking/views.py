@@ -568,15 +568,51 @@ class LogsView(LoginRequiredMixin, ListView):
     paginate_by = 20
 
     def get_queryset(self):
-        return UserActivity.objects.filter(
-            user=self.request.user
-        ).order_by('-start_time')
+        queryset = UserActivity.objects.filter(user=self.request.user)
+        
+        # Фильтрация по дате от
+        date_from = self.request.GET.get('date_from')
+        if date_from:
+            queryset = queryset.filter(start_time__date__gte=date_from)
+        
+        # Фильтрация по дате до
+        date_to = self.request.GET.get('date_to')
+        if date_to:
+            queryset = queryset.filter(start_time__date__lte=date_to)
+        
+        # Фильтрация по приложению
+        application_id = self.request.GET.get('application')
+        if application_id:
+            queryset = queryset.filter(application_id=application_id)
+        
+        return queryset.select_related('application').order_by('-start_time')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['keyboard_activities'] = KeyboardActivity.objects.filter(
-            user=self.request.user
-        ).order_by('-timestamp')[:20]
+        
+        # Получаем клавиатурную активность
+        keyboard_queryset = KeyboardActivity.objects.filter(user=self.request.user)
+        
+        # Применяем те же фильтры, что и для активности
+        date_from = self.request.GET.get('date_from')
+        if date_from:
+            keyboard_queryset = keyboard_queryset.filter(timestamp__date__gte=date_from)
+        
+        date_to = self.request.GET.get('date_to')
+        if date_to:
+            keyboard_queryset = keyboard_queryset.filter(timestamp__date__lte=date_to)
+        
+        application_id = self.request.GET.get('application')
+        if application_id:
+            keyboard_queryset = keyboard_queryset.filter(application_id=application_id)
+        
+        context['keyboard_activities'] = keyboard_queryset.select_related('application').order_by('-timestamp')[:20]
+        
+        # Добавляем список приложений для выпадающего списка
+        context['applications'] = Application.objects.filter(
+            useractivity__user=self.request.user
+        ).distinct()
+        
         return context
 
 class TrackedApplicationViewSet(viewsets.ModelViewSet):
