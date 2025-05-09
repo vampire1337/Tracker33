@@ -163,141 +163,223 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // График активности по дням
-    const dailyCtx = document.getElementById('dailyActivityChart').getContext('2d');
-    
-    // Генерируем демо данные, если нет реальных
-    let labels = [
+    // Данные для графика активности по дням
+    const dailyData = [
         {% for day in daily_data %}
-            '{{ day.date|date:"d.m" }}'{% if not forloop.last %},{% endif %}
+            {
+                date: '{{ day.date|date:"d.m" }}',
+                hours: {{ day.hours|default:0 }}
+            }{% if not forloop.last %},{% endif %}
         {% empty %}
-            'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'
+            {date: 'Пн', hours: 0},
+            {date: 'Вт', hours: 0},
+            {date: 'Ср', hours: 0},
+            {date: 'Чт', hours: 0},
+            {date: 'Пт', hours: 0},
+            {date: 'Сб', hours: 0},
+            {date: 'Вс', hours: 0}
         {% endfor %}
     ];
     
-    let data = [
-        {% for day in daily_data %}
-            {{ day.hours|default:0 }}{% if not forloop.last %},{% endif %}
+    console.log("Данные для дневной активности:", dailyData);
+    
+    // Данные для круговой диаграммы
+    const pieData = [
+        {% for app in apps %}
+            {
+                name: '{{ app.name }}',
+                percentage: {{ app.percentage|default:0 }}
+            }{% if not forloop.last %},{% endif %}
         {% empty %}
-            0, 0, 0, 0, 0, 0, 0
+            {name: 'Нет данных', percentage: 100}
         {% endfor %}
     ];
     
-    console.log("График активности по дням - Labels:", labels);
-    console.log("График активности по дням - Data:", data);
+    console.log("Данные для круговой диаграммы:", pieData);
     
-    // Принудительно создаем график даже если данных нет
-    if (labels.length === 0) {
-        labels = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
-        data = [0, 0, 0, 0, 0, 0, 0];
+    // Создание графика активности по дням
+    createBarChart(dailyData, 'dailyActivityChart', 'Активность по дням');
+    
+    // Создание круговой диаграммы
+    createPieChart(pieData, 'applicationPieChart', 'Распределение времени по приложениям');
+    
+    // Функция для создания столбчатого графика
+    function createBarChart(data, elementId, title) {
+        const container = document.getElementById(elementId);
+        if (!container) {
+            console.error(`Элемент с ID ${elementId} не найден`);
+            return;
+        }
+        
+        // Очищаем контейнер
+        container.innerHTML = '';
+        
+        // Устанавливаем размеры графика
+        const width = container.clientWidth;
+        const height = 250;
+        const margin = {top: 30, right: 30, bottom: 40, left: 50};
+        const chartWidth = width - margin.left - margin.right;
+        const chartHeight = height - margin.top - margin.bottom;
+        
+        // Создаем SVG элемент
+        const svg = d3.select('#' + elementId)
+            .append('svg')
+            .attr('width', width)
+            .attr('height', height);
+        
+        // Создаем группу для графика
+        const g = svg.append('g')
+            .attr('transform', `translate(${margin.left},${margin.top})`);
+        
+        // Создаем шкалы
+        const x = d3.scaleBand()
+            .domain(data.map(d => d.date))
+            .range([0, chartWidth])
+            .padding(0.2);
+        
+        const y = d3.scaleLinear()
+            .domain([0, d3.max(data, d => d.hours) || 5])
+            .nice()
+            .range([chartHeight, 0]);
+        
+        // Создаем оси
+        g.append('g')
+            .attr('transform', `translate(0,${chartHeight})`)
+            .call(d3.axisBottom(x));
+        
+        g.append('g')
+            .call(d3.axisLeft(y));
+        
+        // Добавляем заголовок
+        svg.append('text')
+            .attr('x', width / 2)
+            .attr('y', margin.top / 2)
+            .attr('text-anchor', 'middle')
+            .style('font-size', '16px')
+            .text(title);
+        
+        // Создаем столбцы
+        g.selectAll('.bar')
+            .data(data)
+            .enter().append('rect')
+            .attr('class', 'bar')
+            .attr('x', d => x(d.date))
+            .attr('y', d => y(d.hours))
+            .attr('width', x.bandwidth())
+            .attr('height', d => chartHeight - y(d.hours))
+            .attr('fill', 'rgba(75, 192, 192, 0.7)')
+            .attr('stroke', 'rgba(75, 192, 192, 1)')
+            .attr('stroke-width', 1);
+        
+        // Подпись оси Y
+        svg.append('text')
+            .attr('transform', 'rotate(-90)')
+            .attr('y', margin.left / 3)
+            .attr('x', -(height / 2))
+            .attr('text-anchor', 'middle')
+            .text('Часы');
     }
     
-    const dailyChart = new Chart(dailyCtx, {
-        type: 'bar',
-        data: {
-            labels: labels,
-            datasets: [{
-                label: 'Часы активности',
-                data: data,
-                backgroundColor: 'rgba(75, 192, 192, 0.5)',
-                borderColor: 'rgba(75, 192, 192, 1)',
-                borderWidth: 1
-            }]
-        },
-        options: {
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    title: {
-                        display: true,
-                        text: 'Часы'
-                    }
-                }
-            },
-            plugins: {
-                title: {
-                    display: true,
-                    text: 'Активность по дням'
-                }
-            },
-            responsive: true,
-            maintainAspectRatio: false
+    // Функция для создания круговой диаграммы
+    function createPieChart(data, elementId, title) {
+        const container = document.getElementById(elementId);
+        if (!container) {
+            console.error(`Элемент с ID ${elementId} не найден`);
+            return;
         }
-    });
-    
-    // Круговая диаграмма по приложениям
-    const pieCtx = document.getElementById('applicationPieChart').getContext('2d');
-    
-    // Генерируем демо данные, если нет реальных
-    let pieLabels = [
-        {% for app in apps %}
-            '{{ app.name }}'{% if not forloop.last %},{% endif %}
-        {% empty %}
-            'Нет данных'
-        {% endfor %}
-    ];
-    
-    let pieData = [
-        {% for app in apps %}
-            {{ app.percentage|default:0 }}{% if not forloop.last %},{% endif %}
-        {% empty %}
-            100
-        {% endfor %}
-    ];
-    
-    console.log("Круговая диаграмма - Labels:", pieLabels);
-    console.log("Круговая диаграмма - Data:", pieData);
-    
-    // Принудительно создаем график даже если данных нет
-    if (pieLabels.length === 0 || (pieLabels.length === 1 && pieLabels[0] === 'Нет данных')) {
-        pieLabels = ['Нет данных'];
-        pieData = [100];
+        
+        // Очищаем контейнер
+        container.innerHTML = '';
+        
+        // Устанавливаем размеры графика
+        const width = container.clientWidth;
+        const height = 250;
+        const radius = Math.min(width, height) / 2 - 40;
+        
+        // Создаем SVG элемент
+        const svg = d3.select('#' + elementId)
+            .append('svg')
+            .attr('width', width)
+            .attr('height', height);
+        
+        // Добавляем заголовок
+        svg.append('text')
+            .attr('x', width / 2)
+            .attr('y', 20)
+            .attr('text-anchor', 'middle')
+            .style('font-size', '16px')
+            .text(title);
+        
+        // Создаем группу для графика
+        const g = svg.append('g')
+            .attr('transform', `translate(${width / 2},${height / 2})`);
+        
+        // Цвета для секторов
+        const color = d3.scaleOrdinal()
+            .domain(data.map(d => d.name))
+            .range([
+                'rgba(255, 99, 132, 0.7)',
+                'rgba(54, 162, 235, 0.7)',
+                'rgba(255, 206, 86, 0.7)',
+                'rgba(75, 192, 192, 0.7)',
+                'rgba(153, 102, 255, 0.7)',
+                'rgba(255, 159, 64, 0.7)',
+                'rgba(199, 199, 199, 0.7)'
+            ]);
+        
+        // Генератор сектора
+        const pie = d3.pie()
+            .value(d => d.percentage)
+            .sort(null);
+        
+        const arc = d3.arc()
+            .innerRadius(0)
+            .outerRadius(radius);
+        
+        const outerArc = d3.arc()
+            .innerRadius(radius * 1.1)
+            .outerRadius(radius * 1.1);
+        
+        // Создаем сектора
+        const slices = g.selectAll('.arc')
+            .data(pie(data))
+            .enter()
+            .append('g')
+            .attr('class', 'arc');
+        
+        slices.append('path')
+            .attr('d', arc)
+            .attr('fill', d => color(d.data.name))
+            .attr('stroke', 'white')
+            .style('stroke-width', '2px');
+        
+        // Добавляем легенду
+        const legend = svg.append('g')
+            .attr('transform', `translate(${width - 130},40)`);
+        
+        // Фильтруем данные, чтобы показать только 5 крупнейших секторов
+        const legendData = data.slice(0, 5);
+        
+        legendData.forEach((d, i) => {
+            const legendRow = legend.append('g')
+                .attr('transform', `translate(0, ${i * 20})`);
+            
+            legendRow.append('rect')
+                .attr('width', 10)
+                .attr('height', 10)
+                .attr('fill', color(d.name));
+            
+            legendRow.append('text')
+                .attr('x', 15)
+                .attr('y', 10)
+                .attr('text-anchor', 'start')
+                .style('font-size', '12px')
+                .text(`${d.name} (${d.percentage}%)`);
+        });
     }
-    
-    const pieChart = new Chart(pieCtx, {
-        type: 'pie',
-        data: {
-            labels: pieLabels,
-            datasets: [{
-                data: pieData,
-                backgroundColor: [
-                    'rgba(255, 99, 132, 0.7)',
-                    'rgba(54, 162, 235, 0.7)',
-                    'rgba(255, 206, 86, 0.7)',
-                    'rgba(75, 192, 192, 0.7)',
-                    'rgba(153, 102, 255, 0.7)',
-                    'rgba(255, 159, 64, 0.7)',
-                    'rgba(199, 199, 199, 0.7)'
-                ],
-                borderWidth: 1
-            }]
-        },
-        options: {
-            plugins: {
-                title: {
-                    display: true,
-                    text: 'Распределение времени по приложениям'
-                },
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            let label = context.label || '';
-                            if (label) {
-                                label += ': ';
-                            }
-                            label += context.parsed + '%';
-                            return label;
-                        }
-                    }
-                }
-            },
-            responsive: true,
-            maintainAspectRatio: false
-        }
-    });
     
     // Обработчик кнопок фильтра по периоду
     document.querySelectorAll('.btn-group button[data-period]').forEach(button => {

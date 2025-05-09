@@ -19,6 +19,32 @@
         .card:hover {
             transform: translateY(-5px);
         }
+        
+        /* D3 Chart Styles */
+        .bar {
+            transition: opacity 0.3s;
+        }
+        .bar:hover {
+            opacity: 0.8;
+        }
+        .arc path {
+            transition: opacity 0.3s;
+        }
+        .arc path:hover {
+            opacity: 0.8;
+        }
+        .chart-legend text {
+            font-size: 12px;
+        }
+        .chart-tooltip {
+            position: absolute;
+            background-color: rgba(255, 255, 255, 0.9);
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 8px;
+            pointer-events: none;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
     </style>
 </head>
 <body>
