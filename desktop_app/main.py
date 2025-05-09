@@ -367,7 +367,7 @@ class TimeTrackerApp(QMainWindow):
         # Другие таймеры
         self.update_app_list_timer = QTimer(self)
         self.update_app_list_timer.timeout.connect(self.update_app_list)
-        self.update_app_list_timer.start(5000)
+        self.update_app_list_timer.start(10000)  # Обновляем список каждые 10 секунд
 
         self.check_connection_timer = QTimer(self)
         self.check_connection_timer.timeout.connect(self.check_connection)
@@ -395,6 +395,11 @@ class TimeTrackerApp(QMainWindow):
         
         # Подключаем сигнал для повторной авторизации
         self.login_required_signal.connect(self.show_login_dialog_if_needed)
+
+        # Таймер для периодического обновления интерфейса
+        self.update_ui_timer = QTimer(self)
+        self.update_ui_timer.timeout.connect(self.periodic_ui_update)
+        self.update_ui_timer.start(1000)  # Обновляем интерфейс каждую секунду
 
         if not auth_token:
              # Используем QTimer.singleShot для вызова диалога логина после инициализации основного окна
@@ -909,21 +914,44 @@ class TimeTrackerApp(QMainWindow):
             
             # Устанавливаем разные цвета для полезных и неполезных приложений
             if is_useful is True:
-                self.current_app_label.setStyleSheet("QLabel { color: green; }")
+                self.current_app_label.setStyleSheet("QLabel { color: green; font-weight: bold; }")
             elif is_useful is False:
-                self.current_app_label.setStyleSheet("QLabel { color: red; }")
+                self.current_app_label.setStyleSheet("QLabel { color: red; font-weight: bold; }")
             else:
                 self.current_app_label.setStyleSheet("QLabel { color: black; }")
+                
+            # Обновляем иконку в трее
+            if hasattr(self, 'tray_icon') and self.tray_icon:
+                self.tray_icon.setToolTip(f"Отслеживается: {app_name} - Нажатий: {self.keyboard_press_count}")
         else:
             # Если нет текущей активности, очищаем поля
             self.current_window_title_label.setText("")
             self.current_activity_time_label.setText("Время: 00:00:00")
             self.keyboard_activity_label.setText("Клавиатурная активность: 0 нажатий")
             self.current_app_label.setStyleSheet("QLabel { color: black; }")
+            
+            # Обновляем иконку в трее
+            if hasattr(self, 'tray_icon') and self.tray_icon:
+                self.tray_icon.setToolTip("Time Tracker PRO - Нет активности")
 
     def update_app_list(self):
         """Обновляет списки приложений в интерфейсе"""
         try:
+            # Сохраняем текущее выделение для восстановления после обновления
+            selected_apps = {
+                'all': None,
+                'productive': None,
+                'non_productive': None
+            }
+            
+            # Получаем текущее выделение из каждого списка
+            if self.app_list.selectedItems():
+                selected_apps['all'] = self.app_list.selectedItems()[0].data(Qt.UserRole)
+            if self.productive_list.selectedItems():
+                selected_apps['productive'] = self.productive_list.selectedItems()[0].data(Qt.UserRole)
+            if self.non_productive_list.selectedItems():
+                selected_apps['non_productive'] = self.non_productive_list.selectedItems()[0].data(Qt.UserRole)
+
             # Очищаем существующие списки
             self.app_list.clear()
             self.productive_list.clear()
@@ -982,6 +1010,25 @@ class TimeTrackerApp(QMainWindow):
                         item_non_productive = QListWidgetItem(item_text)
                         item_non_productive.setData(Qt.UserRole, app_name)
                         self.non_productive_list.addItem(item_non_productive)
+            
+            # Восстанавливаем выделение
+            if selected_apps['all']:
+                for i in range(self.app_list.count()):
+                    if self.app_list.item(i).data(Qt.UserRole) == selected_apps['all']:
+                        self.app_list.setCurrentRow(i)
+                        break
+                        
+            if selected_apps['productive']:
+                for i in range(self.productive_list.count()):
+                    if self.productive_list.item(i).data(Qt.UserRole) == selected_apps['productive']:
+                        self.productive_list.setCurrentRow(i)
+                        break
+                        
+            if selected_apps['non_productive']:
+                for i in range(self.non_productive_list.count()):
+                    if self.non_productive_list.item(i).data(Qt.UserRole) == selected_apps['non_productive']:
+                        self.non_productive_list.setCurrentRow(i)
+                        break
             
             # Обновляем заголовки вкладок со статистикой
             self.tabs.setTabText(0, f"Все приложения ({self.app_list.count()})")
@@ -1105,22 +1152,25 @@ class TimeTrackerApp(QMainWindow):
         
         try:
             # Проверяем, отслеживается ли это приложение
-            if config_key not in self.tracked_applications_config:
-                # Если не отслеживается, сначала добавляем его в отслеживаемые как полезное
-                self.tracked_applications_config[config_key] = True
-                if not self.config.has_section('Applications'):
-                    self.config.add_section('Applications')
-                self.config.set('Applications', config_key, 'True')
-                QMessageBox.information(self, "Успешно", f"Приложение '{app_name}' добавлено в отслеживаемые как полезное")
+            is_tracked = config_key in self.tracked_applications_config
+            
+            # Если не отслеживается, сначала добавляем его в отслеживаемые приложения
+            if not is_tracked:
+                is_useful = True  # По умолчанию добавляем как полезное
+                self.tracked_applications_config[config_key] = is_useful
+                status_text = "добавлено как полезное"
             else:
-                # Иначе меняем статус полезности
-                is_productive = self.tracked_applications_config[config_key]
-                new_status = not is_productive
-                self.tracked_applications_config[config_key] = new_status
-                self.config.set('Applications', config_key, str(new_status))
-                
-                status_text = "полезное" if new_status else "неполезное"
-                QMessageBox.information(self, "Успешно", f"Приложение '{app_name}' теперь отмечено как {status_text}")
+                # Если уже отслеживается, инвертируем статус полезности
+                is_useful = self.tracked_applications_config[config_key]
+                new_useful_status = not is_useful
+                self.tracked_applications_config[config_key] = new_useful_status
+                status_text = "полезное" if new_useful_status else "неполезное"
+            
+            # Обновляем конфигурацию
+            if not self.config.has_section('Applications'):
+                self.config.add_section('Applications')
+            self.config.set('Applications', config_key, 
+                            str(self.tracked_applications_config[config_key]))
             
             # Сохраняем конфигурацию
             self._save_config()
@@ -1128,7 +1178,8 @@ class TimeTrackerApp(QMainWindow):
             # Обновляем списки приложений
             self.update_app_list()
             
-            logger.info(f"Изменен статус полезности приложения '{app_name}': {self.tracked_applications_config.get(config_key)}")
+            QMessageBox.information(self, "Успешно", f"Приложение '{app_name}' теперь {status_text}")
+            logger.info(f"Изменен статус полезности приложения '{app_name}': {status_text}")
         except Exception as e:
             logger.error(f"Ошибка при изменении статуса полезности приложения '{app_name}': {e}")
             QMessageBox.warning(self, "Ошибка", f"Не удалось изменить статус приложения: {e}")
@@ -1264,212 +1315,179 @@ class TimeTrackerApp(QMainWindow):
         else:
             event.ignore()
 
-    def toggle_productive(self):
-        """Переключение статуса полезности приложения"""
-        current_item = self.app_list.currentItem()
-        if not current_item:
-            return
-            
-        app_id = current_item.data(Qt.UserRole)
-        try:
-            config = self.config
-            headers = {'Authorization': f'Token {config.get("API", "token")}'}
-            
-            response = requests.post(
-                f"{config.get('API', 'base_url')}/tracked-apps/{app_id}/toggle_productive/",
-                headers=headers
-            )
-            
-            if response.status_code == 200:
-                self.update_app_list()
-                self.status_bar.showMessage("Статус полезности обновлен")
-            else:
-                self.status_bar.showMessage("Ошибка при обновлении статуса")
-        except Exception as e:
-            self.status_bar.showMessage(f"Ошибка: {str(e)}")
-
     def toggle_app(self):
-        """Включение/выключение отслеживания приложения"""
-        current_item = self.app_list.currentItem()
-        if not current_item:
-            QMessageBox.warning(self, 'Ошибка', 'Не выбрано приложение для переключения')
+        """Включает/выключает отслеживание приложения"""
+        # Получаем текущую вкладку
+        current_tab = self.tabs.currentIndex()
+        
+        # Выбираем соответствующий список приложений
+        if current_tab == 0:  # Вкладка "Все приложения"
+            app_list_widget = self.app_list
+        elif current_tab == 1:  # Вкладка "Полезные приложения"
+            app_list_widget = self.productive_list
+        elif current_tab == 2:  # Вкладка "Неполезные приложения"
+            app_list_widget = self.non_productive_list
+        else:
             return
         
-        # Получаем данные из текущего элемента списка
-        app_name = current_item.text()
-        app_id = None
-        
-        # Ищем ID приложения в кэше
-        for name, id in self.app_cache.items():
-            if name.lower() in app_name.lower():
-                app_id = id
-                break
-        
-        if not app_id:
-            QMessageBox.warning(self, 'Ошибка', 'Не удалось найти ID приложения')
-            return
-            
-        if hasattr(self, 'toggle_app_tracking') and callable(self.toggle_app_tracking):
-            if self.toggle_app_tracking(app_id):
-                self.update_app_list()
-            else:
-                QMessageBox.warning(self, 'Ошибка', 'Не удалось изменить статус приложения')
-    
-    def remove_app(self):
-        """Удаляет выбранное приложение из списка отслеживаемых"""
         # Получаем выбранный элемент
-        current_item = self.app_list.currentItem()
-        if not current_item:
-            self.status_bar.showMessage("Не выбрано ни одного приложения")
+        selected_items = app_list_widget.selectedItems()
+        if not selected_items:
+            QMessageBox.warning(self, "Ошибка", "Выберите приложение из списка")
             return
         
-        # Получаем данные из текущего элемента списка
-        app_name = current_item.text()
-        app_id = None
-        
-        # Ищем ID приложения в кэше
-        for name, id in self.app_cache.items():
-            if name.lower() in app_name.lower():
-                app_id = id
-                break
-        
-        if not app_id:
-            QMessageBox.warning(self, 'Ошибка', 'Не удалось найти ID приложения')
-            return
-        
-        # Подтверждение удаления
-        reply = QMessageBox.question(
-            self, 
-            'Подтверждение удаления', 
-            f'Вы уверены, что хотите удалить приложение "{app_name}" из списка отслеживаемых?',
-            QMessageBox.Yes | QMessageBox.No, 
-            QMessageBox.No
-        )
-        
-        if reply == QMessageBox.Yes:
-            # Создаем копию текущего списка отслеживаемых приложений
-            new_tracked_config = self.tracked_applications_config.copy()
+        app_name = selected_items[0].text()
+        # Получаем оригинальное имя процесса из данных элемента
+        proc_name = selected_items[0].data(Qt.UserRole)
+        if not proc_name:
+            proc_name = app_name
             
-            # Удаляем приложение из списка
-            app_key = app_name.lower()
-            if app_key in new_tracked_config:
-                del new_tracked_config[app_key]
-                self.update_tracked_applications_config(new_tracked_config)
-                self.status_bar.showMessage(f"Приложение '{app_name}' удалено из списка отслеживаемых")
-                
-                # Обновляем список приложений в UI
-                self.update_app_list()
-            else:
-                self.status_bar.showMessage(f"Приложение '{app_name}' не найдено в списке отслеживаемых")
-
-    def get_active_window_info(self) -> Optional[Dict[str, str]]:
-        """Получает информацию об активном окне."""
+        app_name_lower = app_name.lower()
+        proc_name_lower = proc_name.lower()
+        
+        # Ключ для конфигурации - используем имя процесса для большей точности
+        config_key = proc_name_lower
+        
         try:
-            # Получаем активное окно через Windows API
-            hwnd = win32gui.GetForegroundWindow()
-            _, pid = win32process.GetWindowThreadProcessId(hwnd)
+            # Проверяем, есть ли приложение в конфигурации трекера
+            is_tracked = config_key in self.tracked_applications_config
             
-            # Если PID равен 0, это может быть рабочий стол или другой системный процесс
-            if pid == 0:
-                logger.debug("PID активного окна = 0, возможно это рабочий стол")
-                return {'app_name': 'explorer.exe', 'window_title': 'Desktop', 'pid': '0'}
+            # Если приложение уже в списке отслеживаемых - сохраняем его статус полезности
+            current_useful_status = False
+            if is_tracked:
+                current_useful_status = self.tracked_applications_config[config_key]
+            
+            # Инвертируем состояние "отслеживается / не отслеживается"
+            new_tracked_state = not is_tracked
+            
+            if new_tracked_state:
+                # Включаем отслеживание
+                self.tracked_applications_config[config_key] = current_useful_status
+                if not self.config.has_section('Applications'):
+                    self.config.add_section('Applications')
+                self.config.set('Applications', config_key, str(current_useful_status))
+                status_text = "включено"
+            else:
+                # Выключаем отслеживание - удаляем из списка отслеживаемых
+                if config_key in self.tracked_applications_config:
+                    del self.tracked_applications_config[config_key]
+                if self.config.has_option('Applications', config_key):
+                    self.config.remove_option('Applications', config_key)
+                status_text = "выключено"
+            
+            # Сохраняем конфигурацию
+            self._save_config()
+            
+            # Обновляем списки приложений
+            self.update_app_list()
+            
+            QMessageBox.information(self, "Успешно", f"Отслеживание приложения '{app_name}' {status_text}")
+            logger.info(f"Изменен статус отслеживания приложения '{app_name}': {status_text}")
+        except Exception as e:
+            logger.error(f"Ошибка при изменении статуса отслеживания приложения '{app_name}': {e}")
+            QMessageBox.warning(self, "Ошибка", f"Не удалось изменить статус приложения: {e}")
+
+    def get_active_window_info(self):
+        """Получает информацию об активном окне"""
+        try:
+            active_window_handle = win32gui.GetForegroundWindow()
+            if not active_window_handle:
+                return None
                 
-            proc = psutil.Process(pid)
-            
-            app_name = proc.name() if hasattr(proc, 'name') else None
-            
-            # Добавляем дополнительные проверки для имени приложения
-            if not app_name:
-                # Возможно, процесс завершился между GetForegroundWindow и получением его имени
-                logger.debug(f"Не удалось получить имя процесса для PID {pid}")
-                app_name = "unknown.exe"  # Устанавливаем имя по умолчанию
-            
             # Получаем заголовок окна
-            window_title = win32gui.GetWindowText(hwnd)
+            window_title = win32gui.GetWindowText(active_window_handle)
             
-            # Если заголовок пустой, используем имя приложения
-            if not window_title:
-                window_title = app_name
-                
-            # Собираем результат
-            result = {
+            # Получаем ID процесса
+            _, process_id = win32process.GetWindowThreadProcessId(active_window_handle)
+            
+            # Получаем имя процесса
+            try:
+                process = psutil.Process(process_id)
+                app_name = process.name()
+            except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+                app_name = "Unknown"
+            
+            # Возвращаем словарь с информацией об активном окне
+            return {
                 'app_name': app_name,
                 'window_title': window_title,
-                'pid': str(pid)
+                'process_id': process_id
             }
-            
-            # Добавляем отладочную информацию
-            logger.debug(f"Active window: '{app_name}', Title: '{window_title}', PID: {pid}")
-            
-            return result
         except Exception as e:
             logger.error(f"Ошибка при получении информации об активном окне: {e}", exc_info=True)
-            # Возвращаем дефолтные значения в случае ошибки
-            return {'app_name': 'unknown.exe', 'window_title': 'Unknown', 'pid': '0'}
-
-    def is_app_useful(self, app_name: str) -> Optional[bool]:
-        """Проверяет, является ли приложение 'полезным' согласно конфигурации.
-        
-        Args:
-            app_name: Имя исполняемого файла приложения (например, 'chrome.exe').
-            
-        Returns:
-            True, если приложение полезное.
-            False, если приложение неполезное.
-            None, если приложение не найдено в конфигурации (или для него не задан статус).
-        """
-        app_name_lower = app_name.lower()
-        if not self.tracked_applications_config: 
-            logger.warning("Конфигурация отслеживаемых приложений пуста или не загружена.")
-            # Загружаем ее, если она не была загружена при инициализации (хотя должна была)
-            if not hasattr(self, '_tracked_apps_loaded_once'): 
-                self.load_tracked_applications_config()
-                self._tracked_apps_loaded_once = True
-
-        if app_name_lower in self.tracked_applications_config:
-            return self.tracked_applications_config[app_name_lower]
-        else:
-            # Если приложение не найдено в списке, можно считать его нейтральным или неизвестным
-            # Для новой логики, если приложение не в списке, мы его не трекаем или спрашиваем пользователя
-            # Пока вернем None, что означает 'не определено / не в списке отслеживаемых'
-            logger.debug(f"Приложение '{app_name_lower}' не найдено в конфигурации отслеживаемых.")
             return None
+            
+    def is_app_useful(self, app_name):
+        """Определяет, является ли приложение полезным согласно конфигурации"""
+        if not app_name:
+            return False
+            
+        # Приводим имя к нижнему регистру для сравнения
+        app_name_lower = app_name.lower()
+        
+        # Проверяем, есть ли приложение в конфигурации
+        if app_name_lower in self.tracked_applications_config:
+            # Возвращаем статус полезности
+            return self.tracked_applications_config[app_name_lower]
+        
+        # Если приложение не найдено в конфигурации, считаем его неполезным
+        return False
 
-    def start_new_activity_session(self, app_name: str, window_title: str, is_useful: Optional[bool] = None):
-        """Начинает отслеживание новой сессии активности для приложения."""
-        # Если уже есть активная сессия, завершаем её перед началом новой
-        if self.current_activity_data:
-            self.end_current_activity_session(event_type="switch")
-        
-        # Создаем новую запись о текущей активности
-        current_time = time.time()
-        current_time_utc = datetime.utcnow()
-        self.activity_start_time = current_time
-        
-        self.current_activity_data = {
-            'app_name': app_name,
-            'window_title': window_title,
-            'is_useful': is_useful,
-            'start_time': current_time,
-            'start_time_iso_utc': current_time_utc.isoformat() + 'Z',
-            'machine_id': self.config.get('Settings', 'machine_id', fallback='unknown'),
-            'user_id': self.config.get('Credentials', 'user_id', fallback='unknown')
-        }
-        
-        logger.info(
-            f"Started new activity session: "
-            f"App='{app_name}', "
-            f"Title='{window_title[:30]}{'...' if len(window_title) > 30 else ''}, "
-            f"Useful='{is_useful}', "
-            f"StartUTC='{self.current_activity_data['start_time_iso_utc']}'"
-        )
-        
-        # Обновление статус-бара и тултипа трея
-        status_text = f"Отслеживается: {app_name} ({'Полезное' if is_useful else 'Неполезное' if is_useful is not None else 'Статус не определен'}) - {window_title[:30]}..."
-        self.status_bar.showMessage(status_text)
-        if hasattr(self, 'tray_icon') and self.tray_icon:
-            self.tray_icon.setToolTip(status_text)
-
+    def start_new_activity_session(self, app_name, window_title, is_useful=None):
+        """Начинает новую сессию активности"""
+        try:
+            # Проверяем, не находится ли пользователь в состоянии простоя
+            if self.is_idle:
+                logger.info("Попытка начать сессию активности, но пользователь неактивен.")
+                return False
+                
+            # Проверяем, включено ли отслеживание для этого приложения
+            app_name_lower = app_name.lower()
+            if app_name_lower in self.tracked_applications_config:
+                is_tracked = self.tracked_applications_config[app_name_lower]
+                if not is_tracked:
+                    logger.info(f"Приложение {app_name} находится в списке неотслеживаемых.")
+                    return False
+            
+            # Если статус полезности не указан, проверяем его в конфигурации
+            if is_useful is None:
+                if app_name_lower in self.tracked_applications_config:
+                    is_useful = self.tracked_applications_config[app_name_lower]
+                else:
+                    # По умолчанию считаем приложение неполезным
+                    is_useful = False
+            
+            # Создаем запись об активности
+            start_time = time.time()
+            self.current_activity_data = {
+                'app_name': app_name,
+                'window_title': window_title,
+                'start_time': start_time,
+                'start_time_iso_utc': datetime.utcnow().isoformat() + 'Z',
+                'is_useful': is_useful,
+                'keyboard_presses': 0  # Начальное значение счетчика нажатий
+            }
+            
+            # Запоминаем время начала активности
+            self.activity_start_time = start_time
+            
+            # Сбрасываем счетчик нажатий клавиш
+            self.keyboard_press_count = 0
+            
+            # Обновляем интерфейс
+            status_message = f"Начата сессия для '{app_name}'"
+            self.update_status_signal.emit(f"Отслеживается: {app_name}")
+            self.status_bar.showMessage(status_message)
+            
+            if hasattr(self, 'tray_icon') and self.tray_icon:
+                self.tray_icon.setToolTip(f"Отслеживается: {app_name}")
+            
+            logger.info(f"Начата новая сессия активности: App='{app_name}', Title='{window_title[:30]}{'...' if len(window_title) > 30 else ''}'")
+            return True
+        except Exception as e:
+            logger.error(f"Ошибка при создании новой сессии активности: {e}", exc_info=True)
+            return False
+            
     def end_current_activity_session(self, event_type: str = "switch") -> Optional[Dict[str, Any]]:
         """Завершает текущую сессию активности, подсчитывает длительность и добавляет в очередь."""
         if not self.current_activity_data or self.activity_start_time is None:
@@ -1491,7 +1509,7 @@ class TimeTrackerApp(QMainWindow):
         activity_entry = self.current_activity_data.copy()
         
         # Добавляем данные о клавиатурной активности
-        if 'keyboard_presses' not in activity_entry and self.keyboard_press_count > 0:
+        if 'keyboard_presses' not in activity_entry or activity_entry['keyboard_presses'] == 0:
             activity_entry['keyboard_presses'] = self.keyboard_press_count
             logger.info(f"Добавлено {self.keyboard_press_count} нажатий клавиш в активность")
             # Сбрасываем счетчик после добавления в активность
@@ -1997,6 +2015,32 @@ class TimeTrackerApp(QMainWindow):
             self.connection_status.setText(f"Статус подключения: Ошибка ({str(e)[:30]}...)")
             self.connection_status.setStyleSheet("QLabel { color: red; }")
             return False
+
+    def periodic_ui_update(self):
+        """Периодически обновляет интерфейс с текущими данными"""
+        try:
+            # Обновляем отображение текущей активности
+            if self.current_activity_data:
+                app_name = self.current_activity_data.get('app_name', '')
+                
+                # Обновляем отображение времени активности
+                if self.activity_start_time:
+                    elapsed = time.time() - self.activity_start_time
+                    hours, remainder = divmod(int(elapsed), 3600)
+                    minutes, seconds = divmod(remainder, 60)
+                    time_str = f"{hours:02}:{minutes:02}:{seconds:02}"
+                    self.current_activity_time_label.setText(f"Время: {time_str}")
+                    
+                # Обновляем отображение клавиатурной активности
+                self.keyboard_activity_label.setText(f"Клавиатурная активность: {self.keyboard_press_count} нажатий")
+                
+                # Обновляем статус бар
+                self.status_bar.showMessage(f"Отслеживается: {app_name} - {time_str} - Клавиатура: {self.keyboard_press_count}")
+            else:
+                self.status_bar.showMessage("Нет активной сессии отслеживания")
+                
+        except Exception as e:
+            logger.error(f"Ошибка при периодическом обновлении UI: {e}", exc_info=True)
 
 
 class SettingsDialog(QDialog):

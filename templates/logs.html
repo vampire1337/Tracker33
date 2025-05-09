@@ -15,20 +15,22 @@
                         <thead>
                             <tr>
                                 <th>Время</th>
-                                <th>Действие</th>
+                                <th>Длительность</th>
                                 <th>Приложение</th>
+                                <th>Нажатий клавиш</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for activity in activities %}
                             <tr>
-                                <td>{{ activity.timestamp|date:"Y-m-d H:i:s" }}</td>
-                                <td>{{ activity.get_action_display }}</td>
+                                <td>{{ activity.start_time|date:"Y-m-d H:i:s" }}</td>
+                                <td>{{ activity.duration }}</td>
                                 <td>{{ activity.application.name }}</td>
+                                <td>{{ activity.keyboard_presses }}</td>
                             </tr>
                             {% empty %}
                             <tr>
-                                <td colspan="3" class="text-center">Нет данных</td>
+                                <td colspan="4" class="text-center">Нет данных</td>
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -67,7 +69,7 @@
                         <thead>
                             <tr>
                                 <th>Время</th>
-                                <th>Нажатий</th>
+                                <th>Клавиша</th>
                                 <th>Приложение</th>
                             </tr>
                         </thead>
@@ -75,7 +77,7 @@
                             {% for activity in keyboard_activities %}
                             <tr>
                                 <td>{{ activity.timestamp|date:"Y-m-d H:i:s" }}</td>
-                                <td>{{ activity.keystrokes }}</td>
+                                <td>{{ activity.key_pressed }}</td>
                                 <td>{{ activity.application.name }}</td>
                             </tr>
                             {% empty %}
@@ -96,55 +98,44 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // Загрузка списка приложений
-    fetch('/api/tracking/applications/')
+    fetch('/api/applications/')
         .then(response => response.json())
         .then(data => {
             const select = document.getElementById('application');
-            data.forEach(app => {
-                const option = document.createElement('option');
-                option.value = app.id;
-                option.textContent = app.name;
-                select.appendChild(option);
-            });
-        });
+            if (select) {
+                data.forEach(app => {
+                    const option = document.createElement('option');
+                    option.value = app.id;
+                    option.textContent = app.name;
+                    select.appendChild(option);
+                });
+            }
+        })
+        .catch(error => console.error('Ошибка загрузки приложений:', error));
 
     // Обработка формы фильтров
-    document.getElementById('filterForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        loadLogs();
-    });
+    const filterForm = document.getElementById('filterForm');
+    if (filterForm) {
+        filterForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            loadLogs();
+        });
+    }
 
     function loadLogs() {
         const dateFrom = document.getElementById('dateFrom').value;
         const dateTo = document.getElementById('dateTo').value;
         const application = document.getElementById('application').value;
 
-        // Здесь будет код для загрузки логов с учетом фильтров
-        // fetch(`/api/tracking/logs/?date_from=${dateFrom}&date_to=${dateTo}&application=${application}`)
-        //     .then(response => response.json())
-        //     .then(data => {
-        //         updateLogsTable(data);
-        //     });
-    }
+        // Формируем URL с параметрами
+        const url = new URL(window.location.href);
+        if (dateFrom) url.searchParams.set('date_from', dateFrom);
+        if (dateTo) url.searchParams.set('date_to', dateTo);
+        if (application) url.searchParams.set('application', application);
 
-    function updateLogsTable(logs) {
-        const table = document.getElementById('logsTable');
-        table.innerHTML = '';
-        
-        logs.forEach(log => {
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td>${new Date(log.timestamp).toLocaleString()}</td>
-                <td>${log.application}</td>
-                <td>${log.duration}</td>
-                <td>${log.activity}</td>
-            `;
-            table.appendChild(row);
-        });
+        // Перенаправляем на страницу с фильтрами
+        window.location.href = url.toString();
     }
-
-    // Загрузка логов при открытии страницы
-    loadLogs();
 });
 </script>
 {% endblock %} 
