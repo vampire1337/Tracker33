@@ -14,6 +14,7 @@ from django.contrib.auth.views import (
     PasswordChangeView,
     PasswordChangeDoneView
 )
+from .simple_password_reset import SimplePasswordResetView, SimplePasswordResetConfirmView
 
 urlpatterns = [
     # Web interface
@@ -24,7 +25,11 @@ urlpatterns = [
     path('api/login/', UserLoginView.as_view(), name='api-user-login'),
     path('api/profile/', UserProfileView.as_view(), name='api-user-profile'),
     
-    # Password reset
+    # Simple Password Reset (без email)
+    path('simple_password_reset/', SimplePasswordResetView.as_view(), name='simple_password_reset'),
+    path('simple_password_reset/confirm/', SimplePasswordResetConfirmView.as_view(), name='simple_password_reset_confirm'),
+    
+    # Standard Password reset (оставляем для совместимости)
     path('password_reset/', PasswordResetView.as_view(
         template_name='account/password_reset.html',
         email_template_name='account/email/password_reset_email.html',
