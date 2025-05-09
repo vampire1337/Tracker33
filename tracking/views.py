@@ -198,90 +198,49 @@ class UserActivityViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
     
     def get_queryset(self):
-        cache_key = f'user_activity_{self.request.user.id}'
-        queryset = cache.get(cache_key)
-        if queryset is None:
-            queryset = UserActivity.objects.filter(user=self.request.user)
-            cache.set(cache_key, queryset, settings.CACHE_TTL)
-        return queryset
+        return UserActivity.objects.filter(user=self.request.user).order_by('-start_time')
 
     def perform_create(self, serializer):
         try:
-            # Добавляем отладочную информацию
-            import logging
-            logger = logging.getLogger(__name__)
-            logger.info(f"Получены данные для создания активности: {serializer.validated_data}")
+            # Получаем данные запроса
+            request_data = self.request.data
+            app_name = request_data.get('app_name', '')
+            process_name = request_data.get('application', '')  # Могло быть передано как ID или как имя процесса
+            keyboard_presses = request_data.get('keyboard_presses', 0)
             
-            # Проверяем, есть ли данные о клавиатурной активности
-            keyboard_presses = serializer.validated_data.get('keyboard_presses', 0)
-            logger.info(f"Количество нажатий клавиш: {keyboard_presses}")
+            # Логируем полученные данные для отладки
+            print(f"Получены данные: app_name={app_name}, process_name={process_name}, keyboard_presses={keyboard_presses}")
             
-            # Проверяем, есть ли данные о приложении
-            app_name = serializer.validated_data.get('app_name', '')
+            # Пытаемся получить существующее приложение
+            application = None
+            if process_name.isdigit():
+                # Если передан ID приложения
+                try:
+                    application = Application.objects.get(id=process_name, user=self.request.user)
+                except Application.DoesNotExist:
+                    pass
             
-            # Сопоставление известных процессов с их реальными названиями
-            app_name_mapping = {
-                'browser.exe': 'Yandex Браузер',
-                'chrome.exe': 'Google Chrome',
-                'firefox.exe': 'Mozilla Firefox',
-                'msedge.exe': 'Microsoft Edge',
-                'opera.exe': 'Opera',
-                'safari.exe': 'Safari',
-                'brave.exe': 'Brave Browser',
-                'vivaldi.exe': 'Vivaldi',
-                'iexplore.exe': 'Internet Explorer',
-                'word.exe': 'Microsoft Word',
-                'excel.exe': 'Microsoft Excel',
-                'powerpnt.exe': 'Microsoft PowerPoint',
-                'outlook.exe': 'Microsoft Outlook',
-                'winword.exe': 'Microsoft Word',
-                'notepad.exe': 'Notepad',
-                'notepad++.exe': 'Notepad++',
-                'code.exe': 'Visual Studio Code',
-                'devenv.exe': 'Visual Studio',
-                'pycharm64.exe': 'PyCharm',
-                'idea64.exe': 'IntelliJ IDEA',
-                'photoshop.exe': 'Adobe Photoshop',
-                'illustrator.exe': 'Adobe Illustrator',
-                'acrobat.exe': 'Adobe Acrobat',
-                'acrord32.exe': 'Adobe Reader',
-                'slack.exe': 'Slack',
-                'teams.exe': 'Microsoft Teams',
-                'discord.exe': 'Discord',
-                'telegram.exe': 'Telegram',
-                'whatsapp.exe': 'WhatsApp',
-                'skype.exe': 'Skype',
-                'zoom.exe': 'Zoom',
-                'steam.exe': 'Steam',
-                'spotify.exe': 'Spotify',
-                'vlc.exe': 'VLC Media Player',
-                'wmplayer.exe': 'Windows Media Player',
-                'explorer.exe': 'Windows Explorer',
-                'cmd.exe': 'Командная строка',
-                'powershell.exe': 'PowerShell',
-                'python.exe': 'Python',
-                'javaw.exe': 'Java',
-                'node.exe': 'Node.js'
-            }
+            # Если приложение не найдено по ID, ищем по имени процесса
+            if not application:
+                try:
+                    application = Application.objects.get(process_name=process_name, user=self.request.user)
+                except Application.DoesNotExist:
+                    # Создаем новое приложение
+                    application = Application.objects.create(
+                        name=app_name or process_name,
+                        process_name=process_name,
+                        user=self.request.user
+                    )
             
-            # Проверяем, есть ли процесс в нашем списке известных приложений
-            if app_name.lower() in app_name_mapping:
-                display_name = app_name_mapping[app_name.lower()]
-                # Обновляем название приложения
-                application_id = serializer.validated_data.get('application')
-                if application_id:
-                    try:
-                        app = Application.objects.get(id=application_id)
-                        app.name = display_name
-                        app.save()
-                    except Application.DoesNotExist:
-                        pass
-            
-            instance = serializer.save(user=self.request.user)
-            cache.delete(f'user_activity_{self.request.user.id}')
-            return instance
-        except ValidationError as e:
-            raise InvalidActivityData(detail=str(e))
+            # Сохраняем активность с правильным объектом приложения и всеми данными
+            serializer.save(
+                user=self.request.user,
+                application=application,
+                keyboard_presses=keyboard_presses
+            )
+        except Exception as e:
+            print(f"Ошибка при создании активности: {e}")
+            raise ValidationError(detail=str(e))
 
     def update(self, request, *args, **kwargs):
         try:
@@ -301,118 +260,11 @@ class KeyboardActivityViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
     
     def get_queryset(self):
-        return KeyboardActivity.objects.filter(user=self.request.user)
-
+        return KeyboardActivity.objects.filter(user=self.request.user).order_by('-timestamp')
+        
     def perform_create(self, serializer):
-        try:
-            serializer.save(user=self.request.user)
-        except ValidationError as e:
-            raise InvalidActivityData(detail=str(e))
+        serializer.save(user=self.request.user)
 
-# Убираем кэширование, чтобы данные обновлялись в реальном времени
-# @method_decorator(cache_page(settings.CACHE_TTL), name='dispatch')
-class StatisticsView(LoginRequiredMixin, TemplateView):
-    template_name = 'statistics.html'
-
-    def get_context_data(self, **kwargs):
-        try:
-            context = super().get_context_data(**kwargs)
-            
-            # Получаем данные за последние 7 дней
-            end_date = timezone.now()
-            start_date = end_date - timedelta(days=7)
-            
-            if start_date > end_date:
-                raise InvalidTimeRange()
-            
-            # Получаем фильтры из запроса
-            productive_only = self.request.GET.get('productive', None)
-            app_ids = self.request.GET.getlist('apps', [])
-            
-            # Отключаем кэширование, чтобы данные всегда были актуальными
-            # Кэш-ключ для статистики
-            # cache_key = f'statistics_{self.request.user.id}_{productive_only}_{"-".join(app_ids)}'
-            # cached_data = cache.get(cache_key)
-            cached_data = None  # Всегда загружаем свежие данные
-            
-            # Всегда загружаем свежие данные
-            if True:
-                # Базовый запрос для фильтрации
-                activity_query = UserActivity.objects.filter(
-                    user=self.request.user,
-                    start_time__range=(start_date, end_date)
-                )
-                
-                # Применяем фильтры
-                if productive_only == 'true':
-                    activity_query = activity_query.filter(
-                        application__is_productive=True
-                    )
-                elif productive_only == 'false':
-                    activity_query = activity_query.filter(
-                        application__is_productive=False
-                    )
-                    
-                if app_ids:
-                    activity_query = activity_query.filter(
-                        application__id__in=app_ids
-                    )
-                
-                # Статистика по приложениям
-                apps = activity_query.values('application__name').annotate(
-                    total_time=Sum('duration')
-                ).order_by('-total_time')[:10]
-                
-                # Клавиатурная активность - используем поле keyboard_presses из модели UserActivity
-                keyboard = UserActivity.objects.filter(
-                    user=self.request.user,
-                    start_time__range=(start_date, end_date)
-                ).aggregate(total_keystrokes=Sum('keyboard_presses'))['total_keystrokes'] or 0
-                
-                # Время работы
-                work_time = TimeLog.objects.filter(
-                    user=self.request.user,
-                    start_time__range=(start_date, end_date)
-                ).annotate(
-                    duration_seconds=ExpressionWrapper(
-                        F('end_time') - F('start_time'),
-                        output_field=DurationField()
-                    )
-                ).aggregate(
-                    total_time=Sum('duration_seconds')
-                )
-                
-                # Получаем список всех приложений для фильтрации
-                all_apps = Application.objects.filter(user=self.request.user)
-                
-                cached_data = {
-                    'apps': apps,
-                    'keyboard_activity': keyboard,
-                    'work_time': work_time['total_time'] or timedelta(0),
-                    'all_apps': all_apps,
-                }
-                
-                # Не используем кэширование
-                # cache.set(cache_key, cached_data, settings.CACHE_TTL)
-            
-            context.update({
-                'apps': cached_data['apps'],
-                'keyboard_activity': cached_data['keyboard_activity'],
-                'work_time': cached_data['work_time'],
-                'start_date': start_date,
-                'end_date': end_date,
-                'all_apps': cached_data['all_apps'],
-                'productive_only': productive_only,
-                'selected_apps': app_ids
-            })
-            
-            return context
-        except Exception as e:
-            messages.error(self.request, str(e))
-            return context
-
-# Отключаем кэширование для дашборда
-# @method_decorator(cache_page(settings.CACHE_TTL), name='dispatch')
 class DashboardView(LoginRequiredMixin, TemplateView):
     template_name = 'dashboard.html'
     
