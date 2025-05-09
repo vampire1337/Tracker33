@@ -2065,12 +2065,12 @@ class TimeTrackerApp(QMainWindow):
                     # Не отправляем duration, так как сервер вычислит его автоматически
                     'is_productive': activity_dict.get('is_useful', False),
                     'app_name': app_name,
-                    'keyboard_presses': keyboard_presses,  # Добавляем количество нажатий клавиш
-                    'user': user_id  # Добавляем идентификатор пользователя
+                    'keyboard_presses': keyboard_presses  # Добавляем количество нажатий клавиш
+                    # Удаляем поле user, так как пользователь определяется по токену на сервере
                 }
                 
                 # Добавляем отладочную информацию
-                logger.info(f"Отправка активности: start_time={start_time}, end_time={end_time}, длительность={calculated_seconds} секунд, user_id={user_id}")
+                logger.info(f"Отправка активности: start_time={start_time}, end_time={end_time}, длительность={calculated_seconds} секунд")
                 activities_to_send_payload.append(api_payload)
 
             if not activities_to_send_payload:
