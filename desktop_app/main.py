@@ -389,8 +389,8 @@ class LoginDialog(QDialog):
             self.test_button.setEnabled(False)
             QApplication.processEvents()  # Обновляем UI
             
-            # Пытаемся авторизоваться
-            success = self.api_client.authenticate(username, password)
+            # Пытаемся авторизоваться - вызываем метод login вместо authenticate
+            success, token = self.api_client.login(username, password)
             
             if success:
                 # Сохраняем токен и данные пользователя в конфигурации
@@ -405,8 +405,18 @@ class LoginDialog(QDialog):
                     config.set('Credentials', 'api_base_url', server_url.rstrip('/') + '/api/')
                     config.set('Credentials', 'auth_token', self.api_client.token)
                     config.set('Credentials', 'username', username)
-                    # Устанавливаем user_id по умолчанию, так как data является токеном, а не словарем
-                    config.set('Credentials', 'user_id', '1')  # Устанавливаем значение по умолчанию
+                    
+                    # Получаем user_id из токена
+                    user_id = "1"  # Значение по умолчанию
+                    try:
+                        # Декодируем токен для получения user_id
+                        token_data = jwt.decode(self.api_client.token, options={"verify_signature": False})
+                        if "user_id" in token_data:
+                            user_id = str(token_data["user_id"])
+                    except Exception as e:
+                        logger.warning(f"Не удалось извлечь user_id из токена: {e}")
+                        
+                    config.set('Credentials', 'user_id', user_id)
                     
                     # Отключаем демо-режим после успешной авторизации
                     if not config.has_section('Settings'):
@@ -855,6 +865,10 @@ class TimeTrackerApp(QMainWindow):
         """Инициализация пользовательского интерфейса"""
         self.setWindowTitle('Time Tracker PRO') 
         self.setGeometry(100, 100, 800, 600)
+
+        # Предотвращаем одновременный запуск нескольких диалогов авторизации
+        self._login_dialog = None
+        self._login_dialog_active = False
 
         # Основной виджет
         central_widget = QWidget()
@@ -1860,25 +1874,45 @@ class TimeTrackerApp(QMainWindow):
             logger.info(f"Демо-режим: Обработано {len(activities_to_send)} записей активности. Данные не отправляются на сервер.")
             return
         
-        # Получаем API URL из конфигурации
-        # Проверяем разные возможные места хранения токена
+        # Получаем данные пользователя и токен из конфигурации
         auth_token = None
+        user_id = None
         
         # Проверяем токен в секции Credentials
-        if self.config.has_section('Credentials') and self.config.has_option('Credentials', 'auth_token'):
-            auth_token = self.config.get('Credentials', 'auth_token')
+        if self.config.has_section('Credentials'):
+            if self.config.has_option('Credentials', 'auth_token'):
+                auth_token = self.config.get('Credentials', 'auth_token')
+            if self.config.has_option('Credentials', 'user_id'):
+                user_id = self.config.get('Credentials', 'user_id')
             
-        # Если не нашли, проверяем в секции Server
-        if not auth_token and self.config.has_section('Server') and self.config.has_option('Server', 'token'):
-            auth_token = self.config.get('Server', 'token')
+        # Если не нашли в Credentials, проверяем другие секции
+        if not auth_token:
+            # Проверяем в секции Server
+            if self.config.has_section('Server') and self.config.has_option('Server', 'token'):
+                auth_token = self.config.get('Server', 'token')
+            # Проверяем в секции API
+            elif self.config.has_section('API') and self.config.has_option('API', 'token'):
+                auth_token = self.config.get('API', 'token')
+            # Проверяем в корне файла
+            elif self.config.has_option('DEFAULT', 'token'):
+                auth_token = self.config.get('DEFAULT', 'token')
+        
+        # Если не нашли user_id в Credentials, пытаемся получить из токена
+        if not user_id and auth_token:
+            try:
+                token_data = jwt.decode(auth_token, options={"verify_signature": False})
+                if "user_id" in token_data:
+                    user_id = str(token_data["user_id"])
+                    # Сохраняем в конфигурацию для последующего использования
+                    if self.config.has_section('Credentials'):
+                        self.config.set('Credentials', 'user_id', user_id)
+                        self._save_config(self.config)
+            except Exception as e:
+                logger.error(f"Ошибка при извлечении user_id из токена: {e}")
             
-        # Если не нашли, проверяем в секции API
-        if not auth_token and self.config.has_section('API') and self.config.has_option('API', 'token'):
-            auth_token = self.config.get('API', 'token')
-            
-        # Если не нашли, проверяем в корне файла
-        if not auth_token and self.config.has_option('DEFAULT', 'token'):
-            auth_token = self.config.get('DEFAULT', 'token')
+        # Если все еще нет user_id, используем значение по умолчанию
+        if not user_id:
+            user_id = "1"
             
         # Получаем URL API
         api_url = None
@@ -1937,9 +1971,9 @@ class TimeTrackerApp(QMainWindow):
                 
                 # Если поля не заполнены, сгенерируем текущие значения
                 if not start_time:
-                    start_time = datetime.utcnow().isoformat() + 'Z'
+                    start_time = datetime.now(tz=datetime.UTC).isoformat()
                 if not end_time:
-                    end_time = datetime.utcnow().isoformat() + 'Z'
+                    end_time = datetime.now(tz=datetime.UTC).isoformat()
                 
                 # Сервер ожидает определенный формат данных
                 # Добавляем все обязательные поля
@@ -1967,21 +2001,14 @@ class TimeTrackerApp(QMainWindow):
                     calculated_seconds = duration_seconds if duration_seconds > 0 else 1
                     duration_obj = timedelta(seconds=calculated_seconds)
                     
-                # Изменяем формат запроса, чтобы соответствовать ожиданиям сервера
-                # Хотя в сериализаторе поле duration помечено как read_only_fields,
-                # сервер всё равно ожидает это поле при вставке в базу данных
-                # Попробуем модифицировать серверную часть
-                
                 # Добавляем отладочную информацию
                 logger.info(f"Вычисленная длительность: {calculated_seconds} секунд")
                 
                 # Определяем ID приложения на основе имени процесса
                 app_name = activity_dict.get('app_name', '')
                 
-                # Создаем новое приложение на сервере, если оно еще не существует
-                app_id = None
-                
                 # Проверяем, есть ли уже такое приложение в кэше
+                app_id = None
                 if app_name.lower() in self.app_cache:
                     app_id = self.app_cache[app_name.lower()]
                     logger.debug(f"Найден ID в кэше для {app_name}: {app_id}")
@@ -2038,13 +2065,14 @@ class TimeTrackerApp(QMainWindow):
                     # Не отправляем duration, так как сервер вычислит его автоматически
                     'is_productive': activity_dict.get('is_useful', False),
                     'app_name': app_name,
-                    'keyboard_presses': keyboard_presses  # Добавляем количество нажатий клавиш
+                    'keyboard_presses': keyboard_presses,  # Добавляем количество нажатий клавиш
+                    'user': user_id  # Добавляем идентификатор пользователя
                 }
                 
                 # Добавляем отладочную информацию
-                logger.info(f"Отправка активности: start_time={start_time}, end_time={end_time}, длительность={calculated_seconds} секунд")
+                logger.info(f"Отправка активности: start_time={start_time}, end_time={end_time}, длительность={calculated_seconds} секунд, user_id={user_id}")
                 activities_to_send_payload.append(api_payload)
-            
+
             if not activities_to_send_payload:
                 logger.debug("Нет данных для отправки после фильтрации.")
                 return
@@ -2186,52 +2214,34 @@ class TimeTrackerApp(QMainWindow):
             api_url = 'http://localhost:8000/api'
             
         try:
-            # Создаем временный APIClient для проверки
-            api_client = APIClient(api_url)
-            api_client.token = auth_token
+            # Проверяем соединение напрямую через запрос
+            headers = {'Authorization': f'Bearer {auth_token}'} if auth_token else {}
+            response = requests.get(f"{api_url}/", headers=headers, timeout=(3, 5))
             
-            # Используем метод test_connection для проверки
-            connection_status, message = api_client.test_connection()
-            
-            if connection_status:
+            if response.status_code == 200:
                 self.connection_status.setText(f"Статус подключения: Подключено ({api_url})")
                 self.connection_status.setStyleSheet("QLabel { color: green; }")
-                logger.info(f"Проверка соединения: {message}")
+                logger.info(f"Проверка соединения: успешно")
+            elif response.status_code == 401:
+                self.connection_status.setText("Статус подключения: Ошибка авторизации")
+                self.connection_status.setStyleSheet("QLabel { color: red; }")
+                logger.warning(f"Ошибка проверки соединения: Недействительный токен (401)")
+                
+                # Планируем показ диалога авторизации с задержкой
+                QTimer.singleShot(1000, self.login_required_signal.emit)
             else:
                 self.connection_status.setText("Статус подключения: Ошибка")
                 self.connection_status.setStyleSheet("QLabel { color: red; }")
-                logger.warning(f"Ошибка проверки соединения: {message}")
-                
-                # Проверяем, нужно ли повторить авторизацию
-                token_valid = False
-                try:
-                    # Декодируем токен и проверяем срок действия
-                    token_data = jwt.decode(auth_token, options={"verify_signature": False})
-                    exp_timestamp = token_data.get('exp')
-                    if exp_timestamp:
-                        expiration_time = datetime.fromtimestamp(exp_timestamp)
-                        if datetime.now() < expiration_time:
-                            token_valid = True
-                except Exception as e:
-                    logger.error(f"Ошибка при проверке токена: {e}")
-
-                # Если токен истек или ошибка авторизации, повторно авторизуемся
-                if not token_valid or "401" in message or "unauthorized" in message.lower():
-                    # Планируем показ диалога авторизации
-                    QTimer.singleShot(1000, self.login_required_signal.emit)
+                logger.warning(f"Ошибка проверки соединения: {response.status_code}")
         except Exception as e:
             self.connection_status.setText("Статус подключения: Ошибка")
             self.connection_status.setStyleSheet("QLabel { color: red; }")
             logger.error(f"Ошибка при проверке соединения: {e}")
             
-            # Если сервер недоступен, но есть демо-режим
-            if not self.config.has_section('Settings'):
-                self.config.add_section('Settings')
-                
             # Отображаем информацию об ошибке
             self.status_bar.showMessage(f"Ошибка соединения: {str(e)[:100]}")
             
-            # Планируем показ диалога авторизации
+            # Планируем показ диалога авторизации с задержкой
             QTimer.singleShot(1000, self.login_required_signal.emit)
 
     def periodic_ui_update(self):
