@@ -74,8 +74,13 @@ def setup_logging():
 
 logger = setup_logging()
 
-class APIClient:
-    """Класс для взаимодействия с API сервера"""
+# Импортируем APIClient из api_client.py вместо использования встроенного класса
+from .api_client import APIClient
+
+# Этот класс больше не используется, но оставлен для совместимости с существующим кодом
+# который может ссылаться на него
+class _LegacyAPIClient:
+    """Класс для взаимодействия с API сервера (устаревший)"""
     def __init__(self, base_url):
         self.base_url = base_url.rstrip('/')
         self.session = requests.Session()
