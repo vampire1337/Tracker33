@@ -30,9 +30,9 @@ LOGGING = {
             'format': '{levelname} {message}',
             'style': '{',
         },
-        'json': {
-            'format': '%(message)s',
-            'class': 'pythonjsonlogger.jsonlogger.JsonFormatter',
+        'detailed': {
+            'format': '{levelname} {asctime} {module} {funcName} {message}',
+            'style': '{',
         },
     },
     'handlers': {
@@ -40,19 +40,19 @@ LOGGING = {
             'level': 'INFO',
             'class': 'logging.FileHandler',
             'filename': BASE_DIR / 'logs/activity.log',
-            'formatter': 'json',
+            'formatter': 'detailed',
         },
         'file_performance': {
             'level': 'INFO',
             'class': 'logging.FileHandler',
             'filename': BASE_DIR / 'logs/performance.log',
-            'formatter': 'json',
+            'formatter': 'verbose',
         },
         'file_error': {
             'level': 'ERROR',
             'class': 'logging.FileHandler',
             'filename': BASE_DIR / 'logs/error.log',
-            'formatter': 'json',
+            'formatter': 'verbose',
         },
         'console': {
             'level': 'DEBUG',
@@ -100,9 +100,9 @@ if not LOGS_DIR.exists():
 SECRET_KEY = 'django-insecure-^)hw&twianf%f=wq&sb)89@4jf%am1*4((&#(c#*xb)g4=yj_g'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv('DEBUG', 'True') == 'True'
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']  # Временно разрешаем все хосты для тестирования
 
 
 # Application definition
@@ -142,11 +142,10 @@ MIDDLEWARE = [
 ]
 
 # CORS settings
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:8000",
-]
+CORS_ALLOWED_ORIGINS = os.getenv('CORS_ALLOWED_ORIGINS', 'http://localhost:8000,http://localhost:3000,http://127.0.0.1:8000,http://127.0.0.1:3000,http://46.173.26.149:8000').split(',')
 
 CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_ALL_ORIGINS = DEBUG  # В режиме разработки разрешаем доступ с любых доменов
 
 # Cache settings
 CACHES = {
@@ -233,13 +232,19 @@ STATICFILES_DIRS = [
     BASE_DIR / 'static',
 ]
 
+# Media files (User uploaded files)
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Allauth settings
-ACCOUNT_EMAIL_VERIFICATION = 'none'
+ACCOUNT_EMAIL_VERIFICATION = 'mandatory'
+ACCOUNT_AUTHENTICATION_METHOD = 'username_email'
+ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_LOGIN_METHODS = {'username', 'email'}
 ACCOUNT_SIGNUP_FIELDS = ['email*', 'username*', 'password1*', 'password2*', 'department*', 'position*']
 ACCOUNT_SESSION_REMEMBER = True
@@ -249,6 +254,9 @@ ACCOUNT_LOGIN_REDIRECT_URL = '/dashboard/'
 ACCOUNT_FORMS = {
     'signup': 'users.forms.CustomSignupForm',
 }
+ACCOUNT_DEFAULT_HTTP_PROTOCOL = 'http'
+ACCOUNT_EMAIL_SUBJECT_PREFIX = '[Tracker33] '
+ACCOUNT_PASSWORD_RESET_TIMEOUT = 259200  # 3 days in seconds
 LOGIN_REDIRECT_URL = '/dashboard/'
 LOGIN_URL = '/login/'
 LOGOUT_REDIRECT_URL = '/'
@@ -318,13 +326,13 @@ AUTHENTICATION_BACKENDS = [
 SITE_ID = 1
 
 # Email settings
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-EMAIL_HOST = ''
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-EMAIL_HOST_USER = ''
-EMAIL_HOST_PASSWORD = ''
-DEFAULT_FROM_EMAIL = ''
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = os.getenv('EMAIL_HOST', 'smtp.gmail.com')
+EMAIL_PORT = int(os.getenv('EMAIL_PORT', 587))
+EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True') == 'True'
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
+DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'noreply@tracker33.com')
 
 # Error handlers
 handler400 = 'users.views.bad_request'
