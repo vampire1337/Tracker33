@@ -46,30 +46,24 @@
                         <div class="card bg-info text-white">
                             <div class="card-body">
                                 <h5 class="card-title">Клавиатурная активность</h5>
-                                <p class="card-text">{{ today_stats.keystrokes }} нажатий</p>
-                                <p class="card-text">Время: 
-                                    {% if today_stats.keystrokes_time %}
-                                        {{ today_stats.keystrokes_time|time:"H:i:s" }}
-                                    {% else %}
-                                        00:00:00
-                                    {% endif %}
-                                </p>
-                                
-                                <!-- Отладочная информация о клавиатурной активности -->
-                                <div class="small text-muted">
-                                    <p>Записи с нажатиями клавиш:</p>
-                                    <ul>
-                                    {% for item in today_stats.debug_keystrokes %}
-                                        <li>ID: {{ item.id }}, Нажатий: {{ item.keyboard_presses }}, Время: {{ item.start_time|date:"H:i:s" }} - {{ item.end_time|date:"H:i:s" }}</li>
-                                    {% empty %}
-                                        <li>Нет записей с нажатиями клавиш</li>
-                                    {% endfor %}
-                                    </ul>
-                                </div>
+                                <p class="card-text" style="font-size: 24px; font-weight: bold;">{{ today_stats.keystrokes }} нажатий</p>
                             </div>
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">График активности</h3>
+            </div>
+            <div class="card-body">
+                <canvas id="activityChart" width="400" height="100"></canvas>
             </div>
         </div>
     </div>
@@ -127,6 +121,7 @@
                             <tr>
                                 <th>Приложение</th>
                                 <th>Время</th>
+                                <th>Процент</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -143,10 +138,17 @@
                                         {% endif %}
                                     {% endwith %}
                                 </td>
+                                <td>
+                                    <div class="progress">
+                                        {% with app=app_group.list.0 %}
+                                            <div class="progress-bar" role="progressbar" style="width: {{ app.percentage|default:0 }}%;" aria-valuenow="{{ app.percentage|default:0 }}" aria-valuemin="0" aria-valuemax="100">{{ app.percentage|default:0 }}%</div>
+                                        {% endwith %}
+                                    </div>
+                                </td>
                             </tr>
                             {% empty %}
                             <tr>
-                                <td colspan="2" class="text-center">Нет данных</td>
+                                <td colspan="3" class="text-center">Нет данных</td>
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -159,10 +161,67 @@
 {% endblock %}
 
 {% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Здесь будет код для загрузки данных через API
-    // и обновления элементов страницы
+    // График активности
+    const ctx = document.getElementById('activityChart').getContext('2d');
+    
+    // Подготовка данных для графика
+    let hours = [];
+    for (let i = 0; i < 24; i++) {
+        hours.push(i + ':00');
+    }
+    
+    // Пример данных, в реальности будут загружаться с сервера
+    const activityChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: hours,
+            datasets: [{
+                label: 'Активность (минуты)',
+                data: [
+                    {% for hour_data in hourly_activity %}
+                        {{ hour_data.minutes|default:0 }}{% if not forloop.last %},{% endif %}
+                    {% empty %}
+                        {% for i in "x"|rjust:"24" %}0,{% endfor %}
+                    {% endfor %}
+                ],
+                backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Минуты активности'
+                    }
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Часы'
+                    }
+                }
+            },
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Распределение активности по часам'
+                },
+                legend: {
+                    display: true,
+                    position: 'top'
+                }
+            },
+            responsive: true,
+            maintainAspectRatio: false
+        }
+    });
 });
 </script>
 {% endblock %} 

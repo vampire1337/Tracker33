@@ -3,7 +3,7 @@ from rest_framework import generics, permissions, status, viewsets
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.utils import timezone
-from datetime import timedelta
+from datetime import timedelta, datetime, time
 from .models import Application, UserActivity, KeyboardActivity, TimeLog
 from .serializers import (
     ApplicationSerializer, 
@@ -84,12 +84,17 @@ class StatisticsView(LoginRequiredMixin, TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         user = self.request.user
-        today = timezone.now().date()
         
-        # Получаем статистику за сегодня
+        # Получаем количество дней для статистики из параметров запроса
+        days = int(self.request.GET.get('days', 7))
+        today = timezone.now().date()
+        start_date = today - timedelta(days=days-1)  # -1 потому что сегодня тоже входит
+        
+        # Получаем статистику за выбранный период
         activities = UserActivity.objects.filter(
             user=user,
-            start_time__date=today
+            start_time__date__gte=start_date,
+            start_time__date__lte=today
         )
         
         # Рассчитываем общее время работы
@@ -111,10 +116,19 @@ class StatisticsView(LoginRequiredMixin, TemplateView):
         minutes, seconds = divmod(remainder, 60)
         formatted_time = f"{hours}:{minutes:02d}:{seconds:02d}"
         
-        # Получаем все приложения пользователя за сегодня
+        # Рассчитываем средние показатели на день
+        avg_seconds_per_day = total_seconds / days if days > 0 else 0
+        avg_hours, avg_remainder = divmod(int(avg_seconds_per_day), 3600)
+        avg_minutes, avg_seconds = divmod(avg_remainder, 60)
+        average_daily_time = f"{avg_hours}:{avg_minutes:02d}:{avg_seconds:02d}"
+        
+        average_daily_keystrokes = int(keyboard_activity / days) if days > 0 else 0
+        
+        # Получаем все приложения пользователя за период
         apps = Application.objects.filter(
             useractivity__user=user,
-            useractivity__start_time__date=today
+            useractivity__start_time__date__gte=start_date,
+            useractivity__start_time__date__lte=today
         ).annotate(
             total_time=Sum('useractivity__duration'),
             total_seconds=Sum(ExpressionWrapper(
@@ -123,7 +137,32 @@ class StatisticsView(LoginRequiredMixin, TemplateView):
             ))
         ).order_by('-total_time')
         
-        # Форматируем время для каждого приложения
+        # Форматируем время для каждого приложения и рассчитываем проценты
+        # Общее количество секунд для всех приложений
+        all_apps_seconds = sum(app.total_seconds for app in apps if getattr(app, 'total_seconds', None))
+        
+        # Получаем предыдущие данные для сравнения и расчета тренда
+        prev_start_date = start_date - timedelta(days=days)
+        prev_end_date = start_date - timedelta(days=1)
+        
+        previous_apps = Application.objects.filter(
+            useractivity__user=user,
+            useractivity__start_time__date__gte=prev_start_date,
+            useractivity__start_time__date__lte=prev_end_date
+        ).annotate(
+            total_time=Sum('useractivity__duration'),
+            total_seconds=Sum(ExpressionWrapper(
+                F('useractivity__duration'), 
+                output_field=models.IntegerField()
+            ))
+        )
+        
+        # Создаем словарь предыдущих данных для быстрого поиска
+        prev_app_data = {}
+        for app in previous_apps:
+            if getattr(app, 'total_seconds', None):
+                prev_app_data[app.id] = app.total_seconds
+        
         for app in apps:
             if hasattr(app, 'total_seconds') and app.total_seconds:
                 # Преобразуем время в секунды, разделив на 1000000 если значение слишком большое
@@ -134,8 +173,29 @@ class StatisticsView(LoginRequiredMixin, TemplateView):
                 hours, remainder = divmod(int(seconds_value), 3600)
                 minutes, seconds = divmod(remainder, 60)
                 app.formatted_time = f"{hours}:{minutes:02d}:{seconds:02d}"
+                
+                # Рассчитываем процент от общего времени
+                app.percentage = round((app.total_seconds / all_apps_seconds) * 100, 1) if all_apps_seconds > 0 else 0
+                
+                # Рассчитываем тренд по сравнению с предыдущим периодом
+                prev_seconds = prev_app_data.get(app.id, 0)
+                if prev_seconds > 0:
+                    app.trend = round(((app.total_seconds - prev_seconds) / prev_seconds) * 100, 1)
+                    # Определяем класс стиля для тренда
+                    if app.trend > 0:
+                        app.trend_class = 'bg-success'
+                    elif app.trend < 0:
+                        app.trend_class = 'bg-danger'
+                    else:
+                        app.trend_class = 'bg-secondary'
+                else:
+                    app.trend = 100  # Если раньше не было активности, то тренд 100%
+                    app.trend_class = 'bg-success'
             else:
                 app.formatted_time = "00:00:00"
+                app.percentage = 0
+                app.trend = 0
+                app.trend_class = 'bg-secondary'
         
         # Обновляем названия приложений для отображения
         for app in apps:
@@ -144,11 +204,40 @@ class StatisticsView(LoginRequiredMixin, TemplateView):
                 app.name = self.app_name_mapping[process_name]
                 app.save()
         
+        # Получаем данные по дням для графика
+        daily_data = []
+        for i in range(days):
+            date = today - timedelta(days=days-1-i)
+            day_activities = activities.filter(start_time__date=date)
+            
+            day_seconds = 0
+            for activity in day_activities:
+                if activity.duration:
+                    day_seconds += activity.duration.total_seconds()
+                elif activity.start_time and activity.end_time:
+                    duration = activity.end_time - activity.start_time
+                    day_seconds += duration.total_seconds()
+            
+            daily_data.append({
+                'date': date,
+                'hours': round(day_seconds / 3600, 1),
+                'minutes': round(day_seconds / 60, 0)
+            })
+        
+        # Рассчитываем продуктивность
+        productive_apps = [app for app in apps if getattr(app, 'is_productive', False)]
+        productive_seconds = sum(app.total_seconds for app in productive_apps if getattr(app, 'total_seconds', None))
+        productivity_percent = round((productive_seconds / all_apps_seconds) * 100) if all_apps_seconds > 0 else 0
+        
         # Добавляем данные в контекст
         context['apps'] = apps
         context['formatted_time'] = formatted_time
         context['keyboard_activity'] = keyboard_activity
         context['today_activity'] = activities.select_related('application').order_by('-start_time')[:10]
+        context['daily_data'] = daily_data
+        context['average_daily_time'] = average_daily_time
+        context['average_daily_keystrokes'] = average_daily_keystrokes
+        context['productivity_percent'] = productivity_percent
         
         return context
 
@@ -391,7 +480,10 @@ class DashboardView(LoginRequiredMixin, TemplateView):
             ))
         ).order_by('-total_time')
         
-        # Форматируем время для каждого приложения
+        # Рассчитываем проценты для приложений
+        all_apps_seconds = sum(app.total_seconds for app in apps if getattr(app, 'total_seconds', None))
+        
+        # Форматируем время для каждого приложения и добавляем проценты
         for app in apps:
             if hasattr(app, 'total_seconds') and app.total_seconds:
                 # Преобразуем время в секунды, разделив на 1000000 если значение слишком большое
@@ -402,14 +494,12 @@ class DashboardView(LoginRequiredMixin, TemplateView):
                 hours, remainder = divmod(int(seconds_value), 3600)
                 minutes, seconds = divmod(remainder, 60)
                 app.formatted_time = f"{hours}:{minutes:02d}:{seconds:02d}"
+                
+                # Добавляем процент от общего времени
+                app.percentage = round((app.total_seconds / all_apps_seconds) * 100, 1) if all_apps_seconds > 0 else 0
             else:
                 app.formatted_time = "00:00:00"
-        
-        # Отладочная информация
-        print(f"\n\nРасчет времени работы: {total_work_time}")
-        print(f"Количество активностей: {activities.count()}")
-        print(f"Общее время в секундах: {total_seconds}")
-        print(f"Форматированное время: {formatted_time}\n\n")
+                app.percentage = 0
         
         # Обновляем названия приложений для отображения
         for app in apps:
@@ -418,6 +508,36 @@ class DashboardView(LoginRequiredMixin, TemplateView):
                 # Обновляем название приложения в базе данных
                 app.name = self.app_name_mapping[process_name]
                 app.save()
+        
+        # Создаем почасовую статистику для графика
+        hourly_activity = []
+        for hour in range(24):
+            start_hour = timezone.make_aware(datetime.combine(today, time(hour=hour, minute=0)))
+            end_hour = timezone.make_aware(datetime.combine(today, time(hour=hour + 1 if hour < 23 else 23, minute=59, second=59)))
+            
+            # Получаем активности только за этот час
+            hour_activities = activities.filter(
+                start_time__gte=start_hour,
+                start_time__lt=end_hour
+            )
+            
+            # Рассчитываем общее время активности за час
+            hour_seconds = 0
+            for activity in hour_activities:
+                if activity.duration:
+                    hour_seconds += activity.duration.total_seconds()
+                elif activity.start_time and activity.end_time:
+                    duration = activity.end_time - activity.start_time
+                    hour_seconds += duration.total_seconds()
+            
+            # Переводим секунды в минуты
+            hour_minutes = round(hour_seconds / 60, 0)
+            
+            hourly_activity.append({
+                'hour': hour,
+                'minutes': hour_minutes,
+                'seconds': hour_seconds
+            })
         
         today_stats = {
             'total_work_time': total_work_time,
@@ -429,36 +549,14 @@ class DashboardView(LoginRequiredMixin, TemplateView):
                 user=user,
                 start_time__date=today
             ).aggregate(total_keystrokes=Sum('keyboard_presses'))['total_keystrokes'] or 0,
-            
-            # Получаем только последние 10 записей о клавиатурной активности
-            'debug_keystrokes': list(UserActivity.objects.filter(
-                user=user,
-                start_time__date=today,
-                keyboard_presses__gt=0
-            ).order_by('-start_time')[:10].values('id', 'keyboard_presses', 'start_time', 'end_time')),
-            
-            # Рассчитываем общее время активности
-            'keystrokes_time': UserActivity.objects.filter(
-                user=user,
-                start_time__date=today,
-                keyboard_presses__gt=0
-            ).aggregate(total_time=Sum('duration'))['total_time'] or timedelta(0)
         }
-
-        # Мы уже получили последние действия в начале метода
-        # today_activity = UserActivity.objects.filter(
-        #     user=user,
-        #     start_time__date=today
-        # ).select_related('application').order_by('-start_time')[:10]
 
         cached_data = {
             'active_apps': active_apps,
             'today_stats': today_stats,
-            'today_activity': context['today_activity']
+            'today_activity': context['today_activity'],
+            'hourly_activity': hourly_activity
         }
-
-        # Не используем кэширование
-        # cache.set(cache_key, cached_data, settings.CACHE_TTL)
 
         context.update(cached_data)
         return context
