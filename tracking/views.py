@@ -135,7 +135,7 @@ class StatisticsView(LoginRequiredMixin, TemplateView):
                 F('useractivity__duration'), 
                 output_field=models.IntegerField()
             ))
-        ).order_by('-total_time')
+        ).order_by('-total_time').distinct()
         
         # Форматируем время для каждого приложения и рассчитываем проценты
         # Общее количество секунд для всех приложений
@@ -199,7 +199,7 @@ class StatisticsView(LoginRequiredMixin, TemplateView):
         
         # Обновляем названия приложений для отображения
         for app in apps:
-            process_name = app.process_name.lower()
+            process_name = app.process_name.lower() if app.process_name else ""
             if process_name in self.app_name_mapping:
                 app.name = self.app_name_mapping[process_name]
                 app.save()
@@ -224,6 +224,27 @@ class StatisticsView(LoginRequiredMixin, TemplateView):
                 'minutes': round(day_seconds / 60, 0)
             })
         
+        # Проверка и создание демо-данных, если нет реальных
+        if not daily_data:
+            for i in range(days):
+                date = today - timedelta(days=days-1-i)
+                daily_data.append({
+                    'date': date,
+                    'hours': 0,
+                    'minutes': 0
+                })
+        
+        # Убедимся, что у нас есть хотя бы одно приложение для пирожка
+        if not apps.exists():
+            # Создаем фиктивное приложение
+            dummy_app = Application()
+            dummy_app.name = "Нет данных"
+            dummy_app.percentage = 100
+            dummy_app.formatted_time = "00:00:00"
+            dummy_app.trend = 0
+            dummy_app.trend_class = 'bg-secondary'
+            apps = [dummy_app]
+        
         # Рассчитываем продуктивность
         productive_apps = [app for app in apps if getattr(app, 'is_productive', False)]
         productive_seconds = sum(app.total_seconds for app in productive_apps if getattr(app, 'total_seconds', None))
@@ -238,6 +259,9 @@ class StatisticsView(LoginRequiredMixin, TemplateView):
         context['average_daily_time'] = average_daily_time
         context['average_daily_keystrokes'] = average_daily_keystrokes
         context['productivity_percent'] = productivity_percent
+        
+        print(f"daily_data: {len(daily_data)} items")
+        print(f"apps: {len(apps)} items")
         
         return context
 
