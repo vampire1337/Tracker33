@@ -1237,20 +1237,60 @@ class TimeTrackerApp(QMainWindow):
     def safe_exit(self):
         try:
             self.status_bar.showMessage('Завершение работы...')
-            if hasattr(self, 'tracker') and self.tracker.is_tracking:
-                self.tracker.stop_tracking()
-            # Останавливаем все потоки и слушатели
-            if hasattr(self, 'keyboard_listener') and self.keyboard_listener:
-                self.keyboard_listener.stop()
-            if hasattr(self, 'mouse_listener') and self.mouse_listener:
-                self.mouse_listener.stop()
-            if hasattr(self, 'process_activity_thread') and self.process_activity_thread.is_alive():
-                # Даём очереди завершиться
-                self.activity_queue.join()
+            
+            # Останавливаем отслеживание активности
+            self.tracking_paused = True
+            
+            # Завершаем текущую сессию, если есть
+            if self.current_activity_data:
+                try:
+                    self.end_current_activity_session(event_type="app_close")
+                except Exception as e:
+                    logger.error(f"Ошибка при завершении текущей сессии: {e}")
+            
+            # Останавливаем все слушатели и таймеры
+            try:
+                if hasattr(self, 'keyboard_listener') and self.keyboard_listener:
+                    self.keyboard_listener.stop()
+                    logger.info("Keyboard listener остановлен")
+            except Exception as e:
+                logger.error(f"Ошибка остановки keyboard listener: {e}")
+                
+            try:
+                if hasattr(self, 'mouse_listener') and self.mouse_listener:
+                    self.mouse_listener.stop()
+                    logger.info("Mouse listener остановлен")
+            except Exception as e:
+                logger.error(f"Ошибка остановки mouse listener: {e}")
+            
+            # Останавливаем все таймеры, которые могут вызывать задержки
+            try:
+                if hasattr(self, 'tracking_timer'):
+                    self.tracking_timer.stop()
+                if hasattr(self, 'ui_update_timer'):
+                    self.ui_update_timer.stop()
+                if hasattr(self, 'idle_check_timer'):
+                    self.idle_check_timer.stop()
+            except Exception as e:
+                logger.error(f"Ошибка остановки таймеров: {e}")
+            
+            # Очищаем очередь активностей
+            try:
+                if hasattr(self, 'activity_queue'):
+                    while not self.activity_queue.empty():
+                        try:
+                            self.activity_queue.get_nowait()
+                            self.activity_queue.task_done()
+                        except:
+                            pass
+            except Exception as e:
+                logger.error(f"Ошибка очистки очереди: {e}")
+            
             logger.info('Приложение завершает работу корректно.')
         except Exception as e:
             logger.error(f'Ошибка завершения: {e}')
         finally:
+            # Немедленно выходим из приложения
             QApplication.quit()
 
     def open_web_interface(self):
@@ -1293,27 +1333,27 @@ class TimeTrackerApp(QMainWindow):
         logger.info("Отслеживание активности остановлено")
 
     def closeEvent(self, event):
-        reply = QMessageBox.question(
-            self,
-            'Выход',
-            'Вы действительно хотите выйти из приложения?\nВсе сборы активности будут остановлены.',
-            QMessageBox.Yes | QMessageBox.No
-        )
-        
-        if reply == QMessageBox.Yes:
-            # Останавливаем отслеживание, если оно активно
-            if hasattr(self, 'keyboard_listener') and self.keyboard_listener:
-                self.keyboard_listener.stop()
-            if hasattr(self, 'mouse_listener') and self.mouse_listener:
-                self.mouse_listener.stop()
-
-            # Завершаем текущую сессию, если есть
-            if self.current_activity_data:
-                self.end_current_activity_session(event_type="app_close")
-
-            self.safe_exit()
-        else:
-            event.ignore()
+        try:
+            reply = QMessageBox.question(
+                self,
+                'Выход',
+                'Вы действительно хотите выйти из приложения?\nВсе сборы активности будут остановлены.',
+                QMessageBox.Yes | QMessageBox.No
+            )
+            
+            if reply == QMessageBox.Yes:
+                # Принимаем событие закрытия
+                event.accept()
+                
+                # Запускаем безопасное завершение работы через очередь событий Qt
+                # Это предотвратит зависание интерфейса
+                QTimer.singleShot(0, self.safe_exit)
+            else:
+                event.ignore()
+        except Exception as e:
+            logger.error(f"Ошибка в обработчике закрытия: {e}")
+            event.accept()
+            QTimer.singleShot(0, self.safe_exit)
 
     def toggle_app(self):
         """Включает/выключает отслеживание приложения"""
