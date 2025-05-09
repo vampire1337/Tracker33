@@ -119,13 +119,21 @@ def download_tracker(request):
     """
     Представление для скачивания файла трекера
     """
-    tracker_path = os.path.join(settings.BASE_DIR, 'dist', 'TimeTracker.exe')
+    # Сначала ищем в desktop_app/dist/ (там может быть более свежая версия)
+    tracker_path = os.path.join(settings.BASE_DIR, 'desktop_app', 'dist', 'TimeTracker.exe')
     if not os.path.exists(tracker_path):
-        # Если файл не найден в основной директории, попробуем найти его в desktop_app
-        tracker_path = os.path.join(settings.BASE_DIR, 'desktop_app', 'dist', 'TimeTracker.exe')
+        # Если не найден, ищем в основной директории dist/
+        tracker_path = os.path.join(settings.BASE_DIR, 'dist', 'TimeTracker.exe')
         if not os.path.exists(tracker_path):
             return render(request, 'errors/404.html', status=404)
     
+    # Получаем информацию о файле для отображения в логах
+    file_size = os.path.getsize(tracker_path)
+    file_modified = os.path.getmtime(tracker_path)
+    print(f"Скачивание файла: {tracker_path}, размер: {file_size/1024/1024:.2f} МБ, дата изменения: {file_modified}")
+    
     response = FileResponse(open(tracker_path, 'rb'))
     response['Content-Disposition'] = 'attachment; filename="TimeTracker.exe"'
+    response['Content-Type'] = 'application/octet-stream'  # Правильный MIME-тип для .exe
+    response['Content-Length'] = file_size  # Размер файла для прогресса скачивания
     return response

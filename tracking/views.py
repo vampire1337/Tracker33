@@ -213,22 +213,32 @@ class UserActivityViewSet(viewsets.ModelViewSet):
             
             # Пытаемся получить существующее приложение
             application = None
-            if process_name.isdigit():
-                # Если передан ID приложения
-                try:
-                    application = Application.objects.get(id=process_name, user=self.request.user)
-                except Application.DoesNotExist:
-                    pass
+            
+            # Проверяем, является ли process_name числом или строкой с числом
+            is_numeric = False
+            try:
+                # Если process_name уже число или строка с числом
+                if isinstance(process_name, int) or (isinstance(process_name, str) and process_name.isdigit()):
+                    is_numeric = True
+                    process_id = int(process_name)
+                    try:
+                        application = Application.objects.get(id=process_id, user=self.request.user)
+                    except Application.DoesNotExist:
+                        pass
+            except (TypeError, ValueError, AttributeError):
+                pass
             
             # Если приложение не найдено по ID, ищем по имени процесса
             if not application:
                 try:
-                    application = Application.objects.get(process_name=process_name, user=self.request.user)
+                    # Если process_name не число, используем его как есть
+                    process_name_str = str(process_name) if process_name is not None else ""
+                    application = Application.objects.get(process_name=process_name_str, user=self.request.user)
                 except Application.DoesNotExist:
                     # Создаем новое приложение
                     application = Application.objects.create(
-                        name=app_name or process_name,
-                        process_name=process_name,
+                        name=app_name or str(process_name),
+                        process_name=str(process_name) if process_name is not None else "",
                         user=self.request.user
                     )
             
