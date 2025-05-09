@@ -182,7 +182,19 @@ document.addEventListener('DOMContentLoaded', function() {
         {% endfor %}
     ];
     
-    console.log("Chart data:", chartData); // Отладочная информация
+    console.log("График активности - Labels:", hours);
+    console.log("График активности - Data:", chartData);
+    
+    // Убедимся, что у нас достаточно данных для графика
+    if (chartData.length < 24) {
+        // Дополним массив нулями, если данных меньше 24 часов
+        while (chartData.length < 24) {
+            chartData.push(0);
+        }
+    } else if (chartData.length > 24) {
+        // Обрежем массив, если данных больше 24 часов
+        chartData.length = 24;
+    }
     
     const activityChart = new Chart(ctx, {
         type: 'bar',

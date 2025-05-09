@@ -168,25 +168,40 @@
 document.addEventListener('DOMContentLoaded', function() {
     // График активности по дням
     const dailyCtx = document.getElementById('dailyActivityChart').getContext('2d');
+    
+    // Генерируем демо данные, если нет реальных
+    let labels = [
+        {% for day in daily_data %}
+            '{{ day.date|date:"d.m" }}'{% if not forloop.last %},{% endif %}
+        {% empty %}
+            'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'
+        {% endfor %}
+    ];
+    
+    let data = [
+        {% for day in daily_data %}
+            {{ day.hours|default:0 }}{% if not forloop.last %},{% endif %}
+        {% empty %}
+            0, 0, 0, 0, 0, 0, 0
+        {% endfor %}
+    ];
+    
+    console.log("График активности по дням - Labels:", labels);
+    console.log("График активности по дням - Data:", data);
+    
+    // Принудительно создаем график даже если данных нет
+    if (labels.length === 0) {
+        labels = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
+        data = [0, 0, 0, 0, 0, 0, 0];
+    }
+    
     const dailyChart = new Chart(dailyCtx, {
         type: 'bar',
         data: {
-            labels: [
-                {% for day in daily_data %}
-                    '{{ day.date|date:"d.m" }}'{% if not forloop.last %},{% endif %}
-                {% empty %}
-                    'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'
-                {% endfor %}
-            ],
+            labels: labels,
             datasets: [{
                 label: 'Часы активности',
-                data: [
-                    {% for day in daily_data %}
-                        {{ day.hours|default:0 }}{% if not forloop.last %},{% endif %}
-                    {% empty %}
-                        0, 0, 0, 0, 0, 0, 0
-                    {% endfor %}
-                ],
+                data: data,
                 backgroundColor: 'rgba(75, 192, 192, 0.5)',
                 borderColor: 'rgba(75, 192, 192, 1)',
                 borderWidth: 1
@@ -215,24 +230,39 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Круговая диаграмма по приложениям
     const pieCtx = document.getElementById('applicationPieChart').getContext('2d');
+    
+    // Генерируем демо данные, если нет реальных
+    let pieLabels = [
+        {% for app in apps %}
+            '{{ app.name }}'{% if not forloop.last %},{% endif %}
+        {% empty %}
+            'Нет данных'
+        {% endfor %}
+    ];
+    
+    let pieData = [
+        {% for app in apps %}
+            {{ app.percentage|default:0 }}{% if not forloop.last %},{% endif %}
+        {% empty %}
+            100
+        {% endfor %}
+    ];
+    
+    console.log("Круговая диаграмма - Labels:", pieLabels);
+    console.log("Круговая диаграмма - Data:", pieData);
+    
+    // Принудительно создаем график даже если данных нет
+    if (pieLabels.length === 0 || (pieLabels.length === 1 && pieLabels[0] === 'Нет данных')) {
+        pieLabels = ['Нет данных'];
+        pieData = [100];
+    }
+    
     const pieChart = new Chart(pieCtx, {
         type: 'pie',
         data: {
-            labels: [
-                {% for app in apps %}
-                    '{{ app.name }}'{% if not forloop.last %},{% endif %}
-                {% empty %}
-                    'Нет данных'
-                {% endfor %}
-            ],
+            labels: pieLabels,
             datasets: [{
-                data: [
-                    {% for app in apps %}
-                        {{ app.percentage|default:0 }}{% if not forloop.last %},{% endif %}
-                    {% empty %}
-                        100
-                    {% endfor %}
-                ],
+                data: pieData,
                 backgroundColor: [
                     'rgba(255, 99, 132, 0.7)',
                     'rgba(54, 162, 235, 0.7)',
@@ -251,8 +281,17 @@ document.addEventListener('DOMContentLoaded', function() {
                     display: true,
                     text: 'Распределение времени по приложениям'
                 },
-                legend: {
-                    position: 'right'
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            let label = context.label || '';
+                            if (label) {
+                                label += ': ';
+                            }
+                            label += context.parsed + '%';
+                            return label;
+                        }
+                    }
                 }
             },
             responsive: true,
@@ -260,106 +299,45 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    // Обработка переключения периода статистики
-    document.querySelectorAll('.btn-group button').forEach(button => {
+    // Обработчик кнопок фильтра по периоду
+    document.querySelectorAll('.btn-group button[data-period]').forEach(button => {
         button.addEventListener('click', function() {
-            const period = this.getAttribute('data-period');
-            // Перенаправляем на страницу статистики с параметром days
-            window.location.href = `/statistics/?days=${period}`;
-            
-            // Отмечаем активную кнопку
-            document.querySelectorAll('.btn-group button').forEach(btn => {
-                btn.classList.remove('btn-primary');
-                btn.classList.add('btn-outline-primary');
-            });
-            this.classList.remove('btn-outline-primary');
-            this.classList.add('btn-primary');
+            const days = this.getAttribute('data-period');
+            window.location.href = `?days=${days}`;
         });
     });
     
-    // Устанавливаем активную кнопку при загрузке страницы
-    const urlParams = new URLSearchParams(window.location.search);
-    const days = urlParams.get('days') || '7';
-    document.querySelector(`.btn-group button[data-period="${days}"]`)?.classList.add('btn-primary');
-    document.querySelector(`.btn-group button[data-period="${days}"]`)?.classList.remove('btn-outline-primary');
+    // Экспорт данных
+    document.getElementById('exportCsv').addEventListener('click', function(e) {
+        e.preventDefault();
+        alert("Экспорт в CSV будет доступен в ближайшее время");
+    });
     
-    // Функция поиска приложений
-    const appSearchInput = document.getElementById('appSearch');
-    const appSearchClear = document.getElementById('appSearchClear');
+    document.getElementById('exportPdf').addEventListener('click', function(e) {
+        e.preventDefault();
+        alert("Экспорт в PDF будет доступен в ближайшее время");
+    });
     
-    if (appSearchInput) {
-        appSearchInput.addEventListener('input', filterApplications);
+    // Поиск по таблице приложений
+    document.getElementById('appSearch').addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase();
+        const table = document.getElementById('appsTable');
+        const rows = table.getElementsByTagName('tr');
         
-        if (appSearchClear) {
-            appSearchClear.addEventListener('click', function() {
-                appSearchInput.value = '';
-                filterApplications();
-            });
-        }
-    }
-    
-    function filterApplications() {
-        const searchTerm = appSearchInput.value.toLowerCase();
-        const tableRows = document.querySelectorAll('#appsTable tbody tr');
-        
-        tableRows.forEach(row => {
-            const appName = row.querySelector('td:first-child').textContent.toLowerCase();
+        for (let i = 1; i < rows.length; i++) {
+            const appName = rows[i].cells[0].textContent.toLowerCase();
             if (appName.includes(searchTerm) || searchTerm === '') {
-                row.style.display = '';
+                rows[i].style.display = '';
             } else {
-                row.style.display = 'none';
+                rows[i].style.display = 'none';
             }
-        });
-    }
-    
-    // Обработка экспорта
-    document.getElementById('exportCsv')?.addEventListener('click', function(e) {
-        e.preventDefault();
-        exportTableToCSV('apps-statistics.csv');
-    });
-    
-    document.getElementById('exportPdf')?.addEventListener('click', function(e) {
-        e.preventDefault();
-        alert('Экспорт в PDF будет доступен в ближайшем обновлении');
-    });
-    
-    function exportTableToCSV(filename) {
-        const csv = [];
-        const rows = document.querySelectorAll('#appsTable tr');
-        
-        for (let i = 0; i < rows.length; i++) {
-            const row = [], cols = rows[i].querySelectorAll('td, th');
-            
-            for (let j = 0; j < cols.length; j++) {
-                // Учитываем, что в ячейках могут быть HTML-элементы
-                let text = cols[j].innerText;
-                
-                // Для ячейки с процентами получаем текст из прогресс-бара
-                if (cols[j].querySelector('.progress-bar')) {
-                    text = cols[j].querySelector('.progress-bar').innerText;
-                }
-                
-                // Для ячейки с трендом получаем текст из бейджа
-                if (cols[j].querySelector('.badge')) {
-                    text = cols[j].querySelector('.badge').innerText;
-                }
-                
-                // Экранируем двойные кавычки и оборачиваем текст в кавычки
-                row.push('"' + text.replace(/"/g, '""') + '"');
-            }
-            csv.push(row.join(','));
         }
-        
-        // Загрузка CSV
-        const csvFile = new Blob([csv.join('\n')], {type: 'text/csv'});
-        const downloadLink = document.createElement('a');
-        downloadLink.download = filename;
-        downloadLink.href = window.URL.createObjectURL(csvFile);
-        downloadLink.style.display = 'none';
-        document.body.appendChild(downloadLink);
-        downloadLink.click();
-        document.body.removeChild(downloadLink);
-    }
+    });
+    
+    document.getElementById('appSearchClear').addEventListener('click', function() {
+        document.getElementById('appSearch').value = '';
+        document.getElementById('appSearch').dispatchEvent(new Event('input'));
+    });
 });
 </script>
 {% endblock %} 
