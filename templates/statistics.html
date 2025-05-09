@@ -7,11 +7,22 @@
     <div class="col-md-12">
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
-                <h3 class="card-title mb-0">Статистика за последние 7 дней</h3>
-                <div class="btn-group">
-                    <button type="button" class="btn btn-sm btn-outline-primary" data-period="7">7 дней</button>
-                    <button type="button" class="btn btn-sm btn-outline-primary" data-period="14">14 дней</button>
-                    <button type="button" class="btn btn-sm btn-outline-primary" data-period="30">30 дней</button>
+                <h3 class="card-title mb-0">Статистика</h3>
+                <div class="d-flex gap-2">
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-sm btn-outline-primary" data-period="7">7 дней</button>
+                        <button type="button" class="btn btn-sm btn-outline-primary" data-period="14">14 дней</button>
+                        <button type="button" class="btn btn-sm btn-outline-primary" data-period="30">30 дней</button>
+                    </div>
+                    <div class="dropdown">
+                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="exportDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                            Экспорт
+                        </button>
+                        <ul class="dropdown-menu" aria-labelledby="exportDropdown">
+                            <li><a class="dropdown-item" href="#" id="exportCsv">CSV</a></li>
+                            <li><a class="dropdown-item" href="#" id="exportPdf">PDF</a></li>
+                        </ul>
+                    </div>
                 </div>
             </div>
             <div class="card-body">
@@ -58,21 +69,31 @@
 <div class="row mt-4">
     <div class="col-md-6">
         <div class="card">
-            <div class="card-header">
+            <div class="card-header d-flex justify-content-between align-items-center">
                 <h3 class="card-title">Активность по дням</h3>
+                <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="collapse" data-bs-target="#dailyActivityCollapse" aria-expanded="true" aria-controls="dailyActivityCollapse">
+                    <i class="fas fa-expand"></i>
+                </button>
             </div>
-            <div class="card-body">
-                <canvas id="dailyActivityChart" width="400" height="250"></canvas>
+            <div class="collapse show" id="dailyActivityCollapse">
+                <div class="card-body">
+                    <canvas id="dailyActivityChart" width="400" height="250"></canvas>
+                </div>
             </div>
         </div>
     </div>
     <div class="col-md-6">
         <div class="card">
-            <div class="card-header">
+            <div class="card-header d-flex justify-content-between align-items-center">
                 <h3 class="card-title">Распределение времени</h3>
+                <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="collapse" data-bs-target="#appPieCollapse" aria-expanded="true" aria-controls="appPieCollapse">
+                    <i class="fas fa-expand"></i>
+                </button>
             </div>
-            <div class="card-body">
-                <canvas id="applicationPieChart" width="400" height="250"></canvas>
+            <div class="collapse show" id="appPieCollapse">
+                <div class="card-body">
+                    <canvas id="applicationPieChart" width="400" height="250"></canvas>
+                </div>
             </div>
         </div>
     </div>
@@ -81,12 +102,16 @@
 <div class="row mt-4">
     <div class="col-md-12">
         <div class="card">
-            <div class="card-header">
+            <div class="card-header d-flex justify-content-between align-items-center">
                 <h3 class="card-title">Топ приложений</h3>
+                <div class="input-group input-group-sm" style="width: 250px;">
+                    <input type="text" class="form-control" id="appSearch" placeholder="Поиск приложения...">
+                    <button class="btn btn-outline-secondary" type="button" id="appSearchClear">×</button>
+                </div>
             </div>
             <div class="card-body">
                 <div class="table-responsive">
-                    <table class="table table-striped">
+                    <table class="table table-striped" id="appsTable">
                         <thead>
                             <tr>
                                 <th>Приложение</th>
@@ -257,6 +282,84 @@ document.addEventListener('DOMContentLoaded', function() {
     const days = urlParams.get('days') || '7';
     document.querySelector(`.btn-group button[data-period="${days}"]`)?.classList.add('btn-primary');
     document.querySelector(`.btn-group button[data-period="${days}"]`)?.classList.remove('btn-outline-primary');
+    
+    // Функция поиска приложений
+    const appSearchInput = document.getElementById('appSearch');
+    const appSearchClear = document.getElementById('appSearchClear');
+    
+    if (appSearchInput) {
+        appSearchInput.addEventListener('input', filterApplications);
+        
+        if (appSearchClear) {
+            appSearchClear.addEventListener('click', function() {
+                appSearchInput.value = '';
+                filterApplications();
+            });
+        }
+    }
+    
+    function filterApplications() {
+        const searchTerm = appSearchInput.value.toLowerCase();
+        const tableRows = document.querySelectorAll('#appsTable tbody tr');
+        
+        tableRows.forEach(row => {
+            const appName = row.querySelector('td:first-child').textContent.toLowerCase();
+            if (appName.includes(searchTerm) || searchTerm === '') {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    }
+    
+    // Обработка экспорта
+    document.getElementById('exportCsv')?.addEventListener('click', function(e) {
+        e.preventDefault();
+        exportTableToCSV('apps-statistics.csv');
+    });
+    
+    document.getElementById('exportPdf')?.addEventListener('click', function(e) {
+        e.preventDefault();
+        alert('Экспорт в PDF будет доступен в ближайшем обновлении');
+    });
+    
+    function exportTableToCSV(filename) {
+        const csv = [];
+        const rows = document.querySelectorAll('#appsTable tr');
+        
+        for (let i = 0; i < rows.length; i++) {
+            const row = [], cols = rows[i].querySelectorAll('td, th');
+            
+            for (let j = 0; j < cols.length; j++) {
+                // Учитываем, что в ячейках могут быть HTML-элементы
+                let text = cols[j].innerText;
+                
+                // Для ячейки с процентами получаем текст из прогресс-бара
+                if (cols[j].querySelector('.progress-bar')) {
+                    text = cols[j].querySelector('.progress-bar').innerText;
+                }
+                
+                // Для ячейки с трендом получаем текст из бейджа
+                if (cols[j].querySelector('.badge')) {
+                    text = cols[j].querySelector('.badge').innerText;
+                }
+                
+                // Экранируем двойные кавычки и оборачиваем текст в кавычки
+                row.push('"' + text.replace(/"/g, '""') + '"');
+            }
+            csv.push(row.join(','));
+        }
+        
+        // Загрузка CSV
+        const csvFile = new Blob([csv.join('\n')], {type: 'text/csv'});
+        const downloadLink = document.createElement('a');
+        downloadLink.download = filename;
+        downloadLink.href = window.URL.createObjectURL(csvFile);
+        downloadLink.style.display = 'none';
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+        document.body.removeChild(downloadLink);
+    }
 });
 </script>
 {% endblock %} 

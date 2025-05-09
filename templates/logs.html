@@ -3,8 +3,42 @@
 {% block title %}Логи - Time Tracker{% endblock %}
 
 {% block content %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Фильтры</h3>
+            </div>
+            <div class="card-body">
+                <form id="filterForm" method="GET" class="row g-3">
+                    <div class="col-md-3">
+                        <label for="dateFrom" class="form-label">Дата от</label>
+                        <input type="date" class="form-control" id="dateFrom" name="date_from" value="{{ request.GET.date_from }}">
+                    </div>
+                    <div class="col-md-3">
+                        <label for="dateTo" class="form-label">Дата до</label>
+                        <input type="date" class="form-control" id="dateTo" name="date_to" value="{{ request.GET.date_to }}">
+                    </div>
+                    <div class="col-md-4">
+                        <label for="application" class="form-label">Приложение</label>
+                        <select class="form-select" id="application" name="application">
+                            <option value="">Все приложения</option>
+                            {% for app in applications %}
+                                <option value="{{ app.id }}" {% if request.GET.application == app.id|stringformat:"s" %}selected{% endif %}>{{ app.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary w-100">Применить</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="row">
-    <div class="col-md-6">
+    <div class="col-md-12">
         <div class="card">
             <div class="card-header">
                 <h3 class="card-title">Активность пользователя</h3>
@@ -24,9 +58,9 @@
                             {% for activity in activities %}
                             <tr>
                                 <td>{{ activity.start_time|date:"Y-m-d H:i:s" }}</td>
-                                <td>{{ activity.duration }}</td>
+                                <td>{{ activity.duration|default:"00:00:00" }}</td>
                                 <td>{{ activity.application.name }}</td>
-                                <td>{{ activity.keyboard_presses }}</td>
+                                <td>{{ activity.keyboard_presses|default:"0" }}</td>
                             </tr>
                             {% empty %}
                             <tr>
@@ -41,7 +75,7 @@
                     <ul class="pagination justify-content-center">
                         {% if page_obj.has_previous %}
                         <li class="page-item">
-                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Назад</a>
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.date_from %}&date_from={{ request.GET.date_from }}{% endif %}{% if request.GET.date_to %}&date_to={{ request.GET.date_to }}{% endif %}{% if request.GET.application %}&application={{ request.GET.application }}{% endif %}">Назад</a>
                         </li>
                         {% endif %}
                         <li class="page-item active">
@@ -49,7 +83,7 @@
                         </li>
                         {% if page_obj.has_next %}
                         <li class="page-item">
-                            <a class="page-link" href="?page={{ page_obj.next_page_number }}">Вперед</a>
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.date_from %}&date_from={{ request.GET.date_from }}{% endif %}{% if request.GET.date_to %}&date_to={{ request.GET.date_to }}{% endif %}{% if request.GET.application %}&application={{ request.GET.application }}{% endif %}">Вперед</a>
                         </li>
                         {% endif %}
                     </ul>
@@ -58,7 +92,10 @@
             </div>
         </div>
     </div>
-    <div class="col-md-6">
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-12">
         <div class="card">
             <div class="card-header">
                 <h3 class="card-title">Клавиатурная активность</h3>
@@ -97,45 +134,13 @@
 {% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Загрузка списка приложений
-    fetch('/api/applications/')
-        .then(response => response.json())
-        .then(data => {
-            const select = document.getElementById('application');
-            if (select) {
-                data.forEach(app => {
-                    const option = document.createElement('option');
-                    option.value = app.id;
-                    option.textContent = app.name;
-                    select.appendChild(option);
-                });
-            }
-        })
-        .catch(error => console.error('Ошибка загрузки приложений:', error));
-
-    // Обработка формы фильтров
-    const filterForm = document.getElementById('filterForm');
-    if (filterForm) {
-        filterForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            loadLogs();
+    // При выборе даты или приложения автоматически отправляем форму
+    const formInputs = document.querySelectorAll('#filterForm select, #filterForm input[type="date"]');
+    formInputs.forEach(input => {
+        input.addEventListener('change', function() {
+            document.getElementById('filterForm').submit();
         });
-    }
-
-    function loadLogs() {
-        const dateFrom = document.getElementById('dateFrom').value;
-        const dateTo = document.getElementById('dateTo').value;
-        const application = document.getElementById('application').value;
-
-        // Формируем URL с параметрами
-        const url = new URL(window.location.href);
-        if (dateFrom) url.searchParams.set('date_from', dateFrom);
-        if (dateTo) url.searchParams.set('date_to', dateTo);
-        if (application) url.searchParams.set('application', application);
-
-        // Перенаправляем на страницу с фильтрами
-        window.location.href = url.toString();
-    }
+    });
 });
 </script>
 {% endblock %} 
