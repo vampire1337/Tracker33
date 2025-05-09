@@ -6,7 +6,7 @@ from PyQt5.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, QH
                            QPushButton, QLabel, QListWidget, QLineEdit, QCheckBox,
                            QMessageBox, QSystemTrayIcon, QMenu, QAction, QDialog,
                            QFormLayout, QDialogButtonBox, QStatusBar, QProgressBar,
-                           QTabWidget, QListWidgetItem, QScrollArea, QTableWidget, QTableWidgetItem, QAbstractItemView, QHeaderView, QComboBox)
+                           QTabWidget, QListWidgetItem, QScrollArea, QTableWidget, QTableWidgetItem, QAbstractItemView, QHeaderView, QComboBox, QFrame)
 from PyQt5.QtCore import QTimer, Qt, QUrl, QThread, pyqtSignal, QSettings
 from PyQt5.QtGui import QIcon, QDesktopServices
 import psutil
@@ -221,69 +221,223 @@ class LoginDialog(QDialog):
         super().__init__(parent)
         self.setWindowTitle("Авторизация")
         self.api_client = None
+        
+        # Запрещаем закрытие диалога крестиком
+        self.setWindowFlags(self.windowFlags() & ~Qt.WindowCloseButtonHint)
+        
+        # Флаг, определяющий, могут ли пользователи изменять URL сервера
+        self.allow_close_without_auth = False
+        
+        # Чтение последнего использованного URL из конфигурации
+        self.last_server_url = "http://127.0.0.1:8000"
+        parent_app = self.parent()
+        if parent_app and hasattr(parent_app, 'config'):
+            config = parent_app.config
+            if config.has_section('Credentials') and config.has_option('Credentials', 'api_base_url'):
+                base_url = config.get('Credentials', 'api_base_url')
+                self.last_server_url = base_url.rstrip('/api/')
+            elif config.has_section('Server') and config.has_option('Server', 'base_url'):
+                self.last_server_url = config.get('Server', 'base_url')
+        
         self.setup_ui()
         
     def setup_ui(self):
         layout = QFormLayout()
         
+        # Добавляем информационный текст
+        info_label = QLabel("Перед началом работы необходимо указать адрес сервера и авторизоваться.\nЕсли сервер находится на этом же компьютере, используйте адрес: http://127.0.0.1:8000")
+        info_label.setWordWrap(True)
+        layout.addRow(info_label)
+        
+        # Разделитель
+        line = QFrame()
+        line.setFrameShape(QFrame.HLine)
+        line.setFrameShadow(QFrame.Sunken)
+        layout.addRow(line)
+        
         self.server_url = QLineEdit()
-        self.server_url.setText("http://127.0.0.1:8000")  # Значение по умолчанию
+        self.server_url.setText(self.last_server_url)
         self.username = QLineEdit()
         self.password = QLineEdit()
         self.password.setEchoMode(QLineEdit.Password)
         
+        # Checkbox для разрешения работы в оффлайн-режиме (только для отладки)
+        self.offline_mode_checkbox = QCheckBox("Разрешить работу в оффлайн-режиме")
+        self.offline_mode_checkbox.setChecked(False)
+        self.offline_mode_checkbox.stateChanged.connect(self.toggle_offline_mode)
+        
         layout.addRow("URL сервера:", self.server_url)
         layout.addRow("Имя пользователя:", self.username)
         layout.addRow("Пароль:", self.password)
+        layout.addRow(self.offline_mode_checkbox)
         
+        # Кнопка проверки подключения
+        self.test_button = QPushButton("Проверить подключение к серверу")
+        self.test_button.clicked.connect(self.test_connection)
+        layout.addRow(self.test_button)
+        
+        # Кнопки действий
         buttons = QDialogButtonBox(
             QDialogButtonBox.Ok | QDialogButtonBox.Cancel,
             Qt.Horizontal, self)
         buttons.accepted.connect(self.authenticate)
         buttons.rejected.connect(self.reject)
+        self.buttons = buttons
         
         layout.addRow(buttons)
         self.setLayout(layout)
+    
+    def toggle_offline_mode(self, state):
+        """Включает/выключает возможность работы в оффлайн-режиме"""
+        self.allow_close_without_auth = state == Qt.Checked
+        if state == Qt.Checked:
+            self.username.setEnabled(False)
+            self.password.setEnabled(False)
+            self.buttons.button(QDialogButtonBox.Ok).setText("Продолжить без авторизации")
+        else:
+            self.username.setEnabled(True)
+            self.password.setEnabled(True)
+            self.buttons.button(QDialogButtonBox.Ok).setText("OK")
+    
+    def closeEvent(self, event):
+        """Переопределяем обработку закрытия окна для предотвращения закрытия без авторизации"""
+        if self.allow_close_without_auth:
+            event.accept()
+        else:
+            # Показываем сообщение, что авторизация обязательна
+            QMessageBox.critical(self, "Требуется авторизация", 
+                                "Для работы приложения требуется авторизация!\n\n"
+                                "Если вы не можете подключиться к серверу, включите оффлайн-режим.")
+            event.ignore()
+    
+    def test_connection(self):
+        """Проверяет подключение к серверу"""
+        server_url = self.server_url.text().strip()
+        
+        if not server_url:
+            QMessageBox.warning(self, "Ошибка", "Введите URL сервера")
+            return
+        
+        # Если URL не содержит протокол, добавляем http://
+        if not server_url.startswith('http://') and not server_url.startswith('https://'):
+            server_url = 'http://' + server_url
+            self.server_url.setText(server_url)
+        
+        try:
+            # Добавляем таймаут для соединения
+            response = requests.get(f"{server_url}/api/", timeout=5)
+            if response.status_code == 200:
+                QMessageBox.information(self, "Успех", f"Подключение к серверу {server_url} успешно установлено!")
+            else:
+                QMessageBox.warning(self, "Предупреждение", 
+                                   f"Сервер доступен, но вернул код {response.status_code}. "
+                                   f"API может быть недоступно.")
+        except requests.exceptions.ConnectionError:
+            QMessageBox.critical(self, "Ошибка соединения", 
+                               f"Не удалось установить соединение с сервером {server_url}. "
+                               f"Проверьте, что сервер запущен и URL указан правильно.")
+        except requests.exceptions.Timeout:
+            QMessageBox.critical(self, "Таймаут соединения", 
+                               f"Превышено время ожидания ответа от сервера {server_url}.")
+        except Exception as e:
+            QMessageBox.critical(self, "Ошибка", f"Произошла ошибка при проверке соединения: {str(e)}")
         
     def authenticate(self):
-        server_url = self.server_url.text()
-        username = self.username.text()
+        # Если включен оффлайн-режим, просто продолжаем без авторизации
+        if self.offline_mode_checkbox.isChecked():
+            parent_app = self.parent()
+            if parent_app and hasattr(parent_app, 'config'):
+                config = parent_app.config
+                if not config.has_section('Settings'):
+                    config.add_section('Settings')
+                
+                # Включаем демо-режим
+                config.set('Settings', 'demo_mode', 'True')
+                
+                # Сохраняем URL сервера для будущего использования
+                if not config.has_section('Credentials'):
+                    config.add_section('Credentials')
+                config.set('Credentials', 'api_base_url', self.server_url.text().strip())
+                
+                # Сохраняем конфигурацию
+                parent_app._save_config(config)
+                logger.info("Приложение работает в оффлайн-режиме")
+            
+            self.accept()
+            return
+            
+        server_url = self.server_url.text().strip()
+        username = self.username.text().strip()
         password = self.password.text()
         
         if not all([server_url, username, password]):
             QMessageBox.warning(self, "Ошибка", "Заполните все поля")
             return
             
+        # Если URL не содержит протокол, добавляем http://
+        if not server_url.startswith('http://') and not server_url.startswith('https://'):
+            server_url = 'http://' + server_url
+            self.server_url.setText(server_url)
+        
+        # Создаем APIClient с таймаутом
         self.api_client = APIClient(server_url)
-        success, data = self.api_client.login(username, password)
-        if success:
-            # Сохраняем токен и данные пользователя в конфигурации
-            # Получаем доступ к объекту конфигурации через родительское окно
-            parent_app = self.parent()
-            if parent_app and hasattr(parent_app, 'config'):
-                config = parent_app.config
-                if not config.has_section('Credentials'):
-                    config.add_section('Credentials')
-                
-                # Сохраняем токен и данные пользователя
-                config.set('Credentials', 'api_base_url', server_url.rstrip('/') + '/api/')
-                config.set('Credentials', 'auth_token', self.api_client.token)
-                config.set('Credentials', 'username', username)
-                # Устанавливаем user_id по умолчанию, так как data является токеном, а не словарем
-                config.set('Credentials', 'user_id', '1')  # Устанавливаем значение по умолчанию
-                
-                # Отключаем демо-режим после успешной авторизации
-                if not config.has_section('Settings'):
-                    config.add_section('Settings')
-                config.set('Settings', 'demo_mode', 'False')
-                
-                # Сохраняем конфигурацию
-                parent_app._save_config(config)
-                logger.info("Токен авторизации успешно сохранен в конфигурации.")
+        
+        try:
+            # Отключаем кнопки на время авторизации
+            self.buttons.button(QDialogButtonBox.Ok).setEnabled(False)
+            self.buttons.button(QDialogButtonBox.Cancel).setEnabled(False)
+            self.test_button.setEnabled(False)
+            QApplication.processEvents()  # Обновляем UI
             
-            self.accept()
-        else:
-            QMessageBox.warning(self, "Ошибка", f"Неверные учетные данные или проблемы с сервером: {data}")
+            # Пытаемся авторизоваться
+            success = self.api_client.authenticate(username, password)
+            
+            if success:
+                # Сохраняем токен и данные пользователя в конфигурации
+                # Получаем доступ к объекту конфигурации через родительское окно
+                parent_app = self.parent()
+                if parent_app and hasattr(parent_app, 'config'):
+                    config = parent_app.config
+                    if not config.has_section('Credentials'):
+                        config.add_section('Credentials')
+                    
+                    # Сохраняем токен и данные пользователя
+                    config.set('Credentials', 'api_base_url', server_url.rstrip('/') + '/api/')
+                    config.set('Credentials', 'auth_token', self.api_client.token)
+                    config.set('Credentials', 'username', username)
+                    # Устанавливаем user_id по умолчанию, так как data является токеном, а не словарем
+                    config.set('Credentials', 'user_id', '1')  # Устанавливаем значение по умолчанию
+                    
+                    # Отключаем демо-режим после успешной авторизации
+                    if not config.has_section('Settings'):
+                        config.add_section('Settings')
+                    config.set('Settings', 'demo_mode', 'False')
+                    
+                    # Сохраняем конфигурацию
+                    parent_app._save_config(config)
+                    logger.info("Токен авторизации успешно сохранен в конфигурации.")
+                
+                self.accept()
+            else:
+                QMessageBox.warning(self, "Ошибка", "Неверные учетные данные или проблемы с сервером")
+                # Включаем кнопки обратно
+                self.buttons.button(QDialogButtonBox.Ok).setEnabled(True)
+                self.buttons.button(QDialogButtonBox.Cancel).setEnabled(True)
+                self.test_button.setEnabled(True)
+        except requests.exceptions.ConnectionError:
+            QMessageBox.critical(self, "Ошибка соединения", 
+                               f"Не удалось установить соединение с сервером {server_url}. "
+                               f"Проверьте, что сервер запущен и URL указан правильно.")
+            # Включаем кнопки обратно
+            self.buttons.button(QDialogButtonBox.Ok).setEnabled(True)
+            self.buttons.button(QDialogButtonBox.Cancel).setEnabled(True)
+            self.test_button.setEnabled(True)
+        except Exception as e:
+            QMessageBox.warning(self, "Ошибка", f"Проблема при авторизации: {e}")
+            # Включаем кнопки обратно
+            self.buttons.button(QDialogButtonBox.Ok).setEnabled(True)
+            self.buttons.button(QDialogButtonBox.Cancel).setEnabled(True)
+            self.test_button.setEnabled(True)
 
 class TimeTrackerApp(QMainWindow):
     # Сигналы для взаимодействия с GUI из других потоков
@@ -1046,76 +1200,93 @@ class TimeTrackerApp(QMainWindow):
         """Показывает диалог авторизации, если токен отсутствует или недействителен"""
         # Этот метод будет вызван после того, как главный цикл событий Qt запустится
         
-        # Проверяем токен во всех возможных местах
-        auth_token = None
-        token_is_valid = False
+        # Предотвращаем запуск множественных диалогов
+        if hasattr(self, '_login_dialog_active') and self._login_dialog_active:
+            logger.warning("Диалог авторизации уже активен, пропускаем повторный вызов")
+            return
+            
+        # Устанавливаем флаг, что диалог авторизации активен
+        self._login_dialog_active = True
         
-        # Проверяем токен в секции Credentials
-        if self.config.has_section('Credentials') and self.config.has_option('Credentials', 'auth_token'):
-            auth_token = self.config.get('Credentials', 'auth_token')
+        try:
+            # Проверяем токен во всех возможных местах
+            auth_token = None
+            token_is_valid = False
             
-        # Если не нашли, проверяем в секции Server
-        if not auth_token and self.config.has_section('Server') and self.config.has_option('Server', 'token'):
-            auth_token = self.config.get('Server', 'token')
-            
-        # Если не нашли, проверяем в секции API
-        if not auth_token and self.config.has_section('API') and self.config.has_option('API', 'token'):
-            auth_token = self.config.get('API', 'token')
-            
-        # Если не нашли, проверяем в корне файла
-        if not auth_token and self.config.has_option('DEFAULT', 'token'):
-            auth_token = self.config.get('DEFAULT', 'token')
-            
-        # Если токен найден, проверяем его валидность
-        if auth_token:
-            try:
-                # Декодируем токен и проверяем срок действия
-                token_data = jwt.decode(auth_token, options={"verify_signature": False})
-                exp_timestamp = token_data.get('exp')
-                if exp_timestamp:
-                    expiration_time = datetime.fromtimestamp(exp_timestamp)
-                    if datetime.now() < expiration_time:
-                        token_is_valid = True
-                        logger.info("Пользователь уже аутентифицирован (токен действителен).")
+            # Проверяем токен в секции Credentials
+            if self.config.has_section('Credentials') and self.config.has_option('Credentials', 'auth_token'):
+                auth_token = self.config.get('Credentials', 'auth_token')
+                
+            # Если не нашли, проверяем в секции Server
+            if not auth_token and self.config.has_section('Server') and self.config.has_option('Server', 'token'):
+                auth_token = self.config.get('Server', 'token')
+                
+            # Если не нашли, проверяем в секции API
+            if not auth_token and self.config.has_section('API') and self.config.has_option('API', 'token'):
+                auth_token = self.config.get('API', 'token')
+                
+            # Если не нашли, проверяем в корне файла
+            if not auth_token and self.config.has_option('DEFAULT', 'token'):
+                auth_token = self.config.get('DEFAULT', 'token')
+                
+            # Если токен найден, проверяем его валидность
+            if auth_token:
+                try:
+                    # Декодируем токен и проверяем срок действия
+                    token_data = jwt.decode(auth_token, options={"verify_signature": False})
+                    exp_timestamp = token_data.get('exp')
+                    if exp_timestamp:
+                        expiration_time = datetime.fromtimestamp(exp_timestamp)
+                        if datetime.now() < expiration_time:
+                            token_is_valid = True
+                            logger.info("Пользователь уже аутентифицирован (токен действителен).")
+                        else:
+                            logger.warning(f"Токен истек {expiration_time}. Требуется повторная авторизация.")
                     else:
-                        logger.warning(f"Токен истек {expiration_time}. Требуется повторная авторизация.")
+                        logger.warning("Токен не содержит информации о сроке действия.")
+                except Exception as e:
+                    logger.error(f"Ошибка при проверке токена: {e}")
+                    
+            # Если токен не найден или недействителен, показываем диалог авторизации
+            if not auth_token or not token_is_valid:
+                logger.info("Токен отсутствует или недействителен, вызывается диалог входа.")
+                
+                # Создаем и запускаем диалог для авторизации
+                login_dialog = LoginDialog(parent=self)
+                if login_dialog.exec_() == QDialog.Accepted:
+                    # После успешного логина LoginDialog должен обновить self.config
+                    # и атрибуты self.api_base_url, self.user_id, self.session.headers
+                    self.api_base_url = self.config.get('Credentials', 'api_base_url')
+                    self.user_id = self.config.get('Credentials', 'user_id')
+                    new_auth_token = self.config.get('Credentials', 'auth_token')
+                    self.session.headers.update({'Authorization': f'Bearer {new_auth_token}'})
+                    logger.info("Вход выполнен успешно через диалог.")
+                    # Перезапускаем таймер отправки данных, если интервал мог измениться
+                    send_interval_seconds = self.config.getint('Settings', 'send_interval_seconds', fallback=60)
+                    self.send_data_timer.setInterval(send_interval_seconds * 1000)
+                    
+                    # Обновляем состояние подключения в интерфейсе
+                    self.connection_status.setText(f"Статус подключения: Подключено ({self.api_base_url})")
+                    self.connection_status.setStyleSheet("QLabel { color: green; }")
                 else:
-                    logger.warning("Токен не содержит информации о сроке действия.")
-            except Exception as e:
-                logger.error(f"Ошибка при проверке токена: {e}")
-                
-        # Если токен не найден или недействителен, показываем диалог авторизации
-        if not auth_token or not token_is_valid:
-            logger.info("Токен отсутствует или недействителен, вызывается диалог входа.")
-            login_dialog = LoginDialog(parent=self) 
-            if login_dialog.exec_() == QDialog.Accepted:
-                # После успешного логина LoginDialog должен обновить self.config
-                # и атрибуты self.api_base_url, self.user_id, self.session.headers
-                self.api_base_url = self.config.get('Credentials', 'api_base_url')
-                self.user_id = self.config.get('Credentials', 'user_id')
-                new_auth_token = self.config.get('Credentials', 'auth_token')
-                self.session.headers.update({'Authorization': f'Bearer {new_auth_token}'})
-                logger.info("Вход выполнен успешно через диалог.")
-                # Перезапускаем таймер отправки данных, если интервал мог измениться
-                send_interval_seconds = self.config.getint('Settings', 'send_interval_seconds', fallback=60)
-                self.send_data_timer.setInterval(send_interval_seconds * 1000)
-                QTimer.singleShot(0, self.send_activity_data)
-                
-                # Обновляем состояние подключения в интерфейсе
-                self.connection_status.setText(f"Статус подключения: Подключено ({self.user_id})")
-                self.connection_status.setStyleSheet("QLabel { color: green; }")
+                    logger.warning("Диалог входа отменен пользователем или работа в оффлайн-режиме.")
+                    # Проверяем, выбран ли оффлайн-режим
+                    if self.config.getboolean('Settings', 'demo_mode', fallback=False):
+                        self.connection_status.setText("Статус подключения: Оффлайн-режим")
+                        self.connection_status.setStyleSheet("QLabel { color: orange; }")
+                    else:
+                        self.connection_status.setText("Статус подключения: Не авторизовано")
+                        self.connection_status.setStyleSheet("QLabel { color: red; }")
+                        QMessageBox.warning(self, "Внимание", 
+                                        "Авторизация не выполнена. Отслеживание активности будет работать в ограниченном режиме.")
             else:
-                logger.warning("Диалог входа отменен пользователем. Приложение может не функционировать корректно.")
-                # Уведомляем пользователя о возможных ограничениях
-                self.connection_status.setText("Статус подключения: Не авторизовано")
-                self.connection_status.setStyleSheet("QLabel { color: red; }")
-                QMessageBox.warning(self, "Внимание", 
-                                   "Авторизация не выполнена. Отслеживание активности будет работать в ограниченном режиме.")
-        else:
-            # Если токен действителен, обновляем UI
-            self.connection_status.setText(f"Статус подключения: Подключено ({self.user_id})")
-            self.connection_status.setStyleSheet("QLabel { color: green; }")
-            logger.info("Пользователь уже аутентифицирован (токен найден и действителен).")
+                # Если токен действителен, обновляем UI
+                self.connection_status.setText(f"Статус подключения: Подключено ({self.api_base_url})")
+                self.connection_status.setStyleSheet("QLabel { color: green; }")
+                logger.info("Пользователь уже аутентифицирован (токен найден и действителен).")
+        finally:
+            # Снимаем флаг после завершения диалога
+            self._login_dialog_active = False
 
     def toggle_productive(self):
         """Переключает статус полезности приложения"""
@@ -1991,70 +2162,77 @@ class TimeTrackerApp(QMainWindow):
         dialog.exec_()
 
     def check_connection(self):
-        """Проверяет подключение к серверу и валидность токена."""
-        try:
-            # Проверяем токен во всех возможных местах
-            auth_token = None
-            token_is_valid = False
+        """Проверяет соединение с сервером"""
+        # Если включен демо-режим, пропускаем проверку
+        if self.config.getboolean('Settings', 'demo_mode', fallback=False):
+            self.connection_status.setText("Статус подключения: Оффлайн-режим")
+            self.connection_status.setStyleSheet("QLabel { color: orange; }")
+            return
             
-            # Проверяем токен в секции Credentials
-            if self.config.has_section('Credentials') and self.config.has_option('Credentials', 'auth_token'):
-                auth_token = self.config.get('Credentials', 'auth_token')
+        # Если нет токена, вызываем диалог авторизации
+        auth_token = None
+        if self.config.has_section('Credentials') and self.config.has_option('Credentials', 'auth_token'):
+            auth_token = self.config.get('Credentials', 'auth_token')
+        
+        if not auth_token:
+            self.login_required_signal.emit()
+            return
+            
+        # Получаем URL API
+        api_url = None
+        if self.config.has_section('Credentials') and self.config.has_option('Credentials', 'api_base_url'):
+            api_url = self.config.get('Credentials', 'api_base_url').rstrip('/')
+        else:
+            api_url = 'http://localhost:8000/api'
+            
+        try:
+            # Создаем временный APIClient для проверки
+            api_client = APIClient(api_url)
+            api_client.token = auth_token
+            
+            # Используем метод test_connection для проверки
+            connection_status, message = api_client.test_connection()
+            
+            if connection_status:
+                self.connection_status.setText(f"Статус подключения: Подключено ({api_url})")
+                self.connection_status.setStyleSheet("QLabel { color: green; }")
+                logger.info(f"Проверка соединения: {message}")
+            else:
+                self.connection_status.setText("Статус подключения: Ошибка")
+                self.connection_status.setStyleSheet("QLabel { color: red; }")
+                logger.warning(f"Ошибка проверки соединения: {message}")
                 
-            # Если не нашли, проверяем в секции Server
-            if not auth_token and self.config.has_section('Server') and self.config.has_option('Server', 'token'):
-                auth_token = self.config.get('Server', 'token')
-                
-            # Если не нашли, проверяем в секции API
-            if not auth_token and self.config.has_section('API') and self.config.has_option('API', 'token'):
-                auth_token = self.config.get('API', 'token')
-                
-            # Если токен найден, проверяем его валидность
-            if auth_token:
+                # Проверяем, нужно ли повторить авторизацию
+                token_valid = False
                 try:
                     # Декодируем токен и проверяем срок действия
                     token_data = jwt.decode(auth_token, options={"verify_signature": False})
                     exp_timestamp = token_data.get('exp')
                     if exp_timestamp:
                         expiration_time = datetime.fromtimestamp(exp_timestamp)
-                        time_left = expiration_time - datetime.now()
-                        if time_left.total_seconds() > 0:
-                            token_is_valid = True
-                            hours_left = time_left.total_seconds() / 3600
-                            logger.info(f"Токен действителен еще {hours_left:.1f} часов")
-                            
-                            # Обновляем UI с информацией о состоянии подключения
-                            user_id = self.config.get('Credentials', 'user_id', fallback="Unknown")
-                            self.connection_status.setText(f"Статус подключения: Подключено ({user_id})")
-                            self.connection_status.setStyleSheet("QLabel { color: green; }")
-                        else:
-                            logger.warning(f"Токен истек {expiration_time}. Требуется повторная авторизация.")
-                            self.connection_status.setText("Статус подключения: Требуется авторизация (токен истек)")
-                            self.connection_status.setStyleSheet("QLabel { color: red; }")
-                            # Вызываем диалог авторизации, но отложенно, чтобы не блокировать основной цикл
-                            QTimer.singleShot(1000, self.login_required_signal.emit)
-                    else:
-                        logger.warning("Токен не содержит информации о сроке действия.")
-                        self.connection_status.setText("Статус подключения: Некорректный токен")
-                        self.connection_status.setStyleSheet("QLabel { color: orange; }")
+                        if datetime.now() < expiration_time:
+                            token_valid = True
                 except Exception as e:
                     logger.error(f"Ошибка при проверке токена: {e}")
-                    self.connection_status.setText(f"Статус подключения: Ошибка ({str(e)[:30]}...)")
-                    self.connection_status.setStyleSheet("QLabel { color: red; }")
-            else:
-                logger.warning("Токен авторизации не найден")
-                self.connection_status.setText("Статус подключения: Требуется авторизация")
-                self.connection_status.setStyleSheet("QLabel { color: red; }")
-                # Вызываем диалог авторизации, но отложенно
-                QTimer.singleShot(1000, self.login_required_signal.emit)
-                
-            # Возвращаем состояние токена
-            return token_is_valid
+
+                # Если токен истек или ошибка авторизации, повторно авторизуемся
+                if not token_valid or "401" in message or "unauthorized" in message.lower():
+                    # Планируем показ диалога авторизации
+                    QTimer.singleShot(1000, self.login_required_signal.emit)
         except Exception as e:
-            logger.error(f"Ошибка при проверке подключения: {e}", exc_info=True)
-            self.connection_status.setText(f"Статус подключения: Ошибка ({str(e)[:30]}...)")
+            self.connection_status.setText("Статус подключения: Ошибка")
             self.connection_status.setStyleSheet("QLabel { color: red; }")
-            return False
+            logger.error(f"Ошибка при проверке соединения: {e}")
+            
+            # Если сервер недоступен, но есть демо-режим
+            if not self.config.has_section('Settings'):
+                self.config.add_section('Settings')
+                
+            # Отображаем информацию об ошибке
+            self.status_bar.showMessage(f"Ошибка соединения: {str(e)[:100]}")
+            
+            # Планируем показ диалога авторизации
+            QTimer.singleShot(1000, self.login_required_signal.emit)
 
     def periodic_ui_update(self):
         """Периодически обновляет интерфейс с текущими данными"""
