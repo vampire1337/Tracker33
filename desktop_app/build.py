@@ -1,6 +1,7 @@
 import PyInstaller.__main__
 import os
 import shutil
+import sys
 from pathlib import Path
 import site
 
@@ -13,14 +14,33 @@ def build_app():
     
     # Получаем путь к PyQt5 из site-packages
     pyqt5_path = None
+    
+    # Проверяем стандартные директории site-packages
     for site_packages in site.getsitepackages():
         pyqt5_candidate = Path(site_packages) / 'PyQt5'
         if pyqt5_candidate.exists():
             pyqt5_path = pyqt5_candidate
             break
     
+    # Проверяем пользовательскую директорию site-packages
+    if not pyqt5_path:
+        user_site = site.getusersitepackages()
+        pyqt5_candidate = Path(user_site) / 'PyQt5'
+        if pyqt5_candidate.exists():
+            pyqt5_path = pyqt5_candidate
+    
+    # Если всё ещё не найден, пробуем найти вручную в sys.path
+    if not pyqt5_path:
+        for path in sys.path:
+            pyqt5_candidate = Path(path) / 'PyQt5'
+            if pyqt5_candidate.exists():
+                pyqt5_path = pyqt5_candidate
+                break
+    
     if not pyqt5_path:
         raise RuntimeError("PyQt5 не найден в site-packages")
+    
+    print(f"Найден PyQt5 в: {pyqt5_path}")
     
     # Создаем директорию для сборки
     build_dir = current_dir / 'build'
