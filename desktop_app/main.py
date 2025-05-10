@@ -75,7 +75,7 @@ def setup_logging():
 logger = setup_logging()
 
 # Импортируем APIClient из api_client.py вместо использования встроенного класса
-from .api_client import APIClient
+from api_client import APIClient
 
 # Этот класс больше не используется, но оставлен для совместимости с существующим кодом
 # который может ссылаться на него
