@@ -6,6 +6,10 @@ from datetime import datetime, timedelta
 import jwt
 from pathlib import Path
 import os
+import urllib3
+
+# Отключаем предупреждения о незащищенных запросах
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 log_dir = os.path.join(os.path.dirname(__file__), "logs")
 os.makedirs(log_dir, exist_ok=True)
@@ -23,6 +27,11 @@ logger = logging.getLogger("TimeTracker")
 
 class APIClient:
     def __init__(self, base_url: str):
+        # Заменяем localhost на удаленный сервер, если он передан в конфиге
+        if "127.0.0.1" in base_url or "localhost" in base_url:
+            base_url = "http://46.173.26.149:8000"
+            logger.info(f"URL изменен на удаленный сервер: {base_url}")
+            
         self.base_url = base_url.rstrip('/')
         self.token = None
         self.token_expires = None
@@ -33,7 +42,15 @@ class APIClient:
         
         # Настройка сессии с таймаутами
         self.session = requests.Session()
-        self.session.timeout = (5, 30)  # 5 секунд на соединение, 30 секунд на ответ
+        self.session.timeout = (10, 30)  # 10 секунд на соединение, 30 секунд на ответ
+        self.session.verify = False  # Отключаем проверку SSL-сертификатов
+        
+        # Установка дополнительных заголовков
+        self.session.headers.update({
+            'User-Agent': 'TimeTrackerDesktopClient/1.0',
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+        })
         
         self.load_token()
 
@@ -82,13 +99,25 @@ class APIClient:
     def authenticate(self, username: str, password: str) -> bool:
         """Аутентификация на сервере"""
         try:
+            # Нормализуем URL для авторизации
+            token_url = f"{self.base_url}"
+            if not token_url.endswith('/api/token/'):
+                if not token_url.endswith('/'):
+                    token_url += '/'
+                if not token_url.endswith('api/'):
+                    token_url += 'api/'
+                if not token_url.endswith('token/'):
+                    token_url += 'token/'
+            
+            logger.info(f"Авторизация по URL: {token_url}")
+            
             response = self.session.post(
-                f"{self.base_url}/api/token/",
+                token_url,
                 json={
                     'username': username,
                     'password': password
                 },
-                timeout=(5, 10)  # 5 секунд на соединение, 10 на ответ
+                timeout=(10, 20)  # 10 секунд на соединение, 20 на ответ
             )
             
             if response.status_code == 200:
@@ -152,10 +181,24 @@ class APIClient:
             return False
             
         try:
+            # Нормализуем URL для обновления токена
+            refresh_url = f"{self.base_url}"
+            if not refresh_url.endswith('/api/token/refresh/'):
+                if not refresh_url.endswith('/'):
+                    refresh_url += '/'
+                if not refresh_url.endswith('api/'):
+                    refresh_url += 'api/'
+                if not refresh_url.endswith('token/'):
+                    refresh_url += 'token/'
+                if not refresh_url.endswith('refresh/'):
+                    refresh_url += 'refresh/'
+            
+            logger.info(f"Обновление токена по URL: {refresh_url}")
+            
             response = self.session.post(
-                f"{self.base_url}/api/token/refresh/",
+                refresh_url,
                 json={'refresh': self.refresh_token},
-                timeout=(5, 10)
+                timeout=(10, 20)
             )
             
             if response.status_code == 200:
@@ -213,7 +256,13 @@ class APIClient:
                 logger.warning("Не удалось обновить токен. Требуется повторная авторизация.")
                 return {}
         # Используем формат Bearer для JWT токенов
-        headers = {'Authorization': f'Bearer {self.token}'}
+        headers = {
+            'Authorization': f'Bearer {self.token}',
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'Origin': 'http://localhost:8000',
+            'User-Agent': 'TimeTrackerDesktopClient/1.0'
+        }
         return headers
 
     def send_activity(self, activity_data: Dict) -> bool:
@@ -225,16 +274,28 @@ class APIClient:
                 return False
                 
             logger.info(f"Заголовки для запроса: {headers}")
-            # Проверяем, содержит ли base_url уже /api на конце
-            api_prefix = '/api' if not self.base_url.endswith('/api') else ''
+            
+            # Нормализуем URL для отправки активности
+            activities_url = f"{self.base_url}"
+            if not activities_url.endswith('/api/activities/'):
+                if not activities_url.endswith('/'):
+                    activities_url += '/'
+                if not activities_url.endswith('api/'):
+                    activities_url += 'api/'
+                if not activities_url.endswith('activities/'):
+                    activities_url += 'activities/'
+            
+            logger.info(f"Отправка активности на URL: {activities_url}")
+            logger.info(f"Данные активности: {activity_data}")
+            
             response = self.session.post(
-                f"{self.base_url}{api_prefix}/activities/",
+                activities_url,
                 json=activity_data,
                 headers=headers,
-                timeout=(5, 30)  # 5 секунд на соединение, 30 на ответ
+                timeout=(10, 30)  # 10 секунд на соединение, 30 на ответ
             )
             logger.info(f"Ответ сервера: {response.status_code} {response.text}")
-            return response.status_code == 201
+            return response.status_code in [200, 201]
         except requests.exceptions.Timeout:
             logger.error("Таймаут при отправке активности")
             return False
@@ -246,36 +307,100 @@ class APIClient:
             return False
 
     def get_user_info(self) -> Optional[Dict]:
-        """Получение информации о пользователе (заглушка)"""
-        logger.info("Вызов get_user_info пропущен: ручка /api/user/ не реализована на сервере.")
-        return None
+        """Получение информации о пользователе"""
+        try:
+            headers = self.get_headers()
+            if not headers:
+                logger.warning("Нет действительного токена для получения информации о пользователе")
+                return None
+                
+            # Нормализуем URL для получения информации о пользователе
+            user_url = f"{self.base_url}"
+            if not user_url.endswith('/api/user/'):
+                if not user_url.endswith('/'):
+                    user_url += '/'
+                if not user_url.endswith('api/'):
+                    user_url += 'api/'
+                if not user_url.endswith('user/'):
+                    user_url += 'user/'
+            
+            logger.info(f"Получение информации о пользователе с URL: {user_url}")
+            
+            response = self.session.get(
+                user_url,
+                headers=headers,
+                timeout=(10, 20)
+            )
+            
+            if response.status_code == 200:
+                return response.json()
+            else:
+                logger.error(f"Ошибка при получении информации о пользователе: {response.status_code} - {response.text}")
+                return None
+        except Exception as e:
+            logger.error(f"Ошибка при получении информации о пользователе: {e}")
+            return None
 
     def logout(self):
         """Выход из системы"""
         self.token = None
         self.refresh_token = None
         self.token_expires = None
+        
+        # Удаляем сохраненный токен
         if self.token_file.exists():
             try:
                 os.remove(self.token_file)
-                logger.info("Файл токена удален при выходе из системы")
             except Exception as e:
-                logger.error(f"Ошибка удаления файла токена: {e}")
+                logger.error(f"Ошибка при удалении токена: {e}")
                 
+        # Очищаем заголовки сессии
+        if 'Authorization' in self.session.headers:
+            del self.session.headers['Authorization']
+            
+        logger.info("Пользователь вышел из системы")
+        
     def test_connection(self) -> Tuple[bool, str]:
-        """Тестирование соединения с сервером"""
+        """Проверка соединения с сервером"""
         try:
+            # Проверяем базовый URL и доступность API
+            api_url = f"{self.base_url}"
+            if not api_url.endswith('/api/applications/'):
+                if not api_url.endswith('/'):
+                    api_url += '/'
+                if not api_url.endswith('api/'):
+                    api_url += 'api/'
+                if not api_url.endswith('applications/'):
+                    api_url += 'applications/'
+            
+            logger.info(f"Проверка соединения с URL: {api_url}")
+            
+            # Пробуем подключиться с авторизацией, если есть токен
+            headers = {}
+            if self.token:
+                headers['Authorization'] = f'Bearer {self.token}'
+                
             response = self.session.get(
-                f"{self.base_url}/api/",
-                timeout=(3, 5)  # Короткие таймауты для быстрого теста
+                api_url,
+                headers=headers,
+                timeout=(10, 15)
             )
-            if response.status_code == 200:
-                return True, "Соединение успешно установлено"
+            
+            if response.status_code in [200, 201, 401]:  # 401 - неавторизован, но сервер доступен
+                logger.info("Успешное подключение к серверу. Загружено {0} приложений.".format(
+                    len(response.json()) if response.status_code == 200 else 0
+                ))
+                return True, "Соединение установлено успешно"
             else:
-                return False, f"Сервер ответил с кодом {response.status_code}"
+                logger.warning(f"Сервер доступен, но вернул неожиданный код: {response.status_code}")
+                return False, f"Сервер вернул код: {response.status_code}"
+                
         except requests.exceptions.Timeout:
-            return False, "Превышено время ожидания ответа от сервера"
-        except requests.exceptions.ConnectionError:
+            logger.error("Таймаут при проверке соединения")
+            return False, "Таймаут при попытке соединения с сервером"
+        except requests.exceptions.ConnectionError as e:
+            logger.error(f"Ошибка соединения при проверке: {e}")
             return False, "Не удалось установить соединение с сервером"
         except Exception as e:
-            return False, f"Ошибка при проверке соединения: {str(e)}" 
+            logger.error(f"Ошибка при проверке соединения: {e}")
+            return False, f"Ошибка: {str(e)}" 
