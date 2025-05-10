@@ -5887,3 +5887,140 @@ ValueError: pid must be a positive integer (got -1878966048)
 2025-05-10 02:12:25,150 - TimeTracker - INFO - Проверка соединения: успешно
 2025-05-10 02:12:26,856 - TimeTracker - INFO - Обновлен список приложений: 119 процессов
 2025-05-10 02:12:36,944 - TimeTracker - INFO - Обновлен список приложений: 119 процессов
+2025-05-10 03:21:09,353 - TimeTracker - INFO - Конфигурация успешно загружена из C:\Users\mihai\Heist_master_PC\Documents\GitHub\Tracker33\desktop_app\config.ini
+2025-05-10 03:21:09,355 - TimeTracker - INFO - Загружено 10 отслеживаемых приложений.
+2025-05-10 03:21:09,356 - TimeTracker - INFO - Конфигурация успешно сохранена в C:\Users\mihai\Heist_master_PC\Documents\GitHub\Tracker33\desktop_app\config.ini
+2025-05-10 03:21:11,508 - TimeTracker - INFO - Обновлен список приложений: 121 процессов
+2025-05-10 03:21:11,559 - TimeTracker - INFO - Запущен поток отслеживания активности
+2025-05-10 03:21:12,763 - TimeTracker - INFO - Начата новая сессия активности: App='python.exe', Title='Time Tracker PRO'
+2025-05-10 03:21:18,769 - TimeTracker - INFO - Добавлено 2 нажатий клавиш в активность
+2025-05-10 03:21:18,770 - TimeTracker - INFO - Завершена сессия активности: App='python.exe', Title='Time Tracker PRO, Duration=6s. В очереди: 1
+2025-05-10 03:21:19,357 - TimeTracker - INFO - Вычисленная длительность: 6.007741 секунд
+2025-05-10 03:21:19,358 - TimeTracker - INFO - Отправляем запрос на создание приложения: http://46.173.26.149:8000/api/applications/
+2025-05-10 03:21:19,788 - TimeTracker - WARNING - Не удалось создать приложение python.exe, используем ID по умолчанию
+2025-05-10 03:21:19,789 - TimeTracker - INFO - Для приложения python.exe выбран ID=1
+2025-05-10 03:21:19,789 - TimeTracker - INFO - Отправка активности: start_time=2025-05-10T00:21:12.762547Z, end_time=2025-05-10T00:21:18.770288Z, длительность=6.007741 секунд
+2025-05-10 03:21:19,789 - TimeTracker - INFO - Отправка 1 записей активности на сервер.
+2025-05-10 03:21:19,790 - TimeTracker - INFO - API URL: http://46.173.26.149:8000/api/activities/, Токен: eyJhbGciOi...
+2025-05-10 03:21:19,790 - TimeTracker - INFO - Отправляем пайлоад: {'application': 1, 'title': 'Time Tracker PRO', 'start_time': '2025-05-10T00:21:12.762547Z', 'end_time': '2025-05-10T00:21:18.770288Z', 'is_productive': False, 'app_name': 'python.exe', 'keyboard_presses': 2}
+2025-05-10 03:21:19,899 - TimeTracker - ERROR - Ошибка авторизации: 401 - {"status":"error","code":401,"detail":{"detail":"Данный токен недействителен для любого типа токена","code":"token_not_valid","messages":[{"token_class":"AccessToken","token_type":"access","message":"Токен недействителен или просрочен"}]}}
+2025-05-10 03:21:19,900 - TimeTracker - INFO - Конфигурация успешно сохранена в C:\Users\mihai\Heist_master_PC\Documents\GitHub\Tracker33\desktop_app\config.ini
+2025-05-10 03:21:19,901 - TimeTracker - INFO - Требуется повторная авторизация. Запрашиваем новый токен...
+2025-05-10 03:21:19,902 - TimeTracker - INFO - Токен отсутствует или недействителен, вызывается диалог входа.
+2025-05-10 03:21:21,524 - TimeTracker - INFO - Обновлен список приложений: 121 процессов
+2025-05-10 03:21:21,526 - TimeTracker - INFO - Начата новая сессия активности: App='python.exe', Title='Авторизация'
+2025-05-10 03:21:30,899 - TimeTracker - INFO - Обновлен список приложений: 121 процессов
+2025-05-10 03:21:32,581 - TimeTracker - INFO - Авторизация по URL: http://46.173.26.149:8000/api/token/
+2025-05-10 03:21:36,290 - TimeTracker - INFO - Токен после логина: eyJhbGciOiJIUzI1NiIs... действителен до 2025-05-10 04:21:38
+2025-05-10 03:21:36,292 - TimeTracker - INFO - Конфигурация успешно сохранена в C:\Users\mihai\Heist_master_PC\Documents\GitHub\Tracker33\desktop_app\config.ini
+2025-05-10 03:21:36,292 - TimeTracker - INFO - Токен авторизации успешно сохранен в конфигурации.
+2025-05-10 03:21:36,297 - TimeTracker - INFO - Вход выполнен успешно через диалог.
+2025-05-10 03:21:36,302 - TimeTracker - ERROR - Ошибка при получении информации об активном окне: pid must be a positive integer (got -217170480)
+Traceback (most recent call last):
+  File "C:\Users\mihai\Heist_master_PC\Documents\GitHub\Tracker33\desktop_app\main_original.py", line 1651, in get_active_window_info
+    process = psutil.Process(process_id)
+  File "C:\Users\mihai\AppData\Roaming\Python\Python313\site-packages\psutil\__init__.py", line 332, in __init__
+    self._init(pid)
+    ~~~~~~~~~~^^^^^
+  File "C:\Users\mihai\AppData\Roaming\Python\Python313\site-packages\psutil\__init__.py", line 341, in _init
+    raise ValueError('pid must be a positive integer (got %s)'
+                     % pid)
+ValueError: pid must be a positive integer (got -217170480)
+2025-05-10 03:21:37,306 - TimeTracker - INFO - Добавлено 20 нажатий клавиш в активность
+2025-05-10 03:21:37,306 - TimeTracker - INFO - Завершена сессия активности: App='python.exe', Title='Авторизация, Duration=16s. В очереди: 2
+2025-05-10 03:21:37,308 - TimeTracker - INFO - Начата новая сессия активности: App='python.exe', Title='Time Tracker PRO'
+2025-05-10 03:21:39,410 - TimeTracker - INFO - Проверка соединения: успешно
+2025-05-10 03:21:40,927 - TimeTracker - INFO - Обновлен список приложений: 121 процессов
+2025-05-10 03:21:45,930 - TimeTracker - INFO - Добавлено 2 нажатий клавиш в активность
+2025-05-10 03:21:45,931 - TimeTracker - INFO - Завершена сессия активности: App='python.exe', Title='Time Tracker PRO, Duration=9s. В очереди: 3
+2025-05-10 03:21:46,309 - TimeTracker - INFO - Вычисленная длительность: 6.007741 секунд
+2025-05-10 03:21:46,310 - TimeTracker - INFO - Отправляем запрос на создание приложения: http://46.173.26.149:8000/api/applications/
+2025-05-10 03:21:46,476 - TimeTracker - INFO - Создано новое приложение: python.exe с ID=112
+2025-05-10 03:21:46,477 - TimeTracker - INFO - Для приложения python.exe выбран ID=112
+2025-05-10 03:21:46,477 - TimeTracker - INFO - Отправка активности: start_time=2025-05-10T00:21:12.762547Z, end_time=2025-05-10T00:21:18.770288Z, длительность=6.007741 секунд
+2025-05-10 03:21:46,478 - TimeTracker - INFO - Вычисленная длительность: 15.781762 секунд
+2025-05-10 03:21:46,478 - TimeTracker - INFO - Для приложения python.exe выбран ID=112
+2025-05-10 03:21:46,478 - TimeTracker - INFO - Отправка активности: start_time=2025-05-10T00:21:21.524808Z, end_time=2025-05-10T00:21:37.306570Z, длительность=15.781762 секунд
+2025-05-10 03:21:46,478 - TimeTracker - INFO - Вычисленная длительность: 8.623401 секунд
+2025-05-10 03:21:46,479 - TimeTracker - INFO - Для приложения python.exe выбран ID=112
+2025-05-10 03:21:46,479 - TimeTracker - INFO - Отправка активности: start_time=2025-05-10T00:21:37.307602Z, end_time=2025-05-10T00:21:45.931003Z, длительность=8.623401 секунд
+2025-05-10 03:21:46,479 - TimeTracker - INFO - Отправка 3 записей активности на сервер.
+2025-05-10 03:21:46,480 - TimeTracker - INFO - API URL: http://46.173.26.149:8000/api/activities/, Токен: eyJhbGciOi...
+2025-05-10 03:21:46,480 - TimeTracker - INFO - Отправляем пайлоад: {'application': 112, 'title': 'Time Tracker PRO', 'start_time': '2025-05-10T00:21:12.762547Z', 'end_time': '2025-05-10T00:21:18.770288Z', 'is_productive': False, 'app_name': 'python.exe', 'keyboard_presses': 2}
+2025-05-10 03:21:46,648 - TimeTracker - INFO - Успешно отправлено: 201 - {"id":1614,"user":3,"application":113,"start_time":"2025-05-10T03:21:12.762547+03:00","end_time":"2025-05-10T03:21:18.770288+03:00","duration":"00:00:06.007741","keyboard_presses":2}
+2025-05-10 03:21:46,649 - TimeTracker - INFO - Отправляем пайлоад: {'application': 112, 'title': 'Авторизация', 'start_time': '2025-05-10T00:21:21.524808Z', 'end_time': '2025-05-10T00:21:37.306570Z', 'is_productive': False, 'app_name': 'python.exe', 'keyboard_presses': 20}
+2025-05-10 03:21:46,804 - TimeTracker - INFO - Успешно отправлено: 201 - {"id":1615,"user":3,"application":113,"start_time":"2025-05-10T03:21:21.524808+03:00","end_time":"2025-05-10T03:21:37.306570+03:00","duration":"00:00:15.781762","keyboard_presses":20}
+2025-05-10 03:21:46,804 - TimeTracker - INFO - Отправляем пайлоад: {'application': 112, 'title': 'Time Tracker PRO', 'start_time': '2025-05-10T00:21:37.307602Z', 'end_time': '2025-05-10T00:21:45.931003Z', 'is_productive': False, 'app_name': 'python.exe', 'keyboard_presses': 2}
+2025-05-10 03:21:46,945 - TimeTracker - INFO - Успешно отправлено: 201 - {"id":1616,"user":3,"application":113,"start_time":"2025-05-10T03:21:37.307602+03:00","end_time":"2025-05-10T03:21:45.931003+03:00","duration":"00:00:08.623401","keyboard_presses":2}
+2025-05-10 03:21:46,946 - TimeTracker - INFO - Успешно отправлено 3 записей активности.
+2025-05-10 03:21:50,964 - TimeTracker - INFO - Обновлен список приложений: 121 процессов
+2025-05-10 03:21:50,974 - TimeTracker - INFO - Открываем веб-интерфейс: http://46.173.26.149:8000/dashboard/
+2025-05-10 03:21:51,966 - TimeTracker - INFO - Начата новая сессия активности: App='chrome.exe', Title='Без имени - Google Chrome'
+2025-05-10 03:21:52,968 - TimeTracker - INFO - Добавлено 0 нажатий клавиш в активность
+2025-05-10 03:21:52,969 - TimeTracker - INFO - Завершена сессия активности: App='chrome.exe', Title='Без имени - Google Chrome, Duration=1s. В очереди: 1
+2025-05-10 03:21:52,976 - TimeTracker - INFO - Начата новая сессия активности: App='chrome.exe', Title='Главная - Time Tracker - Googl...'
+2025-05-10 03:21:56,302 - TimeTracker - INFO - Вычисленная длительность: 1.003488 секунд
+2025-05-10 03:21:56,303 - TimeTracker - INFO - Отправляем запрос на создание приложения: http://46.173.26.149:8000/api/applications/
+2025-05-10 03:21:56,484 - TimeTracker - INFO - Создано новое приложение: chrome.exe с ID=114
+2025-05-10 03:21:56,484 - TimeTracker - INFO - Для приложения chrome.exe выбран ID=114
+2025-05-10 03:21:56,485 - TimeTracker - INFO - Отправка активности: start_time=2025-05-10T00:21:51.965867Z, end_time=2025-05-10T00:21:52.969355Z, длительность=1.003488 секунд
+2025-05-10 03:21:56,485 - TimeTracker - INFO - Отправка 1 записей активности на сервер.
+2025-05-10 03:21:56,485 - TimeTracker - INFO - API URL: http://46.173.26.149:8000/api/activities/, Токен: eyJhbGciOi...
+2025-05-10 03:21:56,486 - TimeTracker - INFO - Отправляем пайлоад: {'application': 114, 'title': 'Без имени - Google Chrome', 'start_time': '2025-05-10T00:21:51.965867Z', 'end_time': '2025-05-10T00:21:52.969355Z', 'is_productive': False, 'app_name': 'chrome.exe', 'keyboard_presses': 0}
+2025-05-10 03:21:56,671 - TimeTracker - INFO - Успешно отправлено: 201 - {"id":1617,"user":3,"application":115,"start_time":"2025-05-10T03:21:51.965867+03:00","end_time":"2025-05-10T03:21:52.969355+03:00","duration":"00:00:01.003488","keyboard_presses":0}
+2025-05-10 03:21:56,672 - TimeTracker - INFO - Успешно отправлено 1 записей активности.
+2025-05-10 03:22:01,244 - TimeTracker - INFO - Обновлен список приложений: 121 процессов
+2025-05-10 03:22:02,065 - TimeTracker - INFO - Добавлено 0 нажатий клавиш в активность
+2025-05-10 03:22:02,066 - TimeTracker - INFO - Завершена сессия активности: App='chrome.exe', Title='Главная - Time Tracker - Googl..., Duration=9s. В очереди: 1
+2025-05-10 03:22:02,068 - TimeTracker - INFO - Начата новая сессия активности: App='chrome.exe', Title='Статистика - Time Tracker - Go...'
+2025-05-10 03:22:06,299 - TimeTracker - INFO - Вычисленная длительность: 9.092667 секунд
+2025-05-10 03:22:06,300 - TimeTracker - INFO - Для приложения chrome.exe выбран ID=114
+2025-05-10 03:22:06,301 - TimeTracker - INFO - Отправка активности: start_time=2025-05-10T00:21:52.973903Z, end_time=2025-05-10T00:22:02.066570Z, длительность=9.092667 секунд
+2025-05-10 03:22:06,301 - TimeTracker - INFO - Отправка 1 записей активности на сервер.
+2025-05-10 03:22:06,301 - TimeTracker - INFO - API URL: http://46.173.26.149:8000/api/activities/, Токен: eyJhbGciOi...
+2025-05-10 03:22:06,302 - TimeTracker - INFO - Отправляем пайлоад: {'application': 114, 'title': 'Главная - Time Tracker - Google Chrome', 'start_time': '2025-05-10T00:21:52.973903Z', 'end_time': '2025-05-10T00:22:02.066570Z', 'is_productive': False, 'app_name': 'chrome.exe', 'keyboard_presses': 0}
+2025-05-10 03:22:06,483 - TimeTracker - INFO - Успешно отправлено: 201 - {"id":1618,"user":3,"application":115,"start_time":"2025-05-10T03:21:52.973903+03:00","end_time":"2025-05-10T03:22:02.066570+03:00","duration":"00:00:09.092667","keyboard_presses":0}
+2025-05-10 03:22:06,483 - TimeTracker - INFO - Успешно отправлено 1 записей активности.
+2025-05-10 03:22:09,412 - TimeTracker - INFO - Проверка соединения: успешно
+2025-05-10 03:22:11,380 - TimeTracker - INFO - Обновлен список приложений: 121 процессов
+2025-05-10 03:22:13,164 - TimeTracker - INFO - Добавлено 0 нажатий клавиш в активность
+2025-05-10 03:22:13,164 - TimeTracker - INFO - Завершена сессия активности: App='chrome.exe', Title='Статистика - Time Tracker - Go..., Duration=11s. В очереди: 1
+2025-05-10 03:22:13,168 - TimeTracker - INFO - Начата новая сессия активности: App='chrome.exe', Title='Главная - Time Tracker - Googl...'
+2025-05-10 03:22:16,300 - TimeTracker - INFO - Вычисленная длительность: 11.096513 секунд
+2025-05-10 03:22:16,300 - TimeTracker - INFO - Для приложения chrome.exe выбран ID=114
+2025-05-10 03:22:16,301 - TimeTracker - INFO - Отправка активности: start_time=2025-05-10T00:22:02.068374Z, end_time=2025-05-10T00:22:13.164887Z, длительность=11.096513 секунд
+2025-05-10 03:22:16,301 - TimeTracker - INFO - Отправка 1 записей активности на сервер.
+2025-05-10 03:22:16,301 - TimeTracker - INFO - API URL: http://46.173.26.149:8000/api/activities/, Токен: eyJhbGciOi...
+2025-05-10 03:22:16,302 - TimeTracker - INFO - Отправляем пайлоад: {'application': 114, 'title': 'Статистика - Time Tracker - Google Chrome', 'start_time': '2025-05-10T00:22:02.068374Z', 'end_time': '2025-05-10T00:22:13.164887Z', 'is_productive': False, 'app_name': 'chrome.exe', 'keyboard_presses': 0}
+2025-05-10 03:22:16,453 - TimeTracker - INFO - Успешно отправлено: 201 - {"id":1619,"user":3,"application":115,"start_time":"2025-05-10T03:22:02.068374+03:00","end_time":"2025-05-10T03:22:13.164887+03:00","duration":"00:00:11.096513","keyboard_presses":0}
+2025-05-10 03:22:16,453 - TimeTracker - INFO - Успешно отправлено 1 записей активности.
+2025-05-10 03:22:21,075 - TimeTracker - INFO - Обновлен список приложений: 121 процессов
+2025-05-10 03:22:31,144 - TimeTracker - INFO - Обновлен список приложений: 121 процессов
+2025-05-10 03:22:39,256 - TimeTracker - INFO - Добавлено 0 нажатий клавиш в активность
+2025-05-10 03:22:39,256 - TimeTracker - INFO - Завершена сессия активности: App='chrome.exe', Title='Главная - Time Tracker - Googl..., Duration=26s. В очереди: 1
+2025-05-10 03:22:39,259 - TimeTracker - INFO - Начата новая сессия активности: App='chrome.exe', Title='Статистика - Time Tracker - Go...'
+2025-05-10 03:22:39,424 - TimeTracker - INFO - Проверка соединения: успешно
+2025-05-10 03:22:41,274 - TimeTracker - INFO - Обновлен список приложений: 121 процессов
+2025-05-10 03:22:45,296 - TimeTracker - INFO - Добавлено 0 нажатий клавиш в активность
+2025-05-10 03:22:45,296 - TimeTracker - INFO - Завершена сессия активности: App='chrome.exe', Title='Статистика - Time Tracker - Go..., Duration=6s. В очереди: 2
+2025-05-10 03:22:45,298 - TimeTracker - INFO - Начата новая сессия активности: App='chrome.exe', Title='Tracker33 - Google Chrome'
+2025-05-10 03:22:46,309 - TimeTracker - INFO - Вычисленная длительность: 26.089111 секунд
+2025-05-10 03:22:46,309 - TimeTracker - INFO - Для приложения chrome.exe выбран ID=114
+2025-05-10 03:22:46,310 - TimeTracker - INFO - Отправка активности: start_time=2025-05-10T00:22:13.167467Z, end_time=2025-05-10T00:22:39.256578Z, длительность=26.089111 секунд
+2025-05-10 03:22:46,310 - TimeTracker - INFO - Вычисленная длительность: 6.038042 секунд
+2025-05-10 03:22:46,310 - TimeTracker - INFO - Для приложения chrome.exe выбран ID=114
+2025-05-10 03:22:46,311 - TimeTracker - INFO - Отправка активности: start_time=2025-05-10T00:22:39.258854Z, end_time=2025-05-10T00:22:45.296896Z, длительность=6.038042 секунд
+2025-05-10 03:22:46,311 - TimeTracker - INFO - Отправка 2 записей активности на сервер.
+2025-05-10 03:22:46,311 - TimeTracker - INFO - API URL: http://46.173.26.149:8000/api/activities/, Токен: eyJhbGciOi...
+2025-05-10 03:22:46,312 - TimeTracker - INFO - Отправляем пайлоад: {'application': 114, 'title': 'Главная - Time Tracker - Google Chrome', 'start_time': '2025-05-10T00:22:13.167467Z', 'end_time': '2025-05-10T00:22:39.256578Z', 'is_productive': False, 'app_name': 'chrome.exe', 'keyboard_presses': 0}
+2025-05-10 03:22:46,506 - TimeTracker - INFO - Успешно отправлено: 201 - {"id":1620,"user":3,"application":115,"start_time":"2025-05-10T03:22:13.167467+03:00","end_time":"2025-05-10T03:22:39.256578+03:00","duration":"00:00:26.089111","keyboard_presses":0}
+2025-05-10 03:22:46,506 - TimeTracker - INFO - Отправляем пайлоад: {'application': 114, 'title': 'Статистика - Time Tracker - Google Chrome', 'start_time': '2025-05-10T00:22:39.258854Z', 'end_time': '2025-05-10T00:22:45.296896Z', 'is_productive': False, 'app_name': 'chrome.exe', 'keyboard_presses': 0}
+2025-05-10 03:22:46,663 - TimeTracker - INFO - Успешно отправлено: 201 - {"id":1621,"user":3,"application":115,"start_time":"2025-05-10T03:22:39.258854+03:00","end_time":"2025-05-10T03:22:45.296896+03:00","duration":"00:00:06.038042","keyboard_presses":0}
+2025-05-10 03:22:46,664 - TimeTracker - INFO - Успешно отправлено 2 записей активности.
+2025-05-10 03:22:47,300 - TimeTracker - INFO - Добавлено 0 нажатий клавиш в активность
+2025-05-10 03:22:47,301 - TimeTracker - INFO - Завершена сессия активности: App='chrome.exe', Title='Tracker33 - Google Chrome, Duration=2s. В очереди: 1
+2025-05-10 03:22:47,304 - TimeTracker - INFO - Начата новая сессия активности: App='python.exe', Title='Time Tracker PRO'
+2025-05-10 03:22:50,984 - TimeTracker - INFO - Обновлен список приложений: 121 процессов
+2025-05-10 03:22:52,986 - TimeTracker - INFO - Добавлено 0 нажатий клавиш в активность
+2025-05-10 03:22:52,987 - TimeTracker - INFO - Завершена сессия активности: App='python.exe', Title='Time Tracker PRO, Duration=6s. В очереди: 2
+2025-05-10 03:22:52,990 - TimeTracker - INFO - Начата новая сессия активности: App='Cursor.exe', Title='cd /c%3A/Users/mihai/Heist_mas...'
