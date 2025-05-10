@@ -2,10 +2,10 @@
 __pycache__/
 *.py[cod]
 *$py.class
-
+*.log
 # Distribution / packaging
 dist/
-build/
+build/Распределение времени
 *.egg-info/
 
 # Environments

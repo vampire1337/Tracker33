@@ -750,3 +750,552 @@ class TimeLogDeleteView(LoginRequiredMixin, DeleteView):
     def delete(self, request, *args, **kwargs):
         messages.success(request, 'Time log was deleted successfully.')
         return super().delete(request, *args, **kwargs)
+
+# NEW API VIEWS
+
+class StatisticsAPIView(APIView):
+    """
+    API для получения статистики использования приложений.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get(self, request, format=None):
+        user = request.user
+        days = int(request.query_params.get('days', 7))
+        
+        today = timezone.now().date()
+        start_date = today - timedelta(days=days-1)
+        
+        # Получаем активности пользователя за указанный период
+        activities = UserActivity.objects.filter(
+            user=user,
+            start_time__date__gte=start_date,
+            start_time__date__lte=today
+        )
+        
+        # Рассчитываем общее время работы
+        total_seconds = 0
+        keyboard_activity = 0
+        
+        for activity in activities:
+            if activity.duration:
+                total_seconds += activity.duration.total_seconds()
+            elif activity.start_time and activity.end_time:
+                duration = activity.end_time - activity.start_time
+                total_seconds += duration.total_seconds()
+            
+            # Суммируем нажатия клавиш
+            keyboard_activity += activity.keyboard_presses or 0
+        
+        # Рассчитываем средние показатели
+        avg_seconds_per_day = total_seconds / days if days > 0 else 0
+        
+        # Получаем статистику по приложениям
+        app_statistics = []
+        all_apps_seconds = 0
+        
+        apps = Application.objects.filter(
+            useractivity__user=user,
+            useractivity__start_time__date__gte=start_date,
+            useractivity__start_time__date__lte=today
+        ).annotate(
+            total_time=Sum('useractivity__duration'),
+            total_seconds=Sum(ExpressionWrapper(
+                F('useractivity__duration'), 
+                output_field=models.IntegerField()
+            ))
+        ).order_by('-total_time').distinct()
+        
+        # Считаем общее время для всех приложений
+        for app in apps:
+            if hasattr(app, 'total_seconds') and app.total_seconds:
+                all_apps_seconds += app.total_seconds
+        
+        # Формируем статистику по приложениям
+        for app in apps:
+            if hasattr(app, 'total_seconds') and app.total_seconds:
+                seconds_value = app.total_seconds
+                if seconds_value > 100000:  # Если значение слишком большое, вероятно это микросекунды
+                    seconds_value = seconds_value / 1000000
+                
+                hours, remainder = divmod(int(seconds_value), 3600)
+                minutes, seconds = divmod(remainder, 60)
+                formatted_time = f"{hours}:{minutes:02d}:{seconds:02d}"
+                
+                percentage = round((app.total_seconds / all_apps_seconds) * 100, 1) if all_apps_seconds > 0 else 0
+                
+                app_statistics.append({
+                    'id': app.id,
+                    'name': app.name,
+                    'process_name': app.process_name,
+                    'total_seconds': app.total_seconds,
+                    'formatted_time': formatted_time,
+                    'percentage': percentage,
+                    'is_productive': app.is_productive
+                })
+        
+        # Форматируем общее время
+        hours, remainder = divmod(int(total_seconds), 3600)
+        minutes, seconds = divmod(remainder, 60)
+        total_formatted_time = f"{hours}:{minutes:02d}:{seconds:02d}"
+        
+        # Форматируем среднее время в день
+        avg_hours, avg_remainder = divmod(int(avg_seconds_per_day), 3600)
+        avg_minutes, avg_seconds = divmod(avg_remainder, 60)
+        avg_formatted_time = f"{avg_hours}:{avg_minutes:02d}:{avg_seconds:02d}"
+        
+        # Собираем данные по дням
+        daily_data = {}
+        for day_offset in range(days):
+            date = today - timedelta(days=days-1-day_offset)
+            date_str = date.strftime('%Y-%m-%d')
+            
+            day_activities = activities.filter(
+                start_time__date=date
+            )
+            
+            day_seconds = 0
+            for activity in day_activities:
+                if activity.duration:
+                    day_seconds += activity.duration.total_seconds()
+                elif activity.start_time and activity.end_time:
+                    duration = activity.end_time - activity.start_time
+                    day_seconds += duration.total_seconds()
+            
+            day_hours = day_seconds / 3600
+            
+            daily_data[date_str] = {
+                'date': date_str,
+                'day_name': date.strftime('%A'),
+                'total_seconds': day_seconds,
+                'hours': round(day_hours, 2)
+            }
+        
+        # Формируем итоговый ответ
+        response_data = {
+            'period': {
+                'start_date': start_date.strftime('%Y-%m-%d'),
+                'end_date': today.strftime('%Y-%m-%d'),
+                'days': days
+            },
+            'summary': {
+                'total_seconds': total_seconds,
+                'total_time': total_formatted_time,
+                'average_time_per_day': avg_formatted_time,
+                'keyboard_activity': keyboard_activity,
+                'average_keyboard_per_day': int(keyboard_activity / days) if days > 0 else 0
+            },
+            'applications': app_statistics,
+            'daily_data': list(daily_data.values())
+        }
+        
+        return Response(response_data)
+
+class DailyActivityAPIView(APIView):
+    """
+    API для получения активности по дням.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get(self, request, format=None):
+        user = request.user
+        date_str = request.query_params.get('date')
+        
+        if date_str:
+            try:
+                date = datetime.strptime(date_str, '%Y-%m-%d').date()
+            except ValueError:
+                return Response(
+                    {'error': 'Invalid date format. Use YYYY-MM-DD.'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        else:
+            date = timezone.now().date()
+        
+        # Получаем активности пользователя за указанный день
+        day_activities = UserActivity.objects.filter(
+            user=user,
+            start_time__date=date
+        ).order_by('start_time')
+        
+        activity_data = []
+        
+        for activity in day_activities:
+            if activity.duration:
+                duration_seconds = activity.duration.total_seconds()
+            elif activity.start_time and activity.end_time:
+                duration = activity.end_time - activity.start_time
+                duration_seconds = duration.total_seconds()
+            else:
+                duration_seconds = 0
+            
+            hours, remainder = divmod(int(duration_seconds), 3600)
+            minutes, seconds = divmod(remainder, 60)
+            formatted_duration = f"{hours}:{minutes:02d}:{seconds:02d}"
+            
+            activity_data.append({
+                'id': activity.id,
+                'application_name': activity.application.name,
+                'process_name': activity.application.process_name,
+                'start_time': activity.start_time.strftime('%H:%M:%S'),
+                'end_time': activity.end_time.strftime('%H:%M:%S') if activity.end_time else None,
+                'duration_seconds': duration_seconds,
+                'formatted_duration': formatted_duration,
+                'is_productive': activity.application.is_productive,
+                'keyboard_presses': activity.keyboard_presses
+            })
+        
+        # Рассчитываем общую продолжительность за день
+        total_seconds = sum(item['duration_seconds'] for item in activity_data)
+        hours, remainder = divmod(int(total_seconds), 3600)
+        minutes, seconds = divmod(remainder, 60)
+        total_formatted_time = f"{hours}:{minutes:02d}:{seconds:02d}"
+        
+        # Расчет продуктивного времени
+        productive_seconds = sum(
+            item['duration_seconds'] for item in activity_data 
+            if item['is_productive']
+        )
+        
+        hours, remainder = divmod(int(productive_seconds), 3600)
+        minutes, seconds = divmod(remainder, 60)
+        productive_formatted_time = f"{hours}:{minutes:02d}:{seconds:02d}"
+        
+        productivity_percentage = round((productive_seconds / total_seconds) * 100, 1) if total_seconds > 0 else 0
+        
+        # Группировка по часам
+        hourly_data = {}
+        for hour in range(24):
+            hourly_data[hour] = {
+                'hour': hour,
+                'total_seconds': 0,
+                'activities': []
+            }
+        
+        for activity in activity_data:
+            if activity['start_time']:
+                hour = int(activity['start_time'].split(':')[0])
+                hourly_data[hour]['total_seconds'] += activity['duration_seconds']
+                hourly_data[hour]['activities'].append(activity)
+        
+        # Формируем итоговый ответ
+        response_data = {
+            'date': date.strftime('%Y-%m-%d'),
+            'day_name': date.strftime('%A'),
+            'summary': {
+                'total_seconds': total_seconds,
+                'total_time': total_formatted_time,
+                'productive_seconds': productive_seconds,
+                'productive_time': productive_formatted_time,
+                'productivity_percentage': productivity_percentage,
+                'activity_count': len(activity_data)
+            },
+            'activities': activity_data,
+            'hourly_data': list(hourly_data.values())
+        }
+        
+        return Response(response_data)
+
+class TimeDistributionAPIView(APIView):
+    """
+    API для получения распределения времени по приложениям.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get(self, request, format=None):
+        user = request.user
+        days = int(request.query_params.get('days', 7))
+        
+        today = timezone.now().date()
+        start_date = today - timedelta(days=days-1)
+        
+        # Получаем активности пользователя за указанный период
+        activities = UserActivity.objects.filter(
+            user=user,
+            start_time__date__gte=start_date,
+            start_time__date__lte=today
+        )
+        
+        # Группируем по приложениям
+        app_data = {}
+        
+        for activity in activities:
+            app_id = activity.application.id
+            app_name = activity.application.name
+            process_name = activity.application.process_name
+            is_productive = activity.application.is_productive
+            
+            if activity.duration:
+                duration_seconds = activity.duration.total_seconds()
+            elif activity.start_time and activity.end_time:
+                duration = activity.end_time - activity.start_time
+                duration_seconds = duration.total_seconds()
+            else:
+                continue
+            
+            if app_id not in app_data:
+                app_data[app_id] = {
+                    'id': app_id,
+                    'name': app_name,
+                    'process_name': process_name,
+                    'is_productive': is_productive,
+                    'total_seconds': 0,
+                    'activities_count': 0
+                }
+            
+            app_data[app_id]['total_seconds'] += duration_seconds
+            app_data[app_id]['activities_count'] += 1
+        
+        # Сортируем по времени использования
+        sorted_apps = sorted(
+            app_data.values(), 
+            key=lambda x: x['total_seconds'], 
+            reverse=True
+        )
+        
+        # Рассчитываем общее время
+        total_seconds = sum(app['total_seconds'] for app in sorted_apps)
+        
+        # Добавляем процентное соотношение и форматированное время
+        for app in sorted_apps:
+            app['percentage'] = round((app['total_seconds'] / total_seconds) * 100, 1) if total_seconds > 0 else 0
+            
+            hours, remainder = divmod(int(app['total_seconds']), 3600)
+            minutes, seconds = divmod(remainder, 60)
+            app['formatted_time'] = f"{hours}:{minutes:02d}:{seconds:02d}"
+        
+        # Рассчитываем продуктивность
+        productive_seconds = sum(
+            app['total_seconds'] for app in sorted_apps 
+            if app['is_productive']
+        )
+        
+        productivity_percentage = round((productive_seconds / total_seconds) * 100, 1) if total_seconds > 0 else 0
+        
+        hours, remainder = divmod(int(total_seconds), 3600)
+        minutes, seconds = divmod(remainder, 60)
+        total_formatted_time = f"{hours}:{minutes:02d}:{seconds:02d}"
+        
+        hours, remainder = divmod(int(productive_seconds), 3600)
+        minutes, seconds = divmod(remainder, 60)
+        productive_formatted_time = f"{hours}:{minutes:02d}:{seconds:02d}"
+        
+        # Формируем итоговый ответ
+        response_data = {
+            'period': {
+                'start_date': start_date.strftime('%Y-%m-%d'),
+                'end_date': today.strftime('%Y-%m-%d'),
+                'days': days
+            },
+            'summary': {
+                'total_seconds': total_seconds,
+                'total_time': total_formatted_time,
+                'productive_seconds': productive_seconds,
+                'productive_time': productive_formatted_time,
+                'productivity_percentage': productivity_percentage,
+                'applications_count': len(sorted_apps)
+            },
+            'applications': sorted_apps
+        }
+        
+        return Response(response_data)
+
+class DashboardAPIView(APIView):
+    """
+    API для получения данных дашборда.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get(self, request, format=None):
+        user = request.user
+        
+        # Получаем статистику за сегодня
+        today = timezone.now().date()
+        today_start = datetime.combine(today, time.min)
+        today_end = datetime.combine(today, time.max)
+        
+        today_activities = UserActivity.objects.filter(
+            user=user,
+            start_time__date=today
+        )
+        
+        # Рассчитываем общее время за сегодня
+        today_seconds = 0
+        
+        for activity in today_activities:
+            if activity.duration:
+                today_seconds += activity.duration.total_seconds()
+            elif activity.start_time and activity.end_time:
+                duration = activity.end_time - activity.start_time
+                today_seconds += duration.total_seconds()
+        
+        hours, remainder = divmod(int(today_seconds), 3600)
+        minutes, seconds = divmod(remainder, 60)
+        today_formatted_time = f"{hours}:{minutes:02d}:{seconds:02d}"
+        
+        # Получаем статистику за неделю
+        week_start = today - timedelta(days=6)
+        
+        weekly_activities = UserActivity.objects.filter(
+            user=user,
+            start_time__date__gte=week_start,
+            start_time__date__lte=today
+        )
+        
+        # Рассчитываем общее время за неделю
+        week_seconds = 0
+        
+        for activity in weekly_activities:
+            if activity.duration:
+                week_seconds += activity.duration.total_seconds()
+            elif activity.start_time and activity.end_time:
+                duration = activity.end_time - activity.start_time
+                week_seconds += duration.total_seconds()
+        
+        hours, remainder = divmod(int(week_seconds), 3600)
+        minutes, seconds = divmod(remainder, 60)
+        week_formatted_time = f"{hours}:{minutes:02d}:{seconds:02d}"
+        
+        # Сравнение с предыдущей неделей
+        prev_week_start = week_start - timedelta(days=7)
+        prev_week_end = today - timedelta(days=7)
+        
+        prev_weekly_activities = UserActivity.objects.filter(
+            user=user,
+            start_time__date__gte=prev_week_start,
+            start_time__date__lte=prev_week_end
+        )
+        
+        prev_week_seconds = 0
+        
+        for activity in prev_weekly_activities:
+            if activity.duration:
+                prev_week_seconds += activity.duration.total_seconds()
+            elif activity.start_time and activity.end_time:
+                duration = activity.end_time - activity.start_time
+                prev_week_seconds += duration.total_seconds()
+        
+        weekly_change_percentage = 0
+        if prev_week_seconds > 0:
+            weekly_change_percentage = round(((week_seconds - prev_week_seconds) / prev_week_seconds) * 100, 1)
+        
+        # Получаем текущие активные приложения
+        active_apps = Application.objects.filter(
+            user=user,
+            is_active=True
+        ).count()
+        
+        # Получаем текущее кол-во продуктивных приложений
+        productive_apps = Application.objects.filter(
+            user=user,
+            is_productive=True
+        ).count()
+        
+        # Продуктивность за неделю
+        productive_seconds = 0
+        for activity in weekly_activities:
+            if activity.application.is_productive:
+                if activity.duration:
+                    productive_seconds += activity.duration.total_seconds()
+                elif activity.start_time and activity.end_time:
+                    duration = activity.end_time - activity.start_time
+                    productive_seconds += duration.total_seconds()
+        
+        productivity_percentage = round((productive_seconds / week_seconds) * 100, 1) if week_seconds > 0 else 0
+        
+        # Топ-5 приложений за неделю
+        app_usage = {}
+        
+        for activity in weekly_activities:
+            app_id = activity.application.id
+            app_name = activity.application.name
+            process_name = activity.application.process_name
+            is_productive = activity.application.is_productive
+            
+            if activity.duration:
+                duration_seconds = activity.duration.total_seconds()
+            elif activity.start_time and activity.end_time:
+                duration = activity.end_time - activity.start_time
+                duration_seconds = duration.total_seconds()
+            else:
+                continue
+            
+            if app_id not in app_usage:
+                app_usage[app_id] = {
+                    'id': app_id,
+                    'name': app_name,
+                    'process_name': process_name,
+                    'is_productive': is_productive,
+                    'total_seconds': 0
+                }
+            
+            app_usage[app_id]['total_seconds'] += duration_seconds
+        
+        # Сортируем по времени использования и берем топ-5
+        top_apps = sorted(
+            app_usage.values(),
+            key=lambda x: x['total_seconds'],
+            reverse=True
+        )[:5]
+        
+        # Добавляем форматированное время и процент
+        for app in top_apps:
+            hours, remainder = divmod(int(app['total_seconds']), 3600)
+            minutes, seconds = divmod(remainder, 60)
+            app['formatted_time'] = f"{hours}:{minutes:02d}:{seconds:02d}"
+            app['percentage'] = round((app['total_seconds'] / week_seconds) * 100, 1) if week_seconds > 0 else 0
+        
+        # Данные по дням недели
+        daily_data = {}
+        for day_offset in range(7):
+            date = week_start + timedelta(days=day_offset)
+            date_str = date.strftime('%Y-%m-%d')
+            
+            day_activities = weekly_activities.filter(
+                start_time__date=date
+            )
+            
+            day_seconds = 0
+            for activity in day_activities:
+                if activity.duration:
+                    day_seconds += activity.duration.total_seconds()
+                elif activity.start_time and activity.end_time:
+                    duration = activity.end_time - activity.start_time
+                    day_seconds += duration.total_seconds()
+            
+            day_hours = day_seconds / 3600
+            
+            daily_data[date_str] = {
+                'date': date_str,
+                'day_name': date.strftime('%A'),
+                'total_seconds': day_seconds,
+                'hours': round(day_hours, 2)
+            }
+        
+        # Формируем итоговый ответ
+        response_data = {
+            'today_summary': {
+                'date': today.strftime('%Y-%m-%d'),
+                'total_seconds': today_seconds,
+                'total_time': today_formatted_time
+            },
+            'weekly_summary': {
+                'start_date': week_start.strftime('%Y-%m-%d'),
+                'end_date': today.strftime('%Y-%m-%d'),
+                'total_seconds': week_seconds,
+                'total_time': week_formatted_time,
+                'change_percentage': weekly_change_percentage
+            },
+            'productivity': {
+                'productive_seconds': productive_seconds,
+                'productivity_percentage': productivity_percentage,
+                'active_apps': active_apps,
+                'productive_apps': productive_apps
+            },
+            'top_applications': top_apps,
+            'daily_data': list(daily_data.values())
+        }
+        
+        return Response(response_data)
+
+# Конец новых API_views
