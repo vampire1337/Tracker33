@@ -1,4 +1,4 @@
-('C:\\Users\\mihai\\Documents\\GitHub\\Tracker33\\desktop_app\\build\\TimeTracker\\PYZ-00.pyz',
+('C:\\Users\\mihai\\Documents\\GitHub\\Tracker33\\build\\TimeTracker\\PYZ-00.pyz',
  [('PyQt5',
    'c:\\Users\\mihai\\Documents\\GitHub\\Tracker33\\.venv\\Lib\\site-packages\\PyQt5\\__init__.py',
    'PYMODULE'),

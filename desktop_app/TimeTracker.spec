@@ -2,8 +2,8 @@
 from PyInstaller.utils.hooks import collect_all
 
 datas = [('C:\\Users\\mihai\\Documents\\GitHub\\Tracker33\\desktop_app\\icon.png', '.'), ('C:\\Users\\mihai\\Documents\\GitHub\\Tracker33\\desktop_app\\config.ini', '.')]
-binaries = [('C:\\Users\\mihai\\AppData\\Roaming\\Python\\Python313\\site-packages\\PyQt5/Qt5/plugins/platforms/*', 'platforms'), ('C:\\Users\\mihai\\AppData\\Roaming\\Python\\Python313\\site-packages\\PyQt5/Qt5/plugins/styles/*', 'styles'), ('C:\\Users\\mihai\\AppData\\Roaming\\Python\\Python313\\site-packages\\PyQt5/Qt5/plugins/imageformats/*', 'imageformats')]
-hiddenimports = ['PyQt5', 'PyQt5.QtCore', 'PyQt5.QtGui', 'PyQt5.QtWidgets', 'PyQt5.QtNetwork', 'PyQt5.sip']
+binaries = [('c:\\Users\\mihai\\Documents\\GitHub\\Tracker33\\.venv\\Lib\\site-packages\\PyQt5/Qt5/plugins/platforms/*', 'platforms'), ('c:\\Users\\mihai\\Documents\\GitHub\\Tracker33\\.venv\\Lib\\site-packages\\PyQt5/Qt5/plugins/styles/*', 'styles'), ('c:\\Users\\mihai\\Documents\\GitHub\\Tracker33\\.venv\\Lib\\site-packages\\PyQt5/Qt5/plugins/imageformats/*', 'imageformats')]
+hiddenimports = ['PyQt5', 'PyQt5.QtCore', 'PyQt5.QtGui', 'PyQt5.QtWidgets', 'PyQt5.QtNetwork', 'PyQt5.sip', 'requests', 'json', 'psutil', 'pynput', 'pynput.keyboard', 'pynput.mouse', 'pygetwindow', 'win32gui', 'win32process', 'jwt', 'sqlite3', 'configparser', 'logging', 'threading', 'datetime', 'queue']
 tmp_ret = collect_all('PyQt5.sip')
 datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]
 
