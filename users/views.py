@@ -15,6 +15,7 @@ from .forms import CustomUserChangeForm, CustomUserCreationForm
 from django.contrib.auth.mixins import LoginRequiredMixin
 from .models import CustomUser
 from django.contrib import messages
+from django.contrib.auth.views import PasswordChangeView as BasePasswordChangeView
 
 User = get_user_model()
 
@@ -137,3 +138,30 @@ def download_tracker(request):
     response['Content-Type'] = 'application/octet-stream'  # Правильный MIME-тип для .exe
     response['Content-Length'] = file_size  # Размер файла для прогресса скачивания
     return response
+
+class CustomPasswordChangeView(BasePasswordChangeView):
+    template_name = 'account/password_change.html'
+    success_url = reverse_lazy('password_change_done')
+    
+    def form_valid(self, form):
+        # Получаем пользователя
+        user = self.request.user
+        # Сохраняем старый пароль для логирования
+        old_password_valid = user.check_password(form.cleaned_data.get('old_password'))
+        
+        # Вызываем стандартный метод, который установит пароль
+        response = super().form_valid(form)
+        
+        # Принудительно устанавливаем пароль и сохраняем
+        new_password = form.cleaned_data.get('new_password1')
+        user.set_password(new_password)
+        user.save()
+        
+        # Обновляем сессию, чтобы пользователь не был разлогинен
+        from django.contrib.auth import update_session_auth_hash
+        update_session_auth_hash(self.request, user)
+        
+        # Добавляем сообщение для пользователя
+        messages.success(self.request, 'Ваш пароль был успешно изменен!')
+        
+        return response

@@ -285,12 +285,28 @@ class APIClient:
                 if not activities_url.endswith('activities/'):
                     activities_url += 'activities/'
             
+            # Модифицируем данные: вместо ID приложения будем отправлять имя процесса
+            modified_activity_data = activity_data.copy()
+            
+            # Если в данных есть числовой ID приложения, заменяем его на строковые данные
+            if 'application' in modified_activity_data and isinstance(modified_activity_data['application'], int):
+                # Удаляем ID приложения и используем вместо этого строковые значения
+                app_id = modified_activity_data.pop('application')
+                app_name = modified_activity_data.get('app_name', '')
+                process_name = app_name  # Используем app_name как запасное значение
+                
+                # Записываем информацию об использованном app_name и process_name
+                logger.info(f"Используем строковые данные вместо ID={app_id}: process_name={process_name}, app_name={app_name}")
+                
+                # Устанавливаем поле process_name для идентификации приложения на сервере
+                modified_activity_data['process_name'] = process_name
+            
             logger.info(f"Отправка активности на URL: {activities_url}")
-            logger.info(f"Данные активности: {activity_data}")
+            logger.info(f"Модифицированные данные активности: {modified_activity_data}")
             
             response = self.session.post(
                 activities_url,
-                json=activity_data,
+                json=modified_activity_data,
                 headers=headers,
                 timeout=(10, 30)  # 10 секунд на соединение, 30 на ответ
             )

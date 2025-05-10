@@ -1,13 +1,13 @@
 """
-Модуль-обертка для запуска TimeTracker без проверки pip и других зависимостей
+Модуль-обертка для запуска TimeTracker с корректной обработкой зависимостей
 """
 import os
 import sys
-import importlib.util
-import types
-import builtins
-import requests
 import logging
+import importlib.util
+import requests
+import warnings
+from pathlib import Path
 
 # Настройка директории для логов
 log_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "logs")
@@ -28,34 +28,40 @@ logger = logging.getLogger("LauncherTimeTracker")
 # Отключаем проверку пользовательских site-packages
 os.environ['PYTHONNOUSERSITE'] = '1'
 
-# Переопределяем __import__ для блокировки импорта pip
-original_import = builtins.__import__
+# Подавляем предупреждения
+warnings.simplefilter("ignore")
 
-def patched_import(name, *args, **kwargs):
-    """Перехватчик импортов для блокировки pip"""
-    # Блокируем попытки импорта pip
-    if name == 'pip' or name.startswith('pip.'):
-        # Возвращаем фиктивный модуль вместо реального pip
-        fake_module = types.ModuleType(name)
-        fake_module.__file__ = '<fake-pip>'
-        
-        # Если это pip._internal, добавляем фиктивные подмодули
-        if name == 'pip._internal':
-            fake_module.main = lambda *args, **kwargs: 0
-        
-        return fake_module
+# Подавляем вывод ошибок pynput
+logging.getLogger('pynput').setLevel(logging.CRITICAL)
+
+# Проверка наличия и импорт необходимых модулей
+required_modules = [
+    'PyQt5', 'psutil', 'pynput', 'pygetwindow', 'requests', 
+    'win32gui', 'win32process', 'jwt'
+]
+
+def check_dependencies():
+    """
+    Проверяет наличие необходимых зависимостей
+    Возвращает True, если все зависимости доступны, и False в противном случае
+    """
+    missing_modules = []
     
-    # Для всех остальных модулей используем оригинальный импорт
-    return original_import(name, *args, **kwargs)
-
-# Устанавливаем перехватчик импорта
-builtins.__import__ = patched_import
-
-# Создаем фиктивные модули pip в sys.modules
-sys.modules['pip'] = types.ModuleType('pip')
-sys.modules['pip._internal'] = types.ModuleType('pip._internal')
-sys.modules['pip._internal.main'] = types.ModuleType('pip._internal.main')
-sys.modules['pip._internal.main'].main = lambda *args, **kwargs: 0
+    logger.info("Проверка необходимых зависимостей...")
+    for module_name in required_modules:
+        try:
+            importlib.import_module(module_name)
+            logger.info(f"✓ Модуль {module_name} доступен")
+        except ImportError:
+            logger.warning(f"✗ Модуль {module_name} не найден")
+            missing_modules.append(module_name)
+    
+    if missing_modules:
+        logger.error(f"Отсутствуют необходимые модули: {', '.join(missing_modules)}")
+        return False
+    
+    logger.info("Все необходимые зависимости присутствуют")
+    return True
 
 # Проверяем соединение с сервером
 def check_server_connection():
@@ -75,19 +81,45 @@ def check_server_connection():
         logger.error(f"Ошибка при проверке соединения: {e}")
         return False
 
-# Подавляем предупреждения
-import warnings
-warnings.simplefilter("ignore")
+def create_qt_app():
+    """
+    Создает экземпляр QApplication
+    Инициализирует PyQt для остальной части приложения
+    """
+    try:
+        from PyQt5.QtWidgets import QApplication
+        return QApplication(sys.argv)
+    except ImportError:
+        logger.critical("Не удалось импортировать PyQt5.QtWidgets.QApplication")
+        return None
 
-# Подавляем вывод ошибок pynput
-import logging
-logging.getLogger('pynput').setLevel(logging.CRITICAL)
-
-# Запускаем основное приложение
-print("Запуск TimeTracker...")
-logger.info("Инициализация TimeTracker")
+def show_missing_dependencies_message(missing_modules):
+    """
+    Отображает диалоговое окно с информацией о недостающих зависимостях
+    """
+    try:
+        from PyQt5.QtWidgets import QMessageBox, QApplication
+        app = QApplication.instance() or QApplication(sys.argv)
+        
+        msg = QMessageBox()
+        msg.setIcon(QMessageBox.Critical)
+        msg.setWindowTitle("Отсутствуют зависимости")
+        msg.setText("Для работы приложения необходимы дополнительные компоненты")
+        msg.setInformativeText(f"Отсутствуют модули: {', '.join(missing_modules)}\n\n"
+                              "Приложение будет работать в ограниченном режиме или может быть нестабильным.")
+        msg.setStandardButtons(QMessageBox.Ok)
+        msg.exec_()
+    except Exception as e:
+        logger.error(f"Не удалось показать диалог о недостающих зависимостях: {e}")
 
 if __name__ == "__main__":
+    logger.info("Запуск TimeTracker...")
+    
+    # Проверяем зависимости
+    all_dependencies_available = check_dependencies()
+    if not all_dependencies_available:
+        logger.warning("Некоторые зависимости отсутствуют, но приложение попытается запуститься")
+    
     # Проверяем соединение с сервером
     connection_available = check_server_connection()
     if connection_available:
@@ -98,17 +130,14 @@ if __name__ == "__main__":
     # Импортируем main.py и запускаем основную функцию
     sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
     
-    # Здесь прямой импорт из main, запускаем приложение
     try:
-        # Хак для отключения проверки на относительный импорт
+        # Добавляем текущую директорию в путь для импорта
         sys.path.append('')
         
-        # Исправляем относительный импорт, который вызывает проблему
-        import main_original
-        # Используем другое имя, чтобы избежать конфликта имен
-        main_module = main_original
+        # Импортируем основной модуль приложения
+        import main as main_module
         
-        # Запускаем основную функцию из main.py
+        # Запускаем основную функцию
         if hasattr(main_module, 'TimeTrackerApp') and hasattr(main_module, 'QApplication'):
             app = main_module.QApplication(sys.argv)
             window = main_module.TimeTrackerApp()
@@ -117,6 +146,23 @@ if __name__ == "__main__":
         else:
             logger.error("Не удалось найти класс TimeTrackerApp в main.py")
             print("Не удалось найти класс TimeTrackerApp в main.py")
+    except ImportError as e:
+        logger.error(f"Ошибка импорта при запуске приложения: {e}")
+        # Пытаемся показать сообщение пользователю
+        try:
+            from PyQt5.QtWidgets import QMessageBox, QApplication
+            app = QApplication.instance() or QApplication(sys.argv)
+            
+            msg = QMessageBox()
+            msg.setIcon(QMessageBox.Critical)
+            msg.setWindowTitle("Ошибка запуска")
+            msg.setText("Не удалось запустить приложение")
+            msg.setInformativeText(f"Ошибка: {str(e)}\n\nВозможно, отсутствуют необходимые компоненты.")
+            msg.setStandardButtons(QMessageBox.Ok)
+            msg.exec_()
+        except:
+            # Если не удалось показать GUI-сообщение, выводим в консоль
+            print(f"Ошибка при запуске приложения: {e}")
     except Exception as e:
         logger.error(f"Ошибка при запуске приложения: {e}")
         print(f"Ошибка при запуске приложения: {e}")
