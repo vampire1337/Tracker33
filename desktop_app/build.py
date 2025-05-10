@@ -73,6 +73,24 @@ def build_app():
         '--hidden-import=PyQt5.sip',
         '--collect-all=PyQt5.sip',  # Собираем все файлы sip
         
+        # Добавляем необходимые зависимости
+        '--hidden-import=requests',
+        '--hidden-import=json',
+        '--hidden-import=psutil',
+        '--hidden-import=pynput',
+        '--hidden-import=pynput.keyboard',
+        '--hidden-import=pynput.mouse',
+        '--hidden-import=pygetwindow',
+        '--hidden-import=win32gui',
+        '--hidden-import=win32process',
+        '--hidden-import=jwt',
+        '--hidden-import=sqlite3',
+        '--hidden-import=configparser',
+        '--hidden-import=logging',
+        '--hidden-import=threading',
+        '--hidden-import=datetime',
+        '--hidden-import=queue',
+        
         # Добавляем необходимые Qt плагины
         f'--add-binary={pyqt5_path}/Qt5/plugins/platforms/*;platforms',
         f'--add-binary={pyqt5_path}/Qt5/plugins/styles/*;styles',
