@@ -5,7 +5,14 @@ def send_activity_data(self):
         return
         
     # Получаем API URL из конфигурации
-    api_url = self.config.get('Credentials', 'api_base_url', fallback='http://localhost:8000/api/') + 'activities/'
+    api_url = self.config.get('Credentials', 'api_base_url', fallback='http://46.173.26.149:8000/api/')
+    
+    # Проверяем, что URL оканчивается на /activities/
+    if not api_url.endswith('/activities/'):
+        if not api_url.endswith('/'):
+            api_url += '/'
+        api_url += 'activities/'
+    
     auth_token = self.config.get('Credentials', 'auth_token', fallback=None)
     
     if not auth_token:
@@ -15,7 +22,11 @@ def send_activity_data(self):
     # Заголовки для запроса
     headers = {
         'Content-Type': 'application/json',
-        'Authorization': f'Bearer {auth_token}'
+        'Authorization': f'Bearer {auth_token}',
+        'Accept': 'application/json',
+        'Origin': 'http://localhost:8000',
+        'Referer': 'http://localhost:8000/',
+        'User-Agent': 'TimeTrackerDesktopClient/1.0'
     }
     
     # Собираем пакет данных для отправки
@@ -50,11 +61,20 @@ def send_activity_data(self):
             return
             
         # Отправляем данные на сервер
-        logger.info(f"Отправка {len(activities_to_send_payload)} записей активности на сервер.")
+        logger.info(f"Отправка {len(activities_to_send_payload)} записей активности на сервер по URL: {api_url}")
+        
+        # Инициализируем сессию с таймаутом если она не существует
+        if not hasattr(self, 'session') or self.session is None:
+            self.session = requests.Session()
+            self.session.timeout = (5, 30)
+        
+        # Добавляем доверие к самоподписанным сертификатам
+        self.session.verify = False
+        
         response = self.session.post(api_url, json=activities_to_send_payload, headers=headers, timeout=30)
         
-        if response.status_code == 200 or response.status_code == 201:
-            logger.info(f"Успешно отправлено {len(activities_to_send_payload)} записей активности.")
+        if response.status_code in [200, 201]:
+            logger.info(f"Успешно отправлено {len(activities_to_send_payload)} записей активности. Код ответа: {response.status_code}")
             self.status_bar.showMessage(f"Отправлено {len(activities_to_send_payload)} записей активности.")
         else:
             logger.error(f"Ошибка при отправке данных: {response.status_code} - {response.text}")
