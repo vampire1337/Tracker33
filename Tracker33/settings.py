@@ -145,7 +145,19 @@ MIDDLEWARE = [
 CORS_ALLOWED_ORIGINS = os.getenv('CORS_ALLOWED_ORIGINS', 'http://localhost:8000,http://localhost:3000,http://127.0.0.1:8000,http://127.0.0.1:3000,http://46.173.26.149:8000').split(',')
 
 CORS_ALLOW_CREDENTIALS = True
-CORS_ALLOW_ALL_ORIGINS = DEBUG  # В режиме разработки разрешаем доступ с любых доменов
+CORS_ALLOW_ALL_ORIGINS = True  # Разрешаем доступ с любых доменов
+CORS_ALLOW_METHODS = ['DELETE', 'GET', 'OPTIONS', 'PATCH', 'POST', 'PUT']
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+]
 
 # Cache settings
 CACHES = {

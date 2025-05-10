@@ -1,6 +1,6 @@
 import requests
 import json
-from typing import Dict, Optional, Tuple, Any
+from typing import Dict, Optional, Tuple, Any, List
 import logging
 from datetime import datetime, timedelta
 import jwt
@@ -339,6 +339,184 @@ class APIClient:
                 return None
         except Exception as e:
             logger.error(f"Ошибка при получении информации о пользователе: {e}")
+            return None
+
+    def get_statistics(self, days: int = 7) -> Optional[Dict]:
+        """Получение статистики за указанный период"""
+        try:
+            headers = self.get_headers()
+            if not headers:
+                logger.warning("Нет действительного токена для получения статистики")
+                return None
+                
+            # Формируем URL для получения статистики
+            stats_url = f"{self.base_url}"
+            if not stats_url.endswith('/'):
+                stats_url += '/'
+            if not stats_url.endswith('api/'):
+                stats_url += 'api/'
+                
+            stats_url += f'statistics/?days={days}'
+            
+            logger.info(f"Получение статистики за {days} дней с URL: {stats_url}")
+            
+            response = self.session.get(
+                stats_url,
+                headers=headers,
+                timeout=(15, 30)  # Увеличенный таймаут для статистики
+            )
+            
+            if response.status_code == 200:
+                logger.info("Статистика успешно получена")
+                return response.json()
+            else:
+                logger.error(f"Ошибка при получении статистики: {response.status_code} - {response.text}")
+                return None
+        except Exception as e:
+            logger.error(f"Ошибка при получении статистики: {e}")
+            return None
+
+    def get_daily_activity(self, date: str = None) -> Optional[Dict]:
+        """Получение активности по дням"""
+        try:
+            headers = self.get_headers()
+            if not headers:
+                logger.warning("Нет действительного токена для получения активности по дням")
+                return None
+            
+            # Формируем URL для получения активности по дням
+            daily_url = f"{self.base_url}"
+            if not daily_url.endswith('/'):
+                daily_url += '/'
+            if not daily_url.endswith('api/'):
+                daily_url += 'api/'
+                
+            daily_url += 'daily-activity/'
+            
+            if date:
+                daily_url += f'?date={date}'
+            
+            logger.info(f"Получение активности по дням с URL: {daily_url}")
+            
+            response = self.session.get(
+                daily_url,
+                headers=headers,
+                timeout=(15, 30)  # Увеличенный таймаут для получения активности
+            )
+            
+            if response.status_code == 200:
+                logger.info("Активность по дням успешно получена")
+                return response.json()
+            else:
+                logger.error(f"Ошибка при получении активности по дням: {response.status_code} - {response.text}")
+                return None
+        except Exception as e:
+            logger.error(f"Ошибка при получении активности по дням: {e}")
+            return None
+
+    def get_time_distribution(self, days: int = 7) -> Optional[Dict]:
+        """Получение распределения времени по приложениям"""
+        try:
+            headers = self.get_headers()
+            if not headers:
+                logger.warning("Нет действительного токена для получения распределения времени")
+                return None
+            
+            # Формируем URL для получения распределения времени
+            distribution_url = f"{self.base_url}"
+            if not distribution_url.endswith('/'):
+                distribution_url += '/'
+            if not distribution_url.endswith('api/'):
+                distribution_url += 'api/'
+                
+            distribution_url += f'time-distribution/?days={days}'
+            
+            logger.info(f"Получение распределения времени за {days} дней с URL: {distribution_url}")
+            
+            response = self.session.get(
+                distribution_url,
+                headers=headers,
+                timeout=(15, 30)  # Увеличенный таймаут для получения распределения
+            )
+            
+            if response.status_code == 200:
+                logger.info("Распределение времени успешно получено")
+                return response.json()
+            else:
+                logger.error(f"Ошибка при получении распределения времени: {response.status_code} - {response.text}")
+                return None
+        except Exception as e:
+            logger.error(f"Ошибка при получении распределения времени: {e}")
+            return None
+
+    def get_dashboard_data(self) -> Optional[Dict]:
+        """Получение данных для дашборда"""
+        try:
+            headers = self.get_headers()
+            if not headers:
+                logger.warning("Нет действительного токена для получения данных дашборда")
+                return None
+            
+            # Формируем URL для получения данных дашборда
+            dashboard_url = f"{self.base_url}"
+            if not dashboard_url.endswith('/'):
+                dashboard_url += '/'
+            if not dashboard_url.endswith('api/'):
+                dashboard_url += 'api/'
+                
+            dashboard_url += 'dashboard/'
+            
+            logger.info(f"Получение данных дашборда с URL: {dashboard_url}")
+            
+            response = self.session.get(
+                dashboard_url,
+                headers=headers,
+                timeout=(15, 30)  # Увеличенный таймаут для получения данных дашборда
+            )
+            
+            if response.status_code == 200:
+                logger.info("Данные дашборда успешно получены")
+                return response.json()
+            else:
+                logger.error(f"Ошибка при получении данных дашборда: {response.status_code} - {response.text}")
+                return None
+        except Exception as e:
+            logger.error(f"Ошибка при получении данных дашборда: {e}")
+            return None
+
+    def get_tracked_applications(self) -> Optional[List[Dict]]:
+        """Получение списка отслеживаемых приложений"""
+        try:
+            headers = self.get_headers()
+            if not headers:
+                logger.warning("Нет действительного токена для получения списка приложений")
+                return None
+            
+            # Формируем URL для получения списка приложений
+            apps_url = f"{self.base_url}"
+            if not apps_url.endswith('/'):
+                apps_url += '/'
+            if not apps_url.endswith('api/'):
+                apps_url += 'api/'
+                
+            apps_url += 'tracked-apps/'
+            
+            logger.info(f"Получение списка отслеживаемых приложений с URL: {apps_url}")
+            
+            response = self.session.get(
+                apps_url,
+                headers=headers,
+                timeout=(10, 20)
+            )
+            
+            if response.status_code == 200:
+                logger.info(f"Успешно получено {len(response.json())} отслеживаемых приложений")
+                return response.json()
+            else:
+                logger.error(f"Ошибка при получении списка приложений: {response.status_code} - {response.text}")
+                return None
+        except Exception as e:
+            logger.error(f"Ошибка при получении списка приложений: {e}")
             return None
 
     def logout(self):
