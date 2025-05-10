@@ -1,0 +1,129 @@
+{% extends 'admin_panel/base_admin.html' %}
+
+{% block admin_content %}
+<h1 class="admin-title">Панель управления</h1>
+
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <h5 class="card-title">Пользователи</h5>
+                <p class="card-text display-4">{{ total_users }}</p>
+                <p class="card-text small">Активных: {{ active_users }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <h5 class="card-title">Приложения</h5>
+                <p class="card-text display-4">{{ total_applications }}</p>
+                <p class="card-text small">Всего отслеживаемых</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <h5 class="card-title">Активности</h5>
+                <p class="card-text display-4">{{ total_activities }}</p>
+                <p class="card-text small">Всего записей</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body">
+                <h5 class="card-title">Версия</h5>
+                <p class="card-text">Time Tracker v1.0</p>
+                <p class="card-text small">Последнее обновление: {% now "d.m.Y" %}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Топ пользователей</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Имя пользователя</th>
+                                <th>Активностей</th>
+                                <th>Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for user in top_users %}
+                            <tr>
+                                <td>{{ user.username }}</td>
+                                <td>{{ user.activity_count }}</td>
+                                <td>
+                                    <a href="{% url 'admin_panel:user_detail' user.pk %}" class="btn btn-sm btn-info">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="{% url 'admin_panel:user_edit' user.pk %}" class="btn btn-sm btn-primary">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="3" class="text-center">Нет пользователей</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <a href="{% url 'admin_panel:users' %}" class="btn btn-outline-primary mt-3">Все пользователи</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Быстрые действия</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <a href="{% url 'admin_panel:users' %}" class="btn btn-primary btn-lg w-100">
+                            <i class="fas fa-users me-2"></i> Управление пользователями
+                        </a>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <a href="{% url 'admin_panel:applications' %}" class="btn btn-success btn-lg w-100">
+                            <i class="fas fa-laptop me-2"></i> Управление приложениями
+                        </a>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <a href="{% url 'admin_panel:activities' %}" class="btn btn-info btn-lg w-100">
+                            <i class="fas fa-chart-line me-2"></i> Просмотр активности
+                        </a>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <a href="{% url 'admin_panel:logs' %}" class="btn btn-warning btn-lg w-100">
+                            <i class="fas fa-file-alt me-2"></i> Просмотр логов
+                        </a>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <a href="{% url 'admin_panel:database' %}" class="btn btn-danger btn-lg w-100">
+                            <i class="fas fa-database me-2"></i> База данных
+                        </a>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <a href="{% url 'dashboard' %}" class="btn btn-secondary btn-lg w-100">
+                            <i class="fas fa-arrow-left me-2"></i> Вернуться на сайт
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 
