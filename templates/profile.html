@@ -70,6 +70,7 @@
                 </div>
                 <div class="card-body">
                     <a href="{% url 'password_change' %}" class="btn btn-warning mb-3">Изменить пароль</a>
+                    <a href="{% url 'download_tracker' %}" class="btn btn-success mb-3">Скачать TimeTracker</a>
                     <p class="text-muted">Последний вход: {{ user.last_login|date:"d.m.Y H:i" }}</p>
                 </div>
             </div>
