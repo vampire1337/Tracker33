@@ -95,6 +95,8 @@
                                 <td>
                                     {% if activity.duration %}
                                         {{ activity.duration|time:"H:i:s" }}
+                                    {% elif activity.current_duration %}
+                                        {{ activity.current_duration|time:"H:i:s" }} (активно)
                                     {% else %}
                                         00:00:00
                                     {% endif %}

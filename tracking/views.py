@@ -192,8 +192,11 @@ class StatisticsView(LoginRequiredMixin, TemplateView):
                     else:
                         app.trend_class = 'bg-secondary'
                 else:
-                    app.trend = 100  # Если раньше не было активности, то тренд 100%
-                    app.trend_class = 'bg-success'
+                    # Если раньше не было активности, показываем нейтральный тренд вместо +100%
+                    app.trend = 0
+                    app.trend_class = 'bg-info'
+                    # Добавляем пометку для интерфейса, что это новое приложение
+                    app.is_new = True
             else:
                 app.formatted_time = "00:00:00"
                 app.percentage = 0
@@ -252,6 +255,30 @@ class StatisticsView(LoginRequiredMixin, TemplateView):
         productive_apps = [app for app in apps if getattr(app, 'is_productive', False)]
         productive_seconds = sum(app.total_seconds for app in productive_apps if getattr(app, 'total_seconds', None))
         productivity_percent = round((productive_seconds / all_apps_seconds) * 100) if all_apps_seconds > 0 else 0
+        
+        # Логируем информацию о продуктивных приложениях для отладки
+        print(f"[DEBUG] Продуктивные приложения: {len(productive_apps)}")
+        for app in productive_apps:
+            print(f"[DEBUG] Продуктивное приложение: {app.name}, время: {getattr(app, 'total_seconds', 0)}")
+        print(f"[DEBUG] Всего продуктивное время: {productive_seconds}, общее время: {all_apps_seconds}, процент: {productivity_percent}%")
+        
+        # Убедимся, что продуктивность считается правильно
+        if not productive_apps and all_apps_seconds > 0:
+            # Проверим статус продуктивных приложений в базе данных
+            app_ids = [app.id for app in apps if hasattr(app, 'id')]
+            productive_db_apps = Application.objects.filter(id__in=app_ids, is_productive=True)
+            
+            if productive_db_apps.exists():
+                print(f"[DEBUG] Найдены продуктивные приложения в БД, но не в текущей выборке: {productive_db_apps.count()}")
+                # Принудительно помечаем приложения как продуктивные
+                for app in apps:
+                    if hasattr(app, 'id') and productive_db_apps.filter(id=app.id).exists():
+                        app.is_productive = True
+                
+                # Пересчитываем продуктивность
+                productive_apps = [app for app in apps if getattr(app, 'is_productive', False)]
+                productive_seconds = sum(app.total_seconds for app in productive_apps if getattr(app, 'total_seconds', None))
+                productivity_percent = round((productive_seconds / all_apps_seconds) * 100) if all_apps_seconds > 0 else 0
         
         # Добавляем данные в контекст
         context['apps'] = apps
@@ -398,7 +425,7 @@ class KeyboardActivityViewSet(viewsets.ModelViewSet):
 class DashboardView(LoginRequiredMixin, TemplateView):
     template_name = 'dashboard.html'
     
-    # Сопоставление известных процессов с их реальными названиями
+    # Словарь для отображения понятных названий приложений
     app_name_mapping = {
         'browser.exe': 'Yandex Браузер',
         'chrome.exe': 'Google Chrome',
@@ -451,12 +478,24 @@ class DashboardView(LoginRequiredMixin, TemplateView):
         # Добавляем timestamp для предотвращения кэширования
         context['timestamp'] = timezone.now().timestamp()
 
-        # Всегда загружаем свежие данные
-        # Добавляем также последние активности для отображения в таблице "Последние действия"
-        context['today_activity'] = UserActivity.objects.filter(
+        # Всегда загружаем свежие данные для последних активностей
+        today_activities = UserActivity.objects.filter(
             user=user,
             start_time__date=today
         ).select_related('application').order_by('-start_time')[:10]  # Ограничиваем до 10 последних записей
+        
+        # Убедимся, что у каждой активности есть правильная длительность
+        for activity in today_activities:
+            # Если длительность не установлена, но есть начало и конец, рассчитываем её
+            if not activity.duration and activity.start_time and activity.end_time:
+                activity.duration = activity.end_time - activity.start_time
+                activity.save()
+            # Если активность не завершена, рассчитываем текущую длительность
+            elif activity.start_time and not activity.end_time:
+                current_time = timezone.now()
+                activity.current_duration = current_time - activity.start_time
+        
+        context['today_activity'] = today_activities
         
         # Получаем активные приложения
         active_apps = Application.objects.filter(
@@ -895,6 +934,58 @@ class StatisticsAPIView(APIView):
         }
         
         return Response(response_data)
+
+class ExportStatisticsAPIView(APIView):
+    """
+    API для экспорта статистики использования приложений в CSV формате.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get(self, request, format=None):
+        user = request.user
+        days = int(request.query_params.get('days', 7))
+        
+        today = timezone.now().date()
+        start_date = today - timedelta(days=days-1)
+        
+        # Получаем активности пользователя за указанный период
+        activities = UserActivity.objects.filter(
+            user=user,
+            start_time__date__gte=start_date,
+            start_time__date__lte=today
+        ).select_related('application').order_by('start_time')
+        
+        import csv
+        from django.http import HttpResponse
+        
+        # Создаем HTTP ответ с CSV файлом
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = f'attachment; filename="activity_report_{start_date.strftime("%Y-%m-%d")}_{today.strftime("%Y-%m-%d")}.csv"'
+        
+        writer = csv.writer(response)
+        writer.writerow(['Дата', 'Время начала', 'Время окончания', 'Длительность', 'Приложение', 'Процесс', 'Нажатия клавиш', 'Продуктивное'])
+        
+        for activity in activities:
+            if activity.duration:
+                duration_str = str(activity.duration)
+            elif activity.start_time and activity.end_time:
+                duration = activity.end_time - activity.start_time
+                duration_str = str(duration)
+            else:
+                duration_str = '00:00:00'
+            
+            writer.writerow([
+                activity.start_time.strftime('%Y-%m-%d'),
+                activity.start_time.strftime('%H:%M:%S'),
+                activity.end_time.strftime('%H:%M:%S') if activity.end_time else '',
+                duration_str,
+                activity.application.name,
+                activity.application.process_name,
+                activity.keyboard_presses,
+                'Да' if activity.application.is_productive else 'Нет'
+            ])
+        
+        return response
 
 class DailyActivityAPIView(APIView):
     """
