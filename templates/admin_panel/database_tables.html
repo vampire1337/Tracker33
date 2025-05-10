@@ -1,0 +1,74 @@
+{% extends 'admin_panel/base_admin.html' %}
+
+{% block admin_content %}
+<h1 class="admin-title">База данных</h1>
+
+<div class="row">
+    <div class="col-md-3 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Таблицы</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    {% for table in tables %}
+                    <a href="?table={{ table }}" class="list-group-item list-group-item-action {% if selected_table == table %}active{% endif %}">
+                        {{ table }}
+                    </a>
+                    {% empty %}
+                    <div class="list-group-item text-center">Нет доступных таблиц</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-9">
+        {% if selected_table %}
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">Таблица: {{ selected_table }}</h5>
+                <span class="badge bg-info">Записей в выборке: {{ total_rows }}</span>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped table-bordered table-sm">
+                        <thead>
+                            <tr>
+                                {% for column in columns %}
+                                <th>{{ column }}</th>
+                                {% endfor %}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in rows %}
+                            <tr>
+                                {% for cell in row %}
+                                <td>{{ cell }}</td>
+                                {% endfor %}
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="{{ columns|length }}" class="text-center">Нет данных</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="text-muted small mt-2">* Отображается максимум 100 записей</div>
+            </div>
+        </div>
+        {% else %}
+        <div class="card">
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <h5 class="alert-heading">Информация</h5>
+                    <p>Выберите таблицу из списка слева, чтобы просмотреть её содержимое.</p>
+                    <p class="mb-0">Для безопасности отображается только первые 100 записей каждой таблицы.</p>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %} 

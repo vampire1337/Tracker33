@@ -1,0 +1,156 @@
+{% extends 'admin_panel/base_admin.html' %}
+
+{% block admin_content %}
+<h1 class="admin-title">Информация о пользователе</h1>
+
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Основная информация</h5>
+            </div>
+            <div class="card-body">
+                <table class="table">
+                    <tr>
+                        <th style="width: 150px;">ID:</th>
+                        <td>{{ user_obj.id }}</td>
+                    </tr>
+                    <tr>
+                        <th>Имя пользователя:</th>
+                        <td>{{ user_obj.username }}</td>
+                    </tr>
+                    <tr>
+                        <th>Email:</th>
+                        <td>{{ user_obj.email }}</td>
+                    </tr>
+                    <tr>
+                        <th>Полное имя:</th>
+                        <td>{{ user_obj.get_full_name }}</td>
+                    </tr>
+                    <tr>
+                        <th>Статус:</th>
+                        <td>
+                            {% if user_obj.is_active %}
+                                <span class="badge bg-success">Активен</span>
+                            {% else %}
+                                <span class="badge bg-danger">Неактивен</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Роли:</th>
+                        <td>
+                            {% if user_obj.is_superuser %}
+                                <span class="badge bg-primary">Суперпользователь</span>
+                            {% endif %}
+                            {% if user_obj.is_staff %}
+                                <span class="badge bg-info">Персонал</span>
+                            {% endif %}
+                            {% if not user_obj.is_superuser and not user_obj.is_staff %}
+                                <span class="badge bg-secondary">Обычный пользователь</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Дата регистрации:</th>
+                        <td>{{ user_obj.date_joined|date:"d.m.Y H:i" }}</td>
+                    </tr>
+                    <tr>
+                        <th>Последний вход:</th>
+                        <td>{{ user_obj.last_login|date:"d.m.Y H:i" }}</td>
+                    </tr>
+                </table>
+                
+                <div class="mt-3">
+                    <a href="{% url 'admin_panel:user_edit' user_obj.pk %}" class="btn btn-primary">
+                        <i class="fas fa-edit me-2"></i> Редактировать
+                    </a>
+                    <a href="{% url 'admin_panel:users' %}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left me-2"></i> Назад к списку
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Приложения пользователя</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Название</th>
+                                <th>Процесс</th>
+                                <th>Активностей</th>
+                                <th>Продуктивное</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for app in applications %}
+                            <tr>
+                                <td>{{ app.name }}</td>
+                                <td>{{ app.process_name }}</td>
+                                <td>{{ app.activity_count }}</td>
+                                <td>
+                                    {% if app.is_productive %}
+                                        <span class="badge bg-success">Да</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Нет</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center">Нет приложений</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h5 class="card-title mb-0">Последние активности</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Дата и время</th>
+                        <th>Приложение</th>
+                        <th>Начало</th>
+                        <th>Окончание</th>
+                        <th>Длительность</th>
+                        <th>Нажатия клавиш</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for activity in activities %}
+                    <tr>
+                        <td>{{ activity.start_time|date:"d.m.Y H:i:s" }}</td>
+                        <td>{{ activity.application.name }}</td>
+                        <td>{{ activity.start_time|time:"H:i:s" }}</td>
+                        <td>{{ activity.end_time|time:"H:i:s" }}</td>
+                        <td>{{ activity.duration }}</td>
+                        <td>{{ activity.keyboard_presses }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center">Нет активности</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %} 

@@ -1,0 +1,54 @@
+{% extends 'admin_panel/base_admin.html' %}
+
+{% block admin_content %}
+<h1 class="admin-title">Просмотр логов</h1>
+
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="card-title mb-0">Выберите файл лога</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="list-group">
+                    {% for log_file in log_files %}
+                    <a href="?log={{ log_file }}" class="list-group-item list-group-item-action {% if selected_log == log_file %}active{% endif %}">
+                        {{ log_file }}
+                    </a>
+                    {% empty %}
+                    <div class="list-group-item text-center">Нет доступных логов</div>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="alert alert-info">
+                    <h5 class="alert-heading">Информация</h5>
+                    <p>Выберите файл лога из списка слева, чтобы просмотреть его содержимое.</p>
+                    <p class="mb-0">Отображаются последние 1000 строк лога.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if selected_log %}
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="card-title mb-0">Содержимое файла: {{ selected_log }}</h5>
+        <a href="?log={{ selected_log }}" class="btn btn-sm btn-outline-primary">Обновить</a>
+    </div>
+    <div class="card-body">
+        {% if error %}
+            <div class="alert alert-danger">{{ error }}</div>
+        {% elif log_content %}
+            <div class="bg-dark text-light p-3" style="max-height: 600px; overflow-y: auto;">
+                <pre style="white-space: pre-wrap;">{{ log_content }}</pre>
+            </div>
+        {% else %}
+            <div class="alert alert-warning">Файл лога пуст или не может быть прочитан.</div>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+{% endblock %} 

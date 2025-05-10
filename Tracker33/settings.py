@@ -126,6 +126,7 @@ INSTALLED_APPS = [
     
     'users',
     'tracking',
+    'admin_panel',
 ]
 
 MIDDLEWARE = [

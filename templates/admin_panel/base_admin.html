@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+
+{% block title %}Админ-панель - Time Tracker{% endblock %}
+
+{% block extra_css %}
+<style>
+    .admin-sidebar {
+        min-height: calc(100vh - 56px);
+        background-color: #f8f9fa;
+        padding-top: 20px;
+    }
+    .admin-sidebar .nav-link {
+        color: #495057;
+        border-radius: 0;
+    }
+    .admin-sidebar .nav-link.active {
+        background-color: #007bff;
+        color: white;
+    }
+    .admin-sidebar .nav-link:hover:not(.active) {
+        background-color: #e9ecef;
+    }
+    .admin-content {
+        padding: 20px;
+    }
+    .admin-title {
+        margin-bottom: 20px;
+        border-bottom: 1px solid #dee2e6;
+        padding-bottom: 10px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-2 admin-sidebar">
+            <ul class="nav flex-column">
+                <li class="nav-item">
+                    <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}" href="{% url 'admin_panel:dashboard' %}">
+                        <i class="fas fa-tachometer-alt me-2"></i> Панель управления
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.resolver_match.url_name == 'users' or request.resolver_match.url_name == 'user_detail' or request.resolver_match.url_name == 'user_edit' %}active{% endif %}" href="{% url 'admin_panel:users' %}">
+                        <i class="fas fa-users me-2"></i> Пользователи
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.resolver_match.url_name == 'applications' %}active{% endif %}" href="{% url 'admin_panel:applications' %}">
+                        <i class="fas fa-laptop me-2"></i> Приложения
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.resolver_match.url_name == 'activities' %}active{% endif %}" href="{% url 'admin_panel:activities' %}">
+                        <i class="fas fa-chart-line me-2"></i> Активность
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.resolver_match.url_name == 'logs' %}active{% endif %}" href="{% url 'admin_panel:logs' %}">
+                        <i class="fas fa-file-alt me-2"></i> Логи
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.resolver_match.url_name == 'database' %}active{% endif %}" href="{% url 'admin_panel:database' %}">
+                        <i class="fas fa-database me-2"></i> База данных
+                    </a>
+                </li>
+                <li class="nav-item mt-4">
+                    <a class="nav-link" href="{% url 'dashboard' %}">
+                        <i class="fas fa-arrow-left me-2"></i> Вернуться на сайт
+                    </a>
+                </li>
+            </ul>
+        </div>
+        
+        <!-- Content -->
+        <div class="col-md-10 admin-content">
+            {% if messages %}
+                <div class="messages">
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+            
+            {% block admin_content %}{% endblock %}
+        </div>
+    </div>
+</div>
+{% endblock %} 
