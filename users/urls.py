@@ -4,14 +4,14 @@ from .views import (
     UserLoginView,
     UserProfileView,
     ProfileView,
-    download_tracker
+    download_tracker,
+    CustomPasswordChangeView
 )
 from django.contrib.auth.views import (
     PasswordResetView,
     PasswordResetDoneView,
     PasswordResetConfirmView,
     PasswordResetCompleteView,
-    PasswordChangeView,
     PasswordChangeDoneView
 )
 from .simple_password_reset import SimplePasswordResetView, SimplePasswordResetConfirmView
@@ -47,11 +47,8 @@ urlpatterns = [
         template_name='account/password_reset_complete.html'
     ), name='password_reset_complete'),
     
-    # Password change
-    path('password_change/', PasswordChangeView.as_view(
-        template_name='account/password_change.html',
-        success_url='/users/password_change/done/'
-    ), name='password_change'),
+    # Password change - используем наш собственный класс
+    path('password_change/', CustomPasswordChangeView.as_view(), name='password_change'),
     path('password_change/done/', PasswordChangeDoneView.as_view(
         template_name='account/password_change_done.html'
     ), name='password_change_done'),

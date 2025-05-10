@@ -320,7 +320,7 @@ class UserActivityViewSet(viewsets.ModelViewSet):
             # Получаем данные запроса
             request_data = self.request.data
             app_name = request_data.get('app_name', '')
-            process_name = request_data.get('application', '')  # Могло быть передано как ID или как имя процесса
+            process_name = request_data.get('process_name', request_data.get('application', ''))  # Получаем process_name или application
             keyboard_presses = request_data.get('keyboard_presses', 0)
             
             # Логируем полученные данные для отладки
@@ -339,23 +339,28 @@ class UserActivityViewSet(viewsets.ModelViewSet):
                     try:
                         application = Application.objects.get(id=process_id, user=self.request.user)
                     except Application.DoesNotExist:
-                        pass
+                        # Если приложение с таким ID не существует, не используем его
+                        print(f"Приложение с ID={process_id} не найдено, создаем новое")
+                        is_numeric = False
             except (TypeError, ValueError, AttributeError):
                 pass
             
             # Если приложение не найдено по ID, ищем по имени процесса
             if not application:
                 try:
-                    # Если process_name не число, используем его как есть
+                    # Если process_name не число, используем его как имя процесса
                     process_name_str = str(process_name) if process_name is not None else ""
                     application = Application.objects.get(process_name=process_name_str, user=self.request.user)
+                    print(f"Найдено приложение по process_name={process_name_str}: {application}")
                 except Application.DoesNotExist:
                     # Создаем новое приложение
+                    application_name = app_name or str(process_name)
                     application = Application.objects.create(
-                        name=app_name or str(process_name),
+                        name=application_name,
                         process_name=str(process_name) if process_name is not None else "",
                         user=self.request.user
                     )
+                    print(f"Создано новое приложение: name={application_name}, process_name={process_name}")
             
             # Сохраняем активность с правильным объектом приложения и всеми данными
             serializer.save(
