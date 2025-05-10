@@ -18,6 +18,7 @@ from .views import (
     TimeLogDeleteView,
     LandingView,
     StatisticsAPIView,
+    ExportStatisticsAPIView,
     DailyActivityAPIView,
     TimeDistributionAPIView,
     DashboardAPIView
@@ -35,6 +36,7 @@ api_urlpatterns = [
     path('timelogs/', TimeLogListCreateView.as_view(), name='timelog-list-create'),
     path('timelogs/<int:pk>/', TimeLogDetailView.as_view(), name='timelog-detail'),
     path('statistics/', StatisticsAPIView.as_view(), name='statistics-api'),
+    path('export-statistics/', ExportStatisticsAPIView.as_view(), name='export-statistics-api'),
     path('daily-activity/', DailyActivityAPIView.as_view(), name='daily-activity-api'),
     path('time-distribution/', TimeDistributionAPIView.as_view(), name='time-distribution-api'),
     path('dashboard/', DashboardAPIView.as_view(), name='dashboard-api'),
