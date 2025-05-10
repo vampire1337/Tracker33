@@ -928,7 +928,7 @@ class TimeTrackerApp(QMainWindow):
         toggle_app_button = QPushButton("Включить/выключить")
         toggle_app_button.clicked.connect(self.toggle_app)
         
-        toggle_productive_button = QPushButton("Отметить как полезное/неполезное")
+        toggle_productive_button = QPushButton("Отметить как продуктивное/непродуктивное")
         toggle_productive_button.clicked.connect(self.toggle_productive)
         
         remove_app_button = QPushButton("Удалить из отслеживаемых")
@@ -941,21 +941,21 @@ class TimeTrackerApp(QMainWindow):
         all_apps_layout.addWidget(self.app_list)
         all_apps_layout.addLayout(all_apps_buttons)
         
-        # Вкладка "Полезные приложения"
+        # Вкладка "Продуктивные приложения"
         productive_tab = QWidget()
         productive_layout = QVBoxLayout(productive_tab)
         
-        # Список полезных приложений
+        # Список продуктивных приложений
         self.productive_list = QListWidget()
         self.productive_list.setSelectionMode(QListWidget.SingleSelection)
         
         productive_layout.addWidget(self.productive_list)
         
-        # Вкладка "Неполезные приложения"
+        # Вкладка "Непродуктивные приложения"
         non_productive_tab = QWidget()
         non_productive_layout = QVBoxLayout(non_productive_tab)
         
-        # Список неполезных приложений
+        # Список непродуктивных приложений
         self.non_productive_list = QListWidget()
         self.non_productive_list.setSelectionMode(QListWidget.SingleSelection)
         
@@ -963,8 +963,8 @@ class TimeTrackerApp(QMainWindow):
         
         # Добавляем вкладки
         self.tabs.addTab(all_apps_tab, "Все приложения")
-        self.tabs.addTab(productive_tab, "Полезные приложения")
-        self.tabs.addTab(non_productive_tab, "Неполезные приложения")
+        self.tabs.addTab(productive_tab, "Продуктивные приложения")
+        self.tabs.addTab(non_productive_tab, "Непродуктивные приложения")
         
         layout.addWidget(self.tabs)
         
@@ -1146,7 +1146,7 @@ class TimeTrackerApp(QMainWindow):
                 # Проверяем, запущено ли сейчас приложение
                 is_running = app_name.lower() in (app.lower() for app in running_apps)
                 
-                item_text = f"{app_name} ({'Полезное' if is_useful else 'Неполезное'}, " \
+                item_text = f"{app_name} ({'Продуктивное' if is_useful else 'Непродуктивное'}, " \
                          f"{'Запущено' if is_running else 'Не запущено'})"
                 
                 sorted_apps.append((app_name, item_text, is_useful, is_running))
@@ -1205,12 +1205,12 @@ class TimeTrackerApp(QMainWindow):
             
             # Обновляем заголовки вкладок со статистикой
             self.tabs.setTabText(0, f"Все приложения ({self.app_list.count()})")
-            self.tabs.setTabText(1, f"Полезные приложения ({self.productive_list.count()})")
-            self.tabs.setTabText(2, f"Неполезные приложения ({self.non_productive_list.count()})")
+            self.tabs.setTabText(1, f"Продуктивные приложения ({self.productive_list.count()})")
+            self.tabs.setTabText(2, f"Непродуктивные приложения ({self.non_productive_list.count()})")
             
             logger.info(f"Обновлен список приложений: {self.app_list.count()} процессов")
             self.status_bar.showMessage(f"Отслеживается: {total_tracked} приложений " \
-                                       f"(полезных: {productive_count}, неполезных: {non_productive_count})")
+                                       f"(продуктивных: {productive_count}, непродуктивных: {non_productive_count})")
         except Exception as e:
             logger.error(f"Ошибка при обновлении списка приложений: {e}", exc_info=True)
             self.status_bar.showMessage(f"Ошибка при обновлении списка приложений: {str(e)[:50]}")
@@ -1308,16 +1308,16 @@ class TimeTrackerApp(QMainWindow):
             self._login_dialog_active = False
 
     def toggle_productive(self):
-        """Переключает статус полезности приложения"""
+        """Переключает статус продуктивности приложения"""
         # Получаем текущую вкладку
         current_tab = self.tabs.currentIndex()
         
         # Выбираем соответствующий список приложений
         if current_tab == 0:  # Вкладка "Все приложения"
             app_list_widget = self.app_list
-        elif current_tab == 1:  # Вкладка "Полезные приложения"
+        elif current_tab == 1:  # Вкладка "Продуктивные приложения"
             app_list_widget = self.productive_list
-        elif current_tab == 2:  # Вкладка "Неполезные приложения"
+        elif current_tab == 2:  # Вкладка "Непродуктивные приложения"
             app_list_widget = self.non_productive_list
         else:
             return
@@ -1346,15 +1346,15 @@ class TimeTrackerApp(QMainWindow):
             
             # Если не отслеживается, сначала добавляем его в отслеживаемые приложения
             if not is_tracked:
-                is_useful = True  # По умолчанию добавляем как полезное
+                is_useful = True  # По умолчанию добавляем как продуктивное
                 self.tracked_applications_config[config_key] = is_useful
-                status_text = "добавлено как полезное"
+                status_text = "добавлено как продуктивное"
             else:
-                # Если уже отслеживается, инвертируем статус полезности
+                # Если уже отслеживается, инвертируем статус продуктивности
                 is_useful = self.tracked_applications_config[config_key]
                 new_useful_status = not is_useful
                 self.tracked_applications_config[config_key] = new_useful_status
-                status_text = "полезное" if new_useful_status else "неполезное"
+                status_text = "продуктивное" if new_useful_status else "непродуктивное"
             
             # Обновляем конфигурацию
             if not self.config.has_section('Applications'):
@@ -1369,9 +1369,9 @@ class TimeTrackerApp(QMainWindow):
             self.update_app_list()
             
             QMessageBox.information(self, "Успешно", f"Приложение '{app_name}' теперь {status_text}")
-            logger.info(f"Изменен статус полезности приложения '{app_name}': {status_text}")
+            logger.info(f"Изменен статус продуктивности приложения '{app_name}': {status_text}")
         except Exception as e:
-            logger.error(f"Ошибка при изменении статуса полезности приложения '{app_name}': {e}")
+            logger.error(f"Ошибка при изменении статуса продуктивности приложения '{app_name}': {e}")
             QMessageBox.warning(self, "Ошибка", f"Не удалось изменить статус приложения: {e}")
 
     def remove_app(self):
@@ -1382,9 +1382,9 @@ class TimeTrackerApp(QMainWindow):
         # Выбираем соответствующий список приложений
         if current_tab == 0:  # Вкладка "Все приложения"
             app_list_widget = self.app_list
-        elif current_tab == 1:  # Вкладка "Полезные приложения"
+        elif current_tab == 1:  # Вкладка "Продуктивные приложения"
             app_list_widget = self.productive_list
-        elif current_tab == 2:  # Вкладка "Неполезные приложения"
+        elif current_tab == 2:  # Вкладка "Непродуктивные приложения"
             app_list_widget = self.non_productive_list
         else:
             return
@@ -1553,9 +1553,9 @@ class TimeTrackerApp(QMainWindow):
         # Выбираем соответствующий список приложений
         if current_tab == 0:  # Вкладка "Все приложения"
             app_list_widget = self.app_list
-        elif current_tab == 1:  # Вкладка "Полезные приложения"
+        elif current_tab == 1:  # Вкладка "Продуктивные приложения"
             app_list_widget = self.productive_list
-        elif current_tab == 2:  # Вкладка "Неполезные приложения"
+        elif current_tab == 2:  # Вкладка "Непродуктивные приложения"
             app_list_widget = self.non_productive_list
         else:
             return
@@ -1582,7 +1582,7 @@ class TimeTrackerApp(QMainWindow):
             # Проверяем, есть ли приложение в конфигурации трекера
             is_tracked = config_key in self.tracked_applications_config
             
-            # Если приложение уже в списке отслеживаемых - сохраняем его статус полезности
+            # Если приложение уже в списке отслеживаемых - сохраняем его статус продуктивности
             current_useful_status = False
             if is_tracked:
                 current_useful_status = self.tracked_applications_config[config_key]
@@ -1648,7 +1648,7 @@ class TimeTrackerApp(QMainWindow):
             return None
             
     def is_app_useful(self, app_name):
-        """Определяет, является ли приложение полезным согласно конфигурации"""
+        """Определяет, является ли приложение продуктивным согласно конфигурации"""
         if not app_name:
             return False
             
@@ -1657,10 +1657,10 @@ class TimeTrackerApp(QMainWindow):
         
         # Проверяем, есть ли приложение в конфигурации
         if app_name_lower in self.tracked_applications_config:
-            # Возвращаем статус полезности
+            # Возвращаем статус продуктивности
             return self.tracked_applications_config[app_name_lower]
         
-        # Если приложение не найдено в конфигурации, считаем его неполезным
+        # Если приложение не найдено в конфигурации, считаем его непродуктивным
         return False
 
     def start_new_activity_session(self, app_name, window_title, is_useful=None):
@@ -2289,7 +2289,7 @@ class SettingsDialog(QDialog):
 
         self.app_list_widget = QTableWidget()
         self.app_list_widget.setColumnCount(3)
-        self.app_list_widget.setHorizontalHeaderLabels(["Приложение (имя процесса)", "Отслеживать", "Статус полезности"])
+        self.app_list_widget.setHorizontalHeaderLabels(["Приложение (имя процесса)", "Отслеживать", "Статус продуктивности"])
         self.app_list_widget.horizontalHeader().setSectionResizeMode(0, QHeaderView.Stretch)
         self.app_list_widget.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeToContents)
         self.app_list_widget.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeToContents)
@@ -2332,12 +2332,12 @@ class SettingsDialog(QDialog):
             
             # Комбо-бокс "Статус"
             status_combo = QComboBox()
-            status_combo.addItems(["Полезное", "Неполезное"])
+            status_combo.addItems(["Продуктивное", "Непродуктивное"])
             if is_tracked:
                 is_useful = current_tracked_config.get(app_name, True) # По умолчанию True, если вдруг нет ключа
                 status_combo.setCurrentIndex(0 if is_useful else 1)
             else:
-                status_combo.setCurrentIndex(0) # По умолчанию "Полезное"
+                status_combo.setCurrentIndex(0) # По умолчанию "Продуктивное"
             status_combo.setEnabled(is_tracked) # Активен, только если отслеживается
 
             # Связываем состояние чекбокса с активностью комбо-бокса
@@ -2360,7 +2360,7 @@ class SettingsDialog(QDialog):
             if app_name_item and checkbox_widget and status_combo:
                 app_name = app_name_item.text()
                 if checkbox_widget.isChecked():
-                    is_useful = status_combo.currentIndex() == 0 # 0 - Полезное, 1 - Неполезное
+                    is_useful = status_combo.currentIndex() == 0 # 0 - Продуктивное, 1 - Непродуктивное
                     new_tracked_config[app_name] = is_useful
             else:
                 logger.warning(f"Пропуск строки {row} в SettingsDialog: не найдены все виджеты.")
