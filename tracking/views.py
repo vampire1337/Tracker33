@@ -540,6 +540,10 @@ class DashboardView(LoginRequiredMixin, TemplateView):
             elif activity.start_time and not activity.end_time:
                 current_time = timezone.now()
                 activity.current_duration = current_time - activity.start_time
+                # Для корректного отображения в шаблоне, преобразуем в строку
+                hours, remainder = divmod(int(activity.current_duration.total_seconds()), 3600)
+                minutes, seconds = divmod(remainder, 60)
+                activity.formatted_duration = f"{hours}:{minutes:02d}:{seconds:02d}"
         
         context['today_activity'] = today_activities
         
@@ -1004,11 +1008,12 @@ class ExportStatisticsAPIView(APIView):
         import csv
         from django.http import HttpResponse
         
-        # Создаем HTTP ответ с CSV файлом
-        response = HttpResponse(content_type='text/csv')
+        # Создаем HTTP ответ с CSV файлом с явным указанием кодировки utf-8 и BOM для Excel
+        response = HttpResponse(content_type='text/csv; charset=utf-8-sig')
+        response.write('\ufeff')  # Добавляем BOM для лучшей совместимости с Excel
         response['Content-Disposition'] = f'attachment; filename="activity_report_{start_date.strftime("%Y-%m-%d")}_{today.strftime("%Y-%m-%d")}.csv"'
         
-        writer = csv.writer(response)
+        writer = csv.writer(response, delimiter=';')  # Используем точку с запятой в качестве разделителя для лучшей совместимости с Excel
         writer.writerow(['Дата', 'Время начала', 'Время окончания', 'Длительность', 'Приложение', 'Процесс', 'Нажатия клавиш', 'Продуктивное'])
         
         for activity in activities:
