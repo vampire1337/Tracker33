@@ -759,10 +759,27 @@ class TrackedApplicationViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['post'])
     def toggle_productive(self, request, pk=None):
-        app = self.get_object()
-        app.is_productive = not app.is_productive
-        app.save()
-        return Response({'status': 'success'})
+        """
+        Переключает статус продуктивности для приложения.
+        """
+        try:
+            app = self.get_object()
+            # Проверяем, принадлежит ли приложение текущему пользователю
+            if app.user and app.user != request.user and not request.user.is_superuser:
+                return Response(
+                    {'status': 'error', 'message': 'У вас нет прав для изменения этого приложения'},
+                    status=403
+                )
+                
+            app.is_productive = not app.is_productive
+            app.save()
+            return Response({'status': 'success', 'is_productive': app.is_productive})
+        except Exception as e:
+            logger.error(f"Ошибка при изменении статуса продуктивности: {e}")
+            return Response(
+                {'status': 'error', 'message': 'Произошла ошибка при изменении статуса приложения'},
+                status=500
+            )
 
     @action(detail=False)
     def active_apps(self, request):
