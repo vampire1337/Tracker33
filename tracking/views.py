@@ -350,6 +350,12 @@ class UserActivityViewSet(viewsets.ModelViewSet):
             process_name = request_data.get('process_name', request_data.get('application', ''))  # Получаем process_name или application
             keyboard_presses = request_data.get('keyboard_presses', 0)
             
+            # Проверяем валидность данных
+            try:
+                keyboard_presses = int(keyboard_presses)
+            except (ValueError, TypeError):
+                keyboard_presses = 0
+            
             # Логируем полученные данные для отладки
             print(f"Получены данные: app_name={app_name}, process_name={process_name}, keyboard_presses={keyboard_presses}")
             
@@ -358,6 +364,7 @@ class UserActivityViewSet(viewsets.ModelViewSet):
             
             # Проверяем, является ли process_name числом или строкой с числом
             is_numeric = False
+            process_id = None
             try:
                 # Если process_name уже число или строка с числом
                 if isinstance(process_name, int) or (isinstance(process_name, str) and process_name.isdigit()):
@@ -365,36 +372,75 @@ class UserActivityViewSet(viewsets.ModelViewSet):
                     process_id = int(process_name)
                     try:
                         application = Application.objects.get(id=process_id, user=self.request.user)
+                        print(f"Найдено приложение по ID={process_id}: {application}")
                     except Application.DoesNotExist:
                         # Если приложение с таким ID не существует, не используем его
                         print(f"Приложение с ID={process_id} не найдено, создаем новое")
                         is_numeric = False
-            except (TypeError, ValueError, AttributeError):
-                pass
+            except (TypeError, ValueError, AttributeError) as e:
+                print(f"Ошибка при обработке process_name как ID: {e}")
+                is_numeric = False
             
             # Если приложение не найдено по ID, ищем по имени процесса
             if not application:
                 try:
                     # Если process_name не число, используем его как имя процесса
                     process_name_str = str(process_name) if process_name is not None else ""
-                    application = Application.objects.get(process_name=process_name_str, user=self.request.user)
-                    print(f"Найдено приложение по process_name={process_name_str}: {application}")
-                except Application.DoesNotExist:
-                    # Создаем новое приложение
-                    application_name = app_name or str(process_name)
-                    application = Application.objects.create(
-                        name=application_name,
-                        process_name=str(process_name) if process_name is not None else "",
-                        user=self.request.user
-                    )
-                    print(f"Создано новое приложение: name={application_name}, process_name={process_name}")
+                    if process_name_str:  # Проверяем, что строка не пустая
+                        application = Application.objects.filter(process_name=process_name_str, user=self.request.user).first()
+                        if application:
+                            print(f"Найдено приложение по process_name={process_name_str}: {application}")
+                except Exception as e:
+                    print(f"Ошибка при поиске приложения по process_name: {e}")
+            
+            # Если приложение всё еще не найдено, создаем новое
+            if not application:
+                application_name = app_name or str(process_name)
+                if not application_name:
+                    application_name = "Неизвестное приложение"
+                    
+                process_name_value = str(process_name) if process_name is not None else ""
+                
+                application = Application.objects.create(
+                    name=application_name,
+                    process_name=process_name_value,
+                    user=self.request.user
+                )
+                print(f"Создано новое приложение: name={application_name}, process_name={process_name_value}")
+            
+            # Проверяем и устанавливаем даты для активности
+            start_time = request_data.get('start_time')
+            end_time = request_data.get('end_time')
+            
+            # Убедимся, что у нас есть валидные даты
+            if not start_time:
+                start_time = timezone.now()
+            
+            # Если есть и start_time и end_time, вычисляем duration
+            duration = None
+            if end_time and start_time:
+                try:
+                    if isinstance(start_time, str):
+                        start_time = datetime.fromisoformat(start_time.replace('Z', '+00:00'))
+                    if isinstance(end_time, str):
+                        end_time = datetime.fromisoformat(end_time.replace('Z', '+00:00'))
+                    duration = end_time - start_time
+                except (ValueError, TypeError) as e:
+                    print(f"Ошибка при вычислении duration: {e}")
             
             # Сохраняем активность с правильным объектом приложения и всеми данными
-            serializer.save(
+            activity = serializer.save(
                 user=self.request.user,
                 application=application,
-                keyboard_presses=keyboard_presses
+                keyboard_presses=keyboard_presses,
+                start_time=start_time,
+                end_time=end_time,
+                duration=duration
             )
+            
+            print(f"Активность успешно сохранена: {activity.id}, приложение: {application.name}")
+            return activity
+            
         except Exception as e:
             print(f"Ошибка при создании активности: {e}")
             raise ValidationError(detail=str(e))
