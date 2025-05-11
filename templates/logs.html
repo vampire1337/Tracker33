@@ -93,42 +93,6 @@
         </div>
     </div>
 </div>
-
-<div class="row mt-4">
-    <div class="col-md-12">
-        <div class="card">
-            <div class="card-header">
-                <h3 class="card-title">Клавиатурная активность</h3>
-            </div>
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-striped">
-                        <thead>
-                            <tr>
-                                <th>Время</th>
-                                <th>Клавиша</th>
-                                <th>Приложение</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for activity in keyboard_activities %}
-                            <tr>
-                                <td>{{ activity.timestamp|date:"Y-m-d H:i:s" }}</td>
-                                <td>{{ activity.key_pressed }}</td>
-                                <td>{{ activity.application.name }}</td>
-                            </tr>
-                            {% empty %}
-                            <tr>
-                                <td colspan="3" class="text-center">Нет данных</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
 {% endblock %}
 
 {% block extra_js %}

@@ -225,95 +225,62 @@ class LoginDialog(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setWindowTitle("Авторизация")
+        self.setWindowFlags(Qt.Dialog | Qt.WindowCloseButtonHint)
+        self.setMinimumWidth(400)
         self.api_client = None
-        
-        # Запрещаем закрытие диалога крестиком
-        self.setWindowFlags(self.windowFlags() & ~Qt.WindowCloseButtonHint)
-        
-        # Флаг, определяющий, могут ли пользователи изменять URL сервера
         self.allow_close_without_auth = False
-        
-        # Чтение последнего использованного URL из конфигурации
-        self.last_server_url = "http://127.0.0.1:8000"
-        parent_app = self.parent()
-        if parent_app and hasattr(parent_app, 'config'):
-            config = parent_app.config
-            if config.has_section('Credentials') and config.has_option('Credentials', 'api_base_url'):
-                base_url = config.get('Credentials', 'api_base_url')
-                self.last_server_url = base_url.rstrip('/api/')
-            elif config.has_section('Server') and config.has_option('Server', 'base_url'):
-                self.last_server_url = config.get('Server', 'base_url')
-        
         self.setup_ui()
-        
+
     def setup_ui(self):
-        layout = QFormLayout()
+        """Настройка пользовательского интерфейса"""
+        layout = QVBoxLayout()
         
-        # Добавляем информационный текст
-        info_label = QLabel("Перед началом работы необходимо указать адрес сервера и авторизоваться.\nЕсли сервер находится на этом же компьютере, используйте адрес: http://127.0.0.1:8000")
-        info_label.setWordWrap(True)
-        layout.addRow(info_label)
+        # Основные элементы формы
+        form_layout = QFormLayout()
         
-        # Разделитель
-        line = QFrame()
-        line.setFrameShape(QFrame.HLine)
-        line.setFrameShadow(QFrame.Sunken)
-        layout.addRow(line)
-        
+        # URL сервера
         self.server_url = QLineEdit()
-        self.server_url.setText(self.last_server_url)
+        # Загружаем URL из настроек
+        if self.parent() and hasattr(self.parent(), 'api_base_url'):
+            self.server_url.setText(self.parent().api_base_url)
+        else:
+            self.server_url.setText("http://localhost:8000")
+            
+        form_layout.addRow("URL сервера:", self.server_url)
+        
+        # Тестовая кнопка для проверки соединения
+        self.test_button = QPushButton("Проверить соединение")
+        self.test_button.clicked.connect(self.test_connection)
+        form_layout.addRow("", self.test_button)
+        
+        # Имя пользователя
         self.username = QLineEdit()
+        form_layout.addRow("Имя пользователя:", self.username)
+        
+        # Пароль
         self.password = QLineEdit()
         self.password.setEchoMode(QLineEdit.Password)
+        form_layout.addRow("Пароль:", self.password)
         
-        # Checkbox для разрешения работы в оффлайн-режиме (только для отладки)
-        self.offline_mode_checkbox = QCheckBox("Разрешить работу в оффлайн-режиме")
-        self.offline_mode_checkbox.setChecked(False)
-        self.offline_mode_checkbox.stateChanged.connect(self.toggle_offline_mode)
+        # Добавляем форму на основной layout
+        layout.addLayout(form_layout)
         
-        layout.addRow("URL сервера:", self.server_url)
-        layout.addRow("Имя пользователя:", self.username)
-        layout.addRow("Пароль:", self.password)
-        layout.addRow(self.offline_mode_checkbox)
+        # Кнопки диалога
+        self.buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        self.buttons.accepted.connect(self.authenticate)
+        self.buttons.rejected.connect(self.reject)
+        layout.addWidget(self.buttons)
         
-        # Кнопка проверки подключения
-        self.test_button = QPushButton("Проверить подключение к серверу")
-        self.test_button.clicked.connect(self.test_connection)
-        layout.addRow(self.test_button)
-        
-        # Кнопки действий
-        buttons = QDialogButtonBox(
-            QDialogButtonBox.Ok | QDialogButtonBox.Cancel,
-            Qt.Horizontal, self)
-        buttons.accepted.connect(self.authenticate)
-        buttons.rejected.connect(self.reject)
-        self.buttons = buttons
-        
-        layout.addRow(buttons)
         self.setLayout(layout)
-    
-    def toggle_offline_mode(self, state):
-        """Включает/выключает возможность работы в оффлайн-режиме"""
-        self.allow_close_without_auth = state == Qt.Checked
-        if state == Qt.Checked:
-            self.username.setEnabled(False)
-            self.password.setEnabled(False)
-            self.buttons.button(QDialogButtonBox.Ok).setText("Продолжить без авторизации")
-        else:
-            self.username.setEnabled(True)
-            self.password.setEnabled(True)
-            self.buttons.button(QDialogButtonBox.Ok).setText("OK")
     
     def closeEvent(self, event):
         """Переопределяем обработку закрытия окна для предотвращения закрытия без авторизации"""
-        if self.allow_close_without_auth:
-            event.accept()
-        else:
-            # Показываем сообщение, что авторизация обязательна
-            QMessageBox.critical(self, "Требуется авторизация", 
-                                "Для работы приложения требуется авторизация!\n\n"
-                                "Если вы не можете подключиться к серверу, включите оффлайн-режим.")
-            event.ignore()
+        # Больше не поддерживаем автономную работу
+        # Показываем сообщение, что авторизация обязательна
+        QMessageBox.critical(self, "Требуется авторизация", 
+                            "Для работы приложения требуется авторизация!\n\n"
+                            "Пожалуйста, подключитесь к серверу и введите данные учетной записи.")
+        event.ignore()
     
     def test_connection(self):
         """Проверяет подключение к серверу"""
@@ -348,29 +315,6 @@ class LoginDialog(QDialog):
             QMessageBox.critical(self, "Ошибка", f"Произошла ошибка при проверке соединения: {str(e)}")
         
     def authenticate(self):
-        # Если включен оффлайн-режим, просто продолжаем без авторизации
-        if self.offline_mode_checkbox.isChecked():
-            parent_app = self.parent()
-            if parent_app and hasattr(parent_app, 'config'):
-                config = parent_app.config
-                if not config.has_section('Settings'):
-                    config.add_section('Settings')
-                
-                # Включаем демо-режим
-                config.set('Settings', 'demo_mode', 'True')
-                
-                # Сохраняем URL сервера для будущего использования
-                if not config.has_section('Credentials'):
-                    config.add_section('Credentials')
-                config.set('Credentials', 'api_base_url', self.server_url.text().strip())
-                
-                # Сохраняем конфигурацию
-                parent_app._save_config(config)
-                logger.info("Приложение работает в оффлайн-режиме")
-            
-            self.accept()
-            return
-            
         server_url = self.server_url.text().strip()
         username = self.username.text().strip()
         password = self.password.text()

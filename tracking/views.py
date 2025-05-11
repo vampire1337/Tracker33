@@ -540,12 +540,21 @@ class DashboardView(LoginRequiredMixin, TemplateView):
             if not activity.duration and activity.start_time and activity.end_time:
                 activity.duration = activity.end_time - activity.start_time
                 activity.save()
+            
+            # Форматируем duration в строку для отображения
+            if activity.duration:
+                seconds = int(activity.duration.total_seconds())
+                hours, remainder = divmod(seconds, 3600)
+                minutes, seconds = divmod(remainder, 60)
+                activity.formatted_duration = f"{hours}:{minutes:02d}:{seconds:02d}"
+                
             # Если активность не завершена, рассчитываем текущую длительность
             elif activity.start_time and not activity.end_time:
                 current_time = timezone.now()
                 activity.current_duration = current_time - activity.start_time
                 # Для корректного отображения в шаблоне, преобразуем в строку
-                hours, remainder = divmod(int(activity.current_duration.total_seconds()), 3600)
+                seconds = int(activity.current_duration.total_seconds())
+                hours, remainder = divmod(seconds, 3600)
                 minutes, seconds = divmod(remainder, 60)
                 activity.formatted_duration = f"{hours}:{minutes:02d}:{seconds:02d}"
         
@@ -771,15 +780,29 @@ class TrackedApplicationViewSet(viewsets.ModelViewSet):
             # Удаляем проверку на суперпользователя с именем 'dfyz'
             # Теперь любой авторизованный пользователь может изменять свои приложения
             
-            app.is_productive = not app.is_productive
-            app.save()
+            # Логируем для отладки
+            logger.info(f"Попытка изменения статуса продуктивности приложения {app.id} '{app.name}' пользователем {request.user.username}")
+            
+            # Проверка специального случая для user01
+            if request.user.username == 'user01':
+                logger.info(f"Обработка особого случая для пользователя user01")
+                # Дополнительная обработка для user01
+                # Устанавливаем принудительно нужный флаг и сохраняем
+                app.is_productive = not app.is_productive
+                app.save(update_fields=['is_productive'])
+            else:
+                # Стандартная обработка
+                app.is_productive = not app.is_productive
+                app.save()
+                
             # Очищаем кэш для всех пользователей
             cache.clear()
+            logger.info(f"Успешно изменен статус продуктивности приложения {app.id} '{app.name}' на {app.is_productive}")
             return Response({'status': 'success', 'is_productive': app.is_productive})
         except Exception as e:
-            logger.error(f"Ошибка при изменении статуса продуктивности: {e}")
+            logger.error(f"Ошибка при изменении статуса продуктивности: {str(e)}", exc_info=True)
             return Response(
-                {'status': 'error', 'message': 'Произошла ошибка при изменении статуса приложения'},
+                {'status': 'error', 'message': f'Произошла ошибка при изменении статуса приложения: {str(e)}'},
                 status=500
             )
 

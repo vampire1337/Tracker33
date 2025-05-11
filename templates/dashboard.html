@@ -94,9 +94,17 @@
                                 <td>{{ activity.application.name }}</td>
                                 <td>
                                     {% if activity.duration %}
-                                        {{ activity.duration|time:"H:i:s" }}
+                                        {% if activity.formatted_duration %}
+                                            {{ activity.formatted_duration }}
+                                        {% else %}
+                                            {{ activity.duration }}
+                                        {% endif %}
                                     {% elif activity.current_duration %}
-                                        {{ activity.current_duration|time:"H:i:s" }} (активно)
+                                        {% if activity.formatted_duration %}
+                                            {{ activity.formatted_duration }} (активно)
+                                        {% else %}
+                                            {{ activity.current_duration }} (активно)
+                                        {% endif %}
                                     {% else %}
                                         00:00:00
                                     {% endif %}
