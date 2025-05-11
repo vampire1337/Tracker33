@@ -22,6 +22,7 @@ from django.views.decorators.cache import cache_page
 from django.db import models
 from django.utils.decorators import method_decorator
 from django.conf import settings
+import logging
 from .exceptions import (
     ApplicationAlreadyExists,
     InvalidTimeRange,
@@ -30,6 +31,9 @@ from .exceptions import (
     InvalidActivityData
 )
 from rest_framework.exceptions import ValidationError
+
+# Настройка логирования
+logger = logging.getLogger('tracking.error')
 
 # Create your views here.
 
@@ -764,13 +768,9 @@ class TrackedApplicationViewSet(viewsets.ModelViewSet):
         """
         try:
             app = self.get_object()
-            # Проверка: Только суперпользователь с именем 'dfyz' может изменять статус "полезное"
-            if not (request.user.is_superuser and request.user.username == 'dfyz'):
-                return Response(
-                    {"error": "У вас нет прав для изменения статуса полезности приложения."},
-                    status=status.HTTP_403_FORBIDDEN
-                )
-                
+            # Удаляем проверку на суперпользователя с именем 'dfyz'
+            # Теперь любой авторизованный пользователь может изменять свои приложения
+            
             app.is_productive = not app.is_productive
             app.save()
             # Очищаем кэш для всех пользователей
