@@ -108,14 +108,10 @@
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h3 class="card-title">Топ приложений</h3>
-                <div class="input-group input-group-sm" style="width: 250px;">
-                    <input type="text" class="form-control" id="appSearch" placeholder="Поиск приложения...">
-                    <button class="btn btn-outline-secondary" type="button" id="appSearchClear">×</button>
-                </div>
             </div>
             <div class="card-body">
                 <div class="table-responsive">
-                    <table class="table" id="appsTable">
+                    <table class="table">
                         <thead>
                             <tr>
                                 <th>Название</th>
@@ -403,55 +399,6 @@ document.addEventListener('DOMContentLoaded', function() {
             .style('font-size', '16px')
             .text(title);
     }
-    
-    // Функционал поиска для таблицы приложений
-    const appSearch = document.getElementById('appSearch');
-    const appSearchClear = document.getElementById('appSearchClear');
-    const appsTable = document.getElementById('appsTable');
-    
-    if (appSearch && appsTable) {
-        appSearch.addEventListener('input', function() {
-            const searchText = this.value.toLowerCase();
-            const rows = appsTable.querySelectorAll('tbody tr');
-            
-            rows.forEach(row => {
-                const appName = row.querySelector('td:first-child').textContent.toLowerCase();
-                if (appName.includes(searchText)) {
-                    row.style.display = '';
-                } else {
-                    row.style.display = 'none';
-                }
-            });
-        });
-        
-        if (appSearchClear) {
-            appSearchClear.addEventListener('click', function() {
-                appSearch.value = '';
-                const rows = appsTable.querySelectorAll('tbody tr');
-                rows.forEach(row => {
-                    row.style.display = '';
-                });
-            });
-        }
-    }
-    
-    // Кнопки периода
-    const periodButtons = document.querySelectorAll('[data-period]');
-    periodButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            const days = this.dataset.period;
-            window.location.href = `?days=${days}`;
-        });
-    });
-    
-    // Активируем кнопку текущего периода
-    const urlParams = new URLSearchParams(window.location.search);
-    const currentPeriod = urlParams.get('days') || '7';
-    const activeButton = document.querySelector(`[data-period="${currentPeriod}"]`);
-    if (activeButton) {
-        activeButton.classList.remove('btn-outline-primary');
-        activeButton.classList.add('btn-primary');
-    }
 });
 </script>
 -->
@@ -543,6 +490,24 @@ document.addEventListener('DOMContentLoaded', function() {
         toastElement.addEventListener('hidden.bs.toast', () => {
             toastElement.remove();
         });
+    }
+    
+    // Кнопки периода
+    const periodButtons = document.querySelectorAll('[data-period]');
+    periodButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const days = this.dataset.period;
+            window.location.href = `?days=${days}`;
+        });
+    });
+    
+    // Активируем кнопку текущего периода
+    const urlParams = new URLSearchParams(window.location.search);
+    const currentPeriod = urlParams.get('days') || '7';
+    const activeButton = document.querySelector(`[data-period="${currentPeriod}"]`);
+    if (activeButton) {
+        activeButton.classList.remove('btn-outline-primary');
+        activeButton.classList.add('btn-primary');
     }
 });
 </script>
