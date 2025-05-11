@@ -764,15 +764,17 @@ class TrackedApplicationViewSet(viewsets.ModelViewSet):
         """
         try:
             app = self.get_object()
-            # Проверяем, принадлежит ли приложение текущему пользователю
-            if app.user and app.user != request.user and not request.user.is_superuser:
+            # Проверка: Только суперпользователь с именем 'dfyz' может изменять статус "полезное"
+            if not (request.user.is_superuser and request.user.username == 'dfyz'):
                 return Response(
-                    {'status': 'error', 'message': 'У вас нет прав для изменения этого приложения'},
-                    status=403
+                    {"error": "У вас нет прав для изменения статуса полезности приложения."},
+                    status=status.HTTP_403_FORBIDDEN
                 )
                 
             app.is_productive = not app.is_productive
             app.save()
+            # Очищаем кэш для всех пользователей
+            cache.clear()
             return Response({'status': 'success', 'is_productive': app.is_productive})
         except Exception as e:
             logger.error(f"Ошибка при изменении статуса продуктивности: {e}")
@@ -1278,6 +1280,9 @@ class DashboardAPIView(APIView):
         today_start = datetime.combine(today, time.min)
         today_end = datetime.combine(today, time.max)
         
+        # Проверяем, есть ли вообще данные об активности пользователя
+        has_activity_data = UserActivity.objects.filter(user=user).exists()
+        
         today_activities = UserActivity.objects.filter(
             user=user,
             start_time__date=today
@@ -1358,12 +1363,15 @@ class DashboardAPIView(APIView):
         # Продуктивность за неделю
         productive_seconds = 0
         for activity in weekly_activities:
-            if activity.application.is_productive:
-                if activity.duration:
-                    productive_seconds += activity.duration.total_seconds()
-                elif activity.start_time and activity.end_time:
-                    duration = activity.end_time - activity.start_time
-                    productive_seconds += duration.total_seconds()
+            try:
+                if activity.application.is_productive:
+                    if activity.duration:
+                        productive_seconds += activity.duration.total_seconds()
+                    elif activity.start_time and activity.end_time:
+                        duration = activity.end_time - activity.start_time
+                        productive_seconds += duration.total_seconds()
+            except Exception as e:
+                logger.error(f"Ошибка при расчете продуктивности: {e}")
         
         productivity_percentage = round((productive_seconds / week_seconds) * 100, 1) if week_seconds > 0 else 0
         
@@ -1371,29 +1379,32 @@ class DashboardAPIView(APIView):
         app_usage = {}
         
         for activity in weekly_activities:
-            app_id = activity.application.id
-            app_name = activity.application.name
-            process_name = activity.application.process_name
-            is_productive = activity.application.is_productive
-            
-            if activity.duration:
-                duration_seconds = activity.duration.total_seconds()
-            elif activity.start_time and activity.end_time:
-                duration = activity.end_time - activity.start_time
-                duration_seconds = duration.total_seconds()
-            else:
-                continue
-            
-            if app_id not in app_usage:
-                app_usage[app_id] = {
-                    'id': app_id,
-                    'name': app_name,
-                    'process_name': process_name,
-                    'is_productive': is_productive,
-                    'total_seconds': 0
-                }
-            
-            app_usage[app_id]['total_seconds'] += duration_seconds
+            try:
+                app_id = activity.application.id
+                app_name = activity.application.name
+                process_name = activity.application.process_name
+                is_productive = activity.application.is_productive
+                
+                if activity.duration:
+                    duration_seconds = activity.duration.total_seconds()
+                elif activity.start_time and activity.end_time:
+                    duration = activity.end_time - activity.start_time
+                    duration_seconds = duration.total_seconds()
+                else:
+                    continue
+                
+                if app_id not in app_usage:
+                    app_usage[app_id] = {
+                        'id': app_id,
+                        'name': app_name,
+                        'process_name': process_name,
+                        'is_productive': is_productive,
+                        'total_seconds': 0
+                    }
+                
+                app_usage[app_id]['total_seconds'] += duration_seconds
+            except Exception as e:
+                logger.error(f"Ошибка при обработке активности: {e}")
         
         # Сортируем по времени использования и берем топ-5
         top_apps = sorted(
@@ -1436,6 +1447,9 @@ class DashboardAPIView(APIView):
                 'hours': round(day_hours, 2)
             }
         
+        # Если у пользователя нет активности, устанавливаем флаг для фронтенда
+        # чтобы показать соответствующее сообщение
+        
         # Формируем итоговый ответ
         response_data = {
             'today_summary': {
@@ -1457,7 +1471,8 @@ class DashboardAPIView(APIView):
                 'productive_apps': productive_apps
             },
             'top_applications': top_apps,
-            'daily_data': list(daily_data.values())
+            'daily_data': list(daily_data.values()),
+            'has_activity_data': has_activity_data  # Флаг для фронтенда
         }
         
         return Response(response_data)

@@ -1110,6 +1110,14 @@ class TimeTrackerApp(QMainWindow):
     def update_app_list(self):
         """Обновляет списки приложений в интерфейсе"""
         try:
+            # Периодически синхронизируем список продуктивных приложений с сервера
+            # Делаем это каждые 30 секунд (примерно каждый 3-й вызов update_app_list)
+            if not hasattr(self, '_last_server_sync_time') or time.time() - self._last_server_sync_time > 30:
+                self._last_server_sync_time = time.time()
+                sync_result = self.sync_productive_apps_from_server()
+                if sync_result:
+                    logger.info("Список продуктивных приложений обновлен с сервера")
+            
             # Сохраняем текущее выделение для восстановления после обновления
             selected_apps = {
                 'all': None,
@@ -1634,6 +1642,48 @@ class TimeTrackerApp(QMainWindow):
             try:
                 process = psutil.Process(process_id)
                 app_name = process.name()
+                
+                # Стандартизируем имена приложений для решения проблемы с несколькими экземплярами
+                # Словарь стандартизации имен приложений (нижний регистр)
+                standardize_apps = {
+                    'chrome.exe': 'chrome.exe',  # Стандартизируем Chrome, включая разные версии
+                    'msedge.exe': 'msedge.exe',  # Microsoft Edge
+                    'firefox.exe': 'firefox.exe',  # Firefox
+                    'browser.exe': 'browser.exe',  # Generic browser
+                    'iexplore.exe': 'iexplore.exe',  # Internet Explorer
+                    'opera.exe': 'opera.exe',  # Opera
+                    'brave.exe': 'brave.exe',  # Brave
+                    'cursor.exe': 'cursor.exe',  # Cursor
+                    'code.exe': 'code.exe',     # VS Code
+                    'explorer.exe': 'explorer.exe',  # Windows Explorer
+                    'telegram.exe': 'telegram.exe', # Telegram
+                    'winword.exe': 'winword.exe',  # Word
+                    'excel.exe': 'excel.exe',   # Excel
+                    'powerpnt.exe': 'powerpnt.exe',  # PowerPoint
+                    'outlook.exe': 'outlook.exe',  # Outlook
+                    'notepad.exe': 'notepad.exe',  # Notepad
+                    'notepad++.exe': 'notepad++.exe',  # Notepad++
+                }
+                
+                # Нормализуем app_name - приводим к нижнему регистру
+                app_name_lower = app_name.lower()
+                
+                # Если приложение есть в словаре стандартизации, используем стандартное имя
+                # иначе оставляем оригинальное имя
+                app_name = standardize_apps.get(app_name_lower, app_name)
+                
+                # Также игнорируем номера экземпляров в имени процесса 
+                # (например, chrome.exe (1), chrome.exe (2))
+                if '(' in app_name and ')' in app_name:
+                    app_name = app_name.split('(')[0].strip()
+                
+                # Для Chrome, Firefox и других браузеров, всегда приводим к стандартному имени
+                # независимо от версии или дополнительных суффиксов
+                for browser_base in ['chrome', 'firefox', 'msedge', 'opera', 'brave']:
+                    if browser_base in app_name_lower:
+                        app_name = f"{browser_base}.exe"
+                        break
+                
             except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
                 app_name = "Unknown"
             
@@ -2274,6 +2324,54 @@ class TimeTrackerApp(QMainWindow):
                 
         except Exception as e:
             logger.error(f"Ошибка при периодическом обновлении UI: {e}", exc_info=True)
+
+    def sync_productive_apps_from_server(self):
+        """Синхронизирует список продуктивных приложений с сервера"""
+        try:
+            if not hasattr(self, 'api_client') or not self.api_client:
+                logger.warning("API клиент не инициализирован, синхронизация не выполнена")
+                return False
+
+            # Получаем список приложений с сервера
+            tracked_apps = self.api_client.get_tracked_applications()
+            if not tracked_apps:
+                logger.warning("Не удалось получить список приложений с сервера")
+                return False
+
+            # Создаем словарь для новой конфигурации
+            new_config = {}
+            
+            # Копируем текущую конфигурацию
+            for app_name, is_useful in self.tracked_applications_config.items():
+                new_config[app_name] = is_useful
+            
+            # Применяем данные с сервера
+            changes_made = False
+            
+            for app in tracked_apps:
+                app_process_name = app.get('process_name', '').lower()
+                app_is_productive = app.get('is_productive', False)
+                
+                # Если это новое приложение или информация о его полезности изменилась
+                if app_process_name and (
+                    app_process_name not in new_config or 
+                    new_config[app_process_name] != app_is_productive
+                ):
+                    new_config[app_process_name] = app_is_productive
+                    changes_made = True
+                    logger.info(f"Обновлена информация о приложении из сервера: {app_process_name} (Полезное: {app_is_productive})")
+            
+            # Если были изменения, обновляем конфигурацию и сохраняем её
+            if changes_made:
+                self.update_tracked_applications_config(new_config)
+                self._save_config()
+                return True
+            else:
+                logger.info("Обновлений с сервера для приложений не обнаружено")
+                return False
+        except Exception as e:
+            logger.error(f"Ошибка при синхронизации продуктивных приложений с сервера: {e}", exc_info=True)
+            return False
 
 
 class SettingsDialog(QDialog):
