@@ -423,19 +423,21 @@ class DashboardView(LoginRequiredMixin, TemplateView):
         context = super().get_context_data(**kwargs)
         user = self.request.user
         today = timezone.now().date()
+        # ВРЕМЕННО: показываем данные за последние 30 дней вместо только сегодня
+        start_date = today - timedelta(days=30)
         
         # Добавляем timestamp для предотвращения кэширования
         context['timestamp'] = timezone.now().timestamp()
 
-        # Всегда загружаем свежие данные для последних активностей
-        today_activities = UserActivity.objects.filter(
+        # Загружаем последние активности за 30 дней
+        recent_activities = UserActivity.objects.filter(
             user=user,
-            start_time__date=today
+            start_time__date__gte=start_date
         ).select_related('application').order_by('-start_time')[:10]
         
         # Фильтруем системные процессы из активностей
         filtered_activities = []
-        for activity in today_activities:
+        for activity in recent_activities:
             if not is_system_process(activity.application.process_name):
                 filtered_activities.append(activity)
         
@@ -463,19 +465,19 @@ class DashboardView(LoginRequiredMixin, TemplateView):
         
         context['today_activity'] = filtered_activities[:10]  # Ограничиваем до 10
         
-        # Получаем активные приложения (только пользовательские)
+        # Получаем активные приложения за последние 30 дней
         active_apps_queryset = Application.objects.filter(
             useractivity__user=user,
-            useractivity__start_time__date=today
+            useractivity__start_time__date__gte=start_date
         ).distinct()
         
         # Фильтруем системные процессы
         active_apps = filter_user_applications(active_apps_queryset)
 
-        # Получаем статистику за сегодня
+        # Получаем статистику за последние 30 дней
         activities = UserActivity.objects.filter(
             user=user,
-            start_time__date=today
+            start_time__date__gte=start_date
         )
         
         # Рассчитываем общее время работы на основе пользовательских приложений
@@ -498,10 +500,10 @@ class DashboardView(LoginRequiredMixin, TemplateView):
         # Форматируем время в строку для отображения
         formatted_time = format_duration(total_seconds)
         
-        # Получаем все приложения пользователя за сегодня с группировкой
+        # Получаем все приложения пользователя за последние 30 дней с группировкой
         apps_queryset = Application.objects.filter(
             useractivity__user=user,
-            useractivity__start_time__date=today
+            useractivity__start_time__date__gte=start_date
         ).annotate(
             total_time=Sum('useractivity__duration'),
             total_seconds=Sum(ExpressionWrapper(

@@ -34,6 +34,7 @@ api_router.register(r'keyboard', KeyboardActivityViewSet)
 
 # API endpoints
 api_urlpatterns = [
+    path('token/', obtain_auth_token, name='api_token_auth'),
     path('timelogs/', TimeLogListCreateView.as_view(), name='timelog-list-create'),
     path('timelogs/<int:pk>/', TimeLogDetailView.as_view(), name='timelog-detail'),
     path('statistics/', StatisticsAPIView.as_view(), name='statistics-api'),
