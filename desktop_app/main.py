@@ -1370,33 +1370,39 @@ class TimeTrackerApp(QMainWindow):
             
             # Получаем список запущенных приложений
             running_apps = self.get_discovered_applications()
+            logger.info(f"Обнаружено запущенных приложений: {len(running_apps)}")
+            logger.debug(f"Запущенные приложения: {running_apps}")
+            
+            # Создаем словарь для определения, запущено ли приложение
+            running_apps_dict = {app.lower(): app for app in running_apps}
             
             # Отсортированный список приложений для отображения
             sorted_apps = []
             
-            # Сначала добавляем отслеживаемые приложения из конфигурации
-            for app_name, is_useful in self.tracked_applications_config.items():
-                # Проверяем, запущено ли сейчас приложение
-                is_running = app_name.lower() in (app.lower() for app in running_apps)
-                
-                item_text = f"{app_name} ({'Запущено' if is_running else 'Не запущено'})"
-                
-                sorted_apps.append((app_name, item_text, is_running))
-            
-            # Затем добавляем запущенные приложения, которых нет в конфигурации
+            # Добавляем только запущенные приложения - меняем логику отображения
             for app_name in running_apps:
-                if app_name.lower() not in self.tracked_applications_config:
-                    item_text = f"{app_name} (Запущено)"
-                    sorted_apps.append((app_name, item_text, True))
-            
+                app_name_lower = app_name.lower()
+                is_tracked = app_name_lower in self.tracked_applications_config
+                is_useful = self.tracked_applications_config.get(app_name_lower, False)
+                
+                item_text = f"{app_name} ({'Полезное' if is_useful else 'Не полезное'})"
+                sorted_apps.append((app_name, item_text, True, is_useful))
+                
             # Сортируем весь список по названию приложения
             sorted_apps.sort(key=lambda x: x[0].lower())
             
             # Заполняем список
-            for app_name, item_text, is_running in sorted_apps:
+            for app_name, item_text, is_running, is_useful in sorted_apps:
                 # Создаем элемент для списка всех приложений
                 item_all = QListWidgetItem(item_text)
                 item_all.setData(Qt.UserRole, app_name)  # Сохраняем оригинальное имя как данные
+                
+                # Устанавливаем цвет в зависимости от полезности
+                if is_useful:
+                    item_all.setForeground(Qt.green)
+                else:
+                    item_all.setForeground(Qt.red)
+                    
                 self.app_list.addItem(item_all)
             
             # Восстанавливаем выделение
@@ -1406,8 +1412,8 @@ class TimeTrackerApp(QMainWindow):
                         self.app_list.setCurrentRow(i)
                         break
             
-            logger.info(f"Обновлен список приложений: {self.app_list.count()} процессов")
-            self.status_bar.showMessage(f"Отслеживается: {self.app_list.count()} приложений")
+            logger.info(f"Обновлен список приложений: {self.app_list.count()} запущенных процессов")
+            self.status_bar.showMessage(f"Отслеживается: {self.app_list.count()} запущенных приложений")
         except Exception as e:
             logger.error(f"Ошибка при обновлении списка приложений: {e}", exc_info=True)
             self.status_bar.showMessage(f"Ошибка при обновлении списка приложений: {str(e)[:50]}")
@@ -2055,9 +2061,16 @@ class TimeTrackerApp(QMainWindow):
                     "lockapp.exe", "python.exe", "pythonw.exe", "cmd.exe", "powershell.exe"
                 ]
             
+            logger.info("Поиск запущенных приложений...")
+            
+            # Счетчики для диагностики
+            total_processes = 0
+            filtered_processes = 0
+            
             # Получаем список процессов
             for proc in psutil.process_iter(['pid', 'name', 'exe']):
                 try:
+                    total_processes += 1
                     proc_info = proc.info
                     proc_name = proc_info['name']
                     
@@ -2069,14 +2082,24 @@ class TimeTrackerApp(QMainWindow):
                     if proc_name.lower().endswith('.exe'):
                         proc_name = proc_name[:-4]
                     
-                    # Пропускаем игнорируемые процессы
-                    if proc_name.lower() in [p.lower() for p in ignored_processes] or proc_name.lower() + '.exe' in [p.lower() for p in ignored_processes]:
+                    # Пропускаем игнорируемые процессы (более точная проверка)
+                    proc_name_lower = proc_name.lower()
+                    skip_process = False
+                    
+                    # Проверяем точное соответствие в списке игнорируемых процессов
+                    for ignored in ignored_processes:
+                        ignored_base = ignored
+                        if ignored.lower().endswith('.exe'):
+                            ignored_base = ignored[:-4].lower()
+                        
+                        if proc_name_lower == ignored_base:
+                            skip_process = True
+                            filtered_processes += 1
+                            break
+                    
+                    if skip_process:
                         continue
                     
-                    # Дополнительная проверка на системные и временные процессы
-                    if proc_name.startswith('_') or proc_name.startswith('tmp') or proc_name.startswith('pid_'):
-                        continue
-                        
                     # Пропускаем процессы без имени или только с цифрами
                     if not proc_name or proc_name.isdigit() or not any(c.isalpha() for c in proc_name):
                         continue
@@ -2084,6 +2107,14 @@ class TimeTrackerApp(QMainWindow):
                     # Проверка на пропуск процессов с именами, состоящими только из цифр и специальных символов
                     if all(not c.isalpha() for c in proc_name):
                         continue
+                    
+                    # Пытаемся получить путь к исполняемому файлу для дополнительной информации
+                    try:
+                        exe_path = proc_info.get('exe')
+                        if exe_path:
+                            logger.debug(f"Процесс {proc_name}, путь: {exe_path}")
+                    except Exception:
+                        pass
                     
                     # Добавляем имя процесса в список обнаруженных приложений
                     discovered_apps.add(proc_name)
@@ -2098,7 +2129,8 @@ class TimeTrackerApp(QMainWindow):
             discovered_apps_list = sorted(list(discovered_apps))
             
             # Добавляем отладочную информацию
-            logger.debug(f"Обнаружено {len(discovered_apps_list)} приложений")
+            logger.info(f"Обнаружено {len(discovered_apps_list)} приложений из {total_processes} процессов (отфильтровано {filtered_processes})")
+            logger.debug(f"Список обнаруженных приложений: {discovered_apps_list}")
             
             return discovered_apps_list
         except Exception as e:
@@ -2159,7 +2191,11 @@ class TimeTrackerApp(QMainWindow):
         if self.activity_queue.empty():
             logger.debug("Очередь активностей пуста, нечего отправлять.")
             return
-            
+        
+        # Добавляем подробное логирование размера очереди
+        queue_size = self.activity_queue.qsize()
+        logger.info(f"Начинаем отправку данных. В очереди {queue_size} записей активности.")
+        
         # Проверяем, включен ли демо-режим
         demo_mode = self.config.getboolean('Settings', 'demo_mode', fallback=False)
         
@@ -2185,20 +2221,30 @@ class TimeTrackerApp(QMainWindow):
         if self.config.has_section('Credentials'):
             if self.config.has_option('Credentials', 'auth_token'):
                 auth_token = self.config.get('Credentials', 'auth_token')
+                # Добавляем диагностику токена
+                if auth_token:
+                    logger.info(f"Найден токен авторизации длиной {len(auth_token)} символов.")
+                else:
+                    logger.warning("Токен авторизации пустой в секции Credentials.")
             if self.config.has_option('Credentials', 'user_id'):
                 user_id = self.config.get('Credentials', 'user_id')
-            
+                logger.info(f"Используется user_id: {user_id}")
+        
         # Если не нашли в Credentials, проверяем другие секции
         if not auth_token:
+            logger.warning("Токен не найден в секции Credentials, проверяем другие секции...")
             # Проверяем в секции Server
             if self.config.has_section('Server') and self.config.has_option('Server', 'token'):
                 auth_token = self.config.get('Server', 'token')
+                logger.info("Токен найден в секции Server")
             # Проверяем в секции API
             elif self.config.has_section('API') and self.config.has_option('API', 'token'):
                 auth_token = self.config.get('API', 'token')
+                logger.info("Токен найден в секции API")
             # Проверяем в корне файла
             elif self.config.has_option('DEFAULT', 'token'):
                 auth_token = self.config.get('DEFAULT', 'token')
+                logger.info("Токен найден в секции DEFAULT")
         
         # Если не нашли user_id в Credentials, пытаемся получить из токена
         if not user_id and auth_token:
@@ -2206,41 +2252,53 @@ class TimeTrackerApp(QMainWindow):
                 token_data = jwt.decode(auth_token, options={"verify_signature": False})
                 if "user_id" in token_data:
                     user_id = str(token_data["user_id"])
+                    logger.info(f"Извлечен user_id из токена: {user_id}")
                     # Сохраняем в конфигурацию для последующего использования
                     if self.config.has_section('Credentials'):
                         self.config.set('Credentials', 'user_id', user_id)
                         self._save_config(self.config)
+                else:
+                    logger.warning("В токене отсутствует поле user_id")
             except Exception as e:
                 logger.error(f"Ошибка при извлечении user_id из токена: {e}")
-            
+        
         # Если все еще нет user_id, используем значение по умолчанию
         if not user_id:
             user_id = "1"
-            
+            logger.warning(f"Не удалось получить user_id, используется значение по умолчанию: {user_id}")
+        
         # Получаем URL API
         api_url = None
         if self.config.has_section('Credentials') and self.config.has_option('Credentials', 'api_base_url'):
             api_url = self.config.get('Credentials', 'api_base_url')
+            logger.info(f"URL API из секции Credentials: {api_url}")
         elif self.config.has_section('Server') and self.config.has_option('Server', 'base_url'):
             api_url = self.config.get('Server', 'base_url')
+            logger.info(f"URL API из секции Server: {api_url}")
         elif self.config.has_section('API') and self.config.has_option('API', 'base_url'):
             api_url = self.config.get('API', 'base_url')
+            logger.info(f"URL API из секции API: {api_url}")
         elif self.config.has_option('DEFAULT', 'base_url'):
             api_url = self.config.get('DEFAULT', 'base_url')
+            logger.info(f"URL API из секции DEFAULT: {api_url}")
         else:
             api_url = 'http://localhost:8000'
+            logger.warning(f"URL API не найден в конфигурации, используется значение по умолчанию: {api_url}")
         
         # Исправляем потенциально некорректный URL API
         if '/api/api' in api_url:
+            old_url = api_url
             api_url = api_url.replace('/api/api', '/api')
-            logger.info(f"Исправлен дублированный путь API в URL: {api_url}")
-            
+            logger.info(f"Исправлен дублированный путь API в URL: {old_url} -> {api_url}")
+        
         # Убедимся, что URL заканчивается на /api/
         if not api_url.endswith('/api/'):
+            old_url = api_url
             if api_url.endswith('/api'):
                 api_url += '/'
             elif not '/api' in api_url:
                 api_url = api_url.rstrip('/') + '/api/'
+            logger.info(f"Нормализован URL API: {old_url} -> {api_url}")
         
         activities_url = f"{api_url}activities/"
         
@@ -2255,12 +2313,13 @@ class TimeTrackerApp(QMainWindow):
             self.config.set('Settings', 'demo_mode', 'True')
             self._save_config(self.config)
             return
-            
+        
         # Заголовки для запроса
         headers = {
             'Content-Type': 'application/json',
             'Authorization': f'Bearer {auth_token}'
         }
+        logger.debug(f"Заголовки запроса: {headers}")
         
         # Обновляем заголовки сессии
         self.session.headers.update({'Authorization': f'Bearer {auth_token}'})
@@ -2278,6 +2337,9 @@ class TimeTrackerApp(QMainWindow):
                 activity_dict = self.activity_queue.get_nowait()
                 activities_to_send.append(activity_dict)
                 
+                # Детальное логирование активности
+                logger.debug(f"Готовится к отправке активность: {activity_dict}")
+                
                 # Формируем данные для API
                 # Убедимся, что все обязательные поля заполнены
                 start_time = activity_dict.get('start_time_iso_utc', '')
@@ -2286,8 +2348,10 @@ class TimeTrackerApp(QMainWindow):
                 # Если поля не заполнены, сгенерируем текущие значения
                 if not start_time:
                     start_time = self.get_utc_now_iso()
+                    logger.warning(f"Отсутствует start_time_iso_utc, сгенерировано: {start_time}")
                 if not end_time:
                     end_time = self.get_utc_now_iso()
+                    logger.warning(f"Отсутствует end_time_iso_utc, сгенерировано: {end_time}")
                 
                 # Сервер ожидает определенный формат данных
                 # Добавляем все обязательные поля
@@ -2399,7 +2463,6 @@ class TimeTrackerApp(QMainWindow):
                 
             # Отправляем данные на сервер
             logger.info(f"Отправка {len(activities_to_send_payload)} записей активности на сервер.")
-            logger.info(f"API URL: {activities_url}, Токен: {auth_token[:10]}...")
             
             # Сервер ожидает отдельные записи, а не массив
             # Отправляем каждую запись по отдельности
@@ -2409,9 +2472,21 @@ class TimeTrackerApp(QMainWindow):
                     # Добавляем отладочную информацию о пайлоаде
                     logger.info(f"Отправляем пайлоад: {payload}")
                     response = self.session.post(activities_url, json=payload, headers=headers, timeout=30)
+                    
+                    # Добавляем полное логирование ответа
+                    logger.info(f"Ответ сервера: код={response.status_code}, тело={response.text}")
+                    
                     if response.status_code in [200, 201]:
                         success_count += 1
                         logger.info(f"Успешно отправлено: {response.status_code} - {response.text}")
+                        
+                        # Проверяем формат ответа и логируем для отладки
+                        try:
+                            response_data = response.json()
+                            logger.info(f"Ответ сервера в JSON: {response_data}")
+                        except Exception as json_e:
+                            logger.warning(f"Ответ сервера не является JSON: {json_e}")
+                        
                     elif response.status_code == 401:
                         # Ошибка авторизации - токен недействителен
                         logger.error(f"Ошибка авторизации: {response.status_code} - {response.text}")
@@ -2447,9 +2522,14 @@ class TimeTrackerApp(QMainWindow):
                         for i, activity in enumerate(activities_to_send):
                             if activity.get('app_name') == payload.get('app_name') and activity.get('start_time_iso_utc') == payload.get('start_time'):
                                 self.activity_queue.put(activity)
+                                logger.info(f"Активность возвращена в очередь для повторной отправки")
                                 break
                 except Exception as e:
-                    logger.error(f"Ошибка при отправке записи: {e}")
+                    logger.error(f"Ошибка при отправке записи: {e}", exc_info=True)
+                    # Возвращаем активность в очередь
+                    # (добавим конкретную активность, которая вызвала ошибку)
+                    logger.info(f"Активность возвращена в очередь из-за ошибки: {e}")
+                    self.activity_queue.put(activities_to_send[activities_to_send_payload.index(payload)])
             
             # Создаем фиктивный ответ для обработки в основном коде
             class DummyResponse:
@@ -2460,8 +2540,8 @@ class TimeTrackerApp(QMainWindow):
             response = DummyResponse(200 if success_count > 0 else 400)
             
             if response.status_code == 200 or response.status_code == 201:
-                logger.info(f"Успешно отправлено {len(activities_to_send_payload)} записей активности.")
-                self.status_bar.showMessage(f"Отправлено {len(activities_to_send_payload)} записей активности.")
+                logger.info(f"Успешно отправлено {success_count} из {len(activities_to_send_payload)} записей активности.")
+                self.status_bar.showMessage(f"Отправлено {success_count} из {len(activities_to_send_payload)} записей активности.")
             elif response.status_code == 401:
                 logger.warning("Токен недействителен, требуется повторная авторизация.")
                 # Удаляем устаревший токен из секций Credentials, Server, API и DEFAULT
@@ -2515,6 +2595,7 @@ class TimeTrackerApp(QMainWindow):
         if self.config.getboolean('Settings', 'demo_mode', fallback=False):
             self.connection_status.setText("Статус подключения: Оффлайн-режим")
             self.connection_status.setStyleSheet("QLabel { color: orange; }")
+            logger.info("Проверка соединения пропущена - приложение в демо-режиме")
             return
             
         # Если нет токена, вызываем диалог авторизации
@@ -2523,6 +2604,9 @@ class TimeTrackerApp(QMainWindow):
             auth_token = self.config.get('Credentials', 'auth_token')
         
         if not auth_token:
+            logger.warning("Проверка соединения: отсутствует токен авторизации")
+            self.connection_status.setText("Статус подключения: Требуется авторизация")
+            self.connection_status.setStyleSheet("QLabel { color: red; }")
             self.login_required_signal.emit()
             return
             
@@ -2540,31 +2624,86 @@ class TimeTrackerApp(QMainWindow):
             if self.config.has_section('Credentials'):
                 self.config.set('Credentials', 'api_base_url', api_url + '/')
                 self._save_config()
+        
+        logger.info(f"Проверка соединения с сервером: {api_url}")
                 
         try:
             # Проверяем соединение напрямую через запрос
             headers = {'Authorization': f'Bearer {auth_token}'} if auth_token else {}
+            logger.debug(f"Заголовки запроса проверки соединения: {headers}")
+            
+            # Пробуем сначала обратиться к корневому URL API для проверки базового соединения
             response = requests.get(f"{api_url}/", headers=headers, timeout=(3, 5))
             
             if response.status_code == 200:
                 self.connection_status.setText(f"Статус подключения: Подключено ({api_url})")
                 self.connection_status.setStyleSheet("QLabel { color: green; }")
-                logger.info(f"Проверка соединения: успешно")
+                logger.info(f"Проверка соединения: успешно, сервер доступен и отвечает")
+                
+                # Дополнительно проверяем активности для текущего пользователя
+                try:
+                    # Получаем user_id
+                    user_id = None
+                    if self.config.has_section('Credentials') and self.config.has_option('Credentials', 'user_id'):
+                        user_id = self.config.get('Credentials', 'user_id')
+                    
+                    if user_id:
+                        # Проверяем активности пользователя
+                        activities_url = f"{api_url}/activities/?user={user_id}&limit=1"
+                        logger.info(f"Запрос активностей пользователя: {activities_url}")
+                        activities_response = requests.get(activities_url, headers=headers, timeout=(3, 5))
+                        
+                        if activities_response.status_code == 200:
+                            try:
+                                activities_data = activities_response.json()
+                                logger.info(f"Ответ API активностей: {activities_data}")
+                                
+                                if activities_data and isinstance(activities_data, list) and len(activities_data) > 0:
+                                    # Получаем последнюю активность
+                                    last_activity = activities_data[0]
+                                    last_time = last_activity.get('end_time', '')
+                                    logger.info(f"Последняя активность пользователя на сервере: {last_time}")
+                                    self.status_bar.showMessage(f"Последняя синхронизированная активность: {last_time}")
+                                else:
+                                    logger.warning("Нет активностей для пользователя на сервере")
+                                    self.status_bar.showMessage("Нет записанных активностей на сервере")
+                            except Exception as e:
+                                logger.error(f"Ошибка при обработке ответа активностей: {e}")
+                        else:
+                            logger.warning(f"Не удалось получить активности: {activities_response.status_code} - {activities_response.text}")
+                except Exception as e:
+                    logger.error(f"Ошибка при проверке активностей: {e}")
             elif response.status_code == 401:
                 self.connection_status.setText("Статус подключения: Ошибка авторизации")
                 self.connection_status.setStyleSheet("QLabel { color: red; }")
                 logger.warning(f"Ошибка проверки соединения: Недействительный токен (401)")
                 
+                # Показываем детали ответа для отладки
+                logger.debug(f"Детали ответа 401: {response.text}")
+                
                 # Планируем показ диалога авторизации с задержкой
                 QTimer.singleShot(1000, self.login_required_signal.emit)
             else:
-                self.connection_status.setText("Статус подключения: Ошибка")
+                self.connection_status.setText(f"Статус подключения: Ошибка {response.status_code}")
                 self.connection_status.setStyleSheet("QLabel { color: red; }")
-                logger.warning(f"Ошибка проверки соединения: {response.status_code}")
+                logger.warning(f"Ошибка проверки соединения: {response.status_code} - {response.text}")
+                
+                # Дополнительная отладочная информация
+                self.status_bar.showMessage(f"Ошибка сервера: {response.status_code} - {response.text[:50]}")
+        except requests.exceptions.ConnectionError as e:
+            self.connection_status.setText("Статус подключения: Сервер недоступен")
+            self.connection_status.setStyleSheet("QLabel { color: red; }")
+            logger.error(f"Ошибка соединения с сервером: {e}")
+            self.status_bar.showMessage(f"Сервер недоступен: проверьте подключение к сети")
+        except requests.exceptions.Timeout as e:
+            self.connection_status.setText("Статус подключения: Таймаут")
+            self.connection_status.setStyleSheet("QLabel { color: red; }")
+            logger.error(f"Таймаут при подключении к серверу: {e}")
+            self.status_bar.showMessage(f"Сервер не отвечает: превышено время ожидания")
         except Exception as e:
             self.connection_status.setText("Статус подключения: Ошибка")
             self.connection_status.setStyleSheet("QLabel { color: red; }")
-            logger.error(f"Ошибка при проверке соединения: {e}")
+            logger.error(f"Ошибка при проверке соединения: {e}", exc_info=True)
             
             # Отображаем информацию об ошибке
             self.status_bar.showMessage(f"Ошибка соединения: {str(e)[:100]}")
