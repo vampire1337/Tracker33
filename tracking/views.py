@@ -133,7 +133,7 @@ class StatisticsView(LoginRequiredMixin, TemplateView):
                 grouped_apps[normalized_name]['total_seconds'] += seconds_value
                 grouped_apps[normalized_name]['activities_count'] += 1
             else:
-                # Создаем новую запись
+                # Создаем новую запись с правильным названием
                 grouped_apps[normalized_name] = {
                     'id': app.id,
                     'name': normalized_name,
@@ -166,12 +166,15 @@ class StatisticsView(LoginRequiredMixin, TemplateView):
                 def __init__(self, data):
                     for key, value in data.items():
                         setattr(self, key, value)
+                        
+                def __str__(self):
+                    return self.name
             apps.append(AppMock(app_data))
         
         # ОТЛАДКА: Проверяем что передаем в контекст
         print(f"[DEBUG] Statistics - Создано {len(apps)} приложений:")
         for i, app in enumerate(apps[:5]):  # Показываем первые 5
-            print(f"  App {i}: name='{app.name}', id={getattr(app, 'id', 'None')}, percentage={getattr(app, 'percentage', 0)}")
+            print(f"  App {i}: name='{app.name}', process_name='{getattr(app, 'process_name', 'None')}', percentage={getattr(app, 'percentage', 0)}")
         
         # Получаем данные по дням для графика
         daily_data = []
@@ -554,12 +557,15 @@ class DashboardView(LoginRequiredMixin, TemplateView):
                 def __init__(self, data):
                     for key, value in data.items():
                         setattr(self, key, value)
+                        
+                def __str__(self):
+                    return self.name
             apps.append(AppMock(app_data))
         
         # ОТЛАДКА: Проверяем что передаем в контекст
         print(f"[DEBUG] Dashboard - Создано {len(apps)} приложений:")
         for i, app in enumerate(apps[:5]):  # Показываем первые 5
-            print(f"  App {i}: name='{app.name}', id={getattr(app, 'id', 'None')}, percentage={getattr(app, 'percentage', 0)}")
+            print(f"  App {i}: name='{app.name}', process_name='{getattr(app, 'process_name', 'None')}', percentage={getattr(app, 'percentage', 0)}")
         
         # Создаем почасовую статистику для графика (исключая системные процессы)
         hourly_activity = []
