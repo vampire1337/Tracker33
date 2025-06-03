@@ -502,27 +502,31 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // График активности по часам
-    const ctx = document.getElementById('activityChart').getContext('2d');
+    const ctx = document.getElementById('activityChart');
+    if (!ctx) {
+        console.error('График activityChart не найден!');
+        return;
+    }
     
     // Подготовка данных для графика
     let hours = [];
-    let activityData = [];
-    
     for (let i = 0; i < 24; i++) {
         hours.push(i.toString().padStart(2, '0') + ':00');
     }
     
-    // Данные активности по часам
+    // Данные активности по часам из Django
     const hourlyActivity = [
         {% for hour_data in hourly_activity %}
             {{ hour_data.minutes|default:0 }}{% if not forloop.last %},{% endif %}
         {% empty %}
-            0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+            {% for i in "0123456789012345678901234" %}0{% if not forloop.last %},{% endif %}{% endfor %}
         {% endfor %}
     ];
     
+    console.log('Данные для графика активности:', hourlyActivity);
+    
     // Создаем градиент для красивого отображения
-    const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+    const gradient = ctx.getContext('2d').createLinearGradient(0, 0, 0, 400);
     gradient.addColorStop(0, 'rgba(54, 162, 235, 0.8)');
     gradient.addColorStop(1, 'rgba(54, 162, 235, 0.1)');
     
@@ -612,11 +616,16 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     // Добавляем информационное сообщение о возможности клика по графику
-    if (hourlyActivity.some(value => value > 0)) {
-        showNotification('💡 Совет: Кликните по точкам на графике для детальной информации!', 'info');
+    const hasData = hourlyActivity.some(value => value > 0);
+    if (hasData) {
+        setTimeout(() => {
+            showNotification('💡 Совет: Кликните по точкам на графике для детальной информации!', 'info');
+        }, 2000);
+    } else {
+        console.log('Нет данных для отображения в графике активности');
     }
     
-    console.log("График активности создан:", hourlyActivity);
+    console.log("График активности создан. Данные:", hourlyActivity);
     
     // Функции для работы с целями
     window.showGoalSetter = function() {
@@ -678,6 +687,14 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Запускаем проверку достижений
     checkAchievements();
+    
+    // Логируем статистику для отладки
+    console.log('Dashboard загружен. Статистика:', {
+        время: '{{ today_stats.formatted_time }}',
+        клавиши: {{ today_stats.keystrokes|default:0 }},
+        продуктивность: {{ today_stats.productivity_percent|default:0 }},
+        приложения: {{ today_stats.apps|length|default:0 }}
+    });
 });
 </script>
 {% endblock %} 

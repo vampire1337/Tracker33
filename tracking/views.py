@@ -31,6 +31,18 @@ from .exceptions import (
     InvalidActivityData
 )
 from rest_framework.exceptions import ValidationError
+from .utils import (
+    filter_user_applications,
+    group_applications_by_name,
+    normalize_app_name,
+    format_duration,
+    calculate_productivity_stats,
+    is_system_process
+)
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_POST
+import json
 
 # Настройка логирования
 logger = logging.getLogger('tracking.error')
@@ -39,51 +51,6 @@ logger = logging.getLogger('tracking.error')
 
 class StatisticsView(LoginRequiredMixin, TemplateView):
     template_name = 'statistics.html'
-    
-    # Словарь для отображения понятных названий приложений
-    app_name_mapping = {
-        'browser.exe': 'Yandex Браузер',
-        'chrome.exe': 'Google Chrome',
-        'firefox.exe': 'Mozilla Firefox',
-        'msedge.exe': 'Microsoft Edge',
-        'opera.exe': 'Opera',
-        'safari.exe': 'Safari',
-        'brave.exe': 'Brave Browser',
-        'vivaldi.exe': 'Vivaldi',
-        'iexplore.exe': 'Internet Explorer',
-        'word.exe': 'Microsoft Word',
-        'excel.exe': 'Microsoft Excel',
-        'powerpnt.exe': 'Microsoft PowerPoint',
-        'outlook.exe': 'Microsoft Outlook',
-        'winword.exe': 'Microsoft Word',
-        'notepad.exe': 'Notepad',
-        'notepad++.exe': 'Notepad++',
-        'code.exe': 'Visual Studio Code',
-        'devenv.exe': 'Visual Studio',
-        'pycharm64.exe': 'PyCharm',
-        'idea64.exe': 'IntelliJ IDEA',
-        'photoshop.exe': 'Adobe Photoshop',
-        'illustrator.exe': 'Adobe Illustrator',
-        'acrobat.exe': 'Adobe Acrobat',
-        'acrord32.exe': 'Adobe Reader',
-        'slack.exe': 'Slack',
-        'teams.exe': 'Microsoft Teams',
-        'discord.exe': 'Discord',
-        'telegram.exe': 'Telegram',
-        'whatsapp.exe': 'WhatsApp',
-        'skype.exe': 'Skype',
-        'zoom.exe': 'Zoom',
-        'steam.exe': 'Steam',
-        'spotify.exe': 'Spotify',
-        'vlc.exe': 'VLC Media Player',
-        'wmplayer.exe': 'Windows Media Player',
-        'explorer.exe': 'Windows Explorer',
-        'cmd.exe': 'Командная строка',
-        'powershell.exe': 'PowerShell',
-        'python.exe': 'Python',
-        'javaw.exe': 'Java',
-        'node.exe': 'Node.js'
-    }
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -119,20 +86,15 @@ class StatisticsView(LoginRequiredMixin, TemplateView):
             keyboard_activity += activity.keyboard_presses or 0
         
         # Форматируем время в строку для отображения
-        hours, remainder = divmod(int(total_seconds), 3600)
-        minutes, seconds = divmod(remainder, 60)
-        formatted_time = f"{hours}:{minutes:02d}:{seconds:02d}"
+        formatted_time = format_duration(total_seconds)
         
         # Рассчитываем средние показатели на день
         avg_seconds_per_day = total_seconds / days if days > 0 else 0
-        avg_hours, avg_remainder = divmod(int(avg_seconds_per_day), 3600)
-        avg_minutes, avg_seconds = divmod(avg_remainder, 60)
-        average_daily_time = f"{avg_hours}:{avg_minutes:02d}:{avg_seconds:02d}"
-        
+        average_daily_time = format_duration(avg_seconds_per_day)
         average_daily_keystrokes = int(keyboard_activity / days) if days > 0 else 0
         
         # Получаем все приложения пользователя за период - без кэширования
-        apps = Application.objects.filter(
+        apps_queryset = Application.objects.filter(
             useractivity__user=user,
             useractivity__start_time__date__gte=start_date,
             useractivity__start_time__date__lte=today
@@ -144,157 +106,131 @@ class StatisticsView(LoginRequiredMixin, TemplateView):
             ))
         ).order_by('-total_time').distinct()
         
-        # Форматируем время для каждого приложения и рассчитываем проценты
-        # Общее количество секунд для всех приложений
-        all_apps_seconds = sum(app.total_seconds for app in apps if getattr(app, 'total_seconds', None))
+        # Применяем фильтрацию системных процессов и группировку
+        apps_data = []
+        grouped_apps = {}
         
-        # Получаем предыдущие данные для сравнения и расчета тренда
-        prev_start_date = start_date - timedelta(days=days)
-        prev_end_date = start_date - timedelta(days=1)
-        
-        previous_apps = Application.objects.filter(
-            useractivity__user=user,
-            useractivity__start_time__date__gte=prev_start_date,
-            useractivity__start_time__date__lte=prev_end_date
-        ).annotate(
-            total_time=Sum('useractivity__duration'),
-            total_seconds=Sum(ExpressionWrapper(
-                F('useractivity__duration'), 
-                output_field=models.IntegerField()
-            ))
-        )
-        
-        # Создаем словарь предыдущих данных для быстрого поиска
-        prev_app_data = {}
-        for app in previous_apps:
-            if getattr(app, 'total_seconds', None):
-                prev_app_data[app.id] = app.total_seconds
-        
-        for app in apps:
-            if hasattr(app, 'total_seconds') and app.total_seconds:
-                # Преобразуем время в секунды, разделив на 1000000 если значение слишком большое
-                seconds_value = app.total_seconds
-                if seconds_value > 100000:  # Если значение слишком большое, вероятно это микросекунды
-                    seconds_value = seconds_value / 1000000
+        for app in apps_queryset:
+            # Проверяем, не системный ли это процесс
+            if is_system_process(app.process_name):
+                continue
                 
-                hours, remainder = divmod(int(seconds_value), 3600)
-                minutes, seconds = divmod(remainder, 60)
-                app.formatted_time = f"{hours}:{minutes:02d}:{seconds:02d}"
+            # Нормализуем название приложения
+            normalized_result = normalize_app_name(app.process_name)
+            if normalized_result[0] is None:
+                continue
                 
-                # Рассчитываем процент от общего времени
-                app.percentage = round((app.total_seconds / all_apps_seconds) * 100, 1) if all_apps_seconds > 0 else 0
-                
-                # Рассчитываем тренд по сравнению с предыдущим периодом
-                prev_seconds = prev_app_data.get(app.id, 0)
-                if prev_seconds > 0:
-                    app.trend = round(((app.total_seconds - prev_seconds) / prev_seconds) * 100, 1)
-                    # Определяем класс стиля для тренда
-                    if app.trend > 0:
-                        app.trend_class = 'bg-success'
-                    elif app.trend < 0:
-                        app.trend_class = 'bg-danger'
-                    else:
-                        app.trend_class = 'bg-secondary'
-                else:
-                    # Если раньше не было активности, показываем нейтральный тренд вместо +100%
-                    app.trend = 0
-                    app.trend_class = 'bg-info'
-                    # Добавляем пометку для интерфейса, что это новое приложение
-                    app.is_new = True
+            normalized_name, default_productive = normalized_result
+            
+            # Преобразуем время в секунды правильно
+            seconds_value = getattr(app, 'total_seconds', 0) or 0
+            if seconds_value > 100000:  # Если значение слишком большое, вероятно это микросекунды
+                seconds_value = seconds_value / 1000000
+            
+            if normalized_name in grouped_apps:
+                # Суммируем время для одинаковых приложений
+                grouped_apps[normalized_name]['total_seconds'] += seconds_value
+                grouped_apps[normalized_name]['activities_count'] += 1
             else:
-                app.formatted_time = "00:00:00"
-                app.percentage = 0
-                app.trend = 0
-                app.trend_class = 'bg-secondary'
+                # Создаем новую запись
+                grouped_apps[normalized_name] = {
+                    'id': app.id,
+                    'name': normalized_name,
+                    'process_name': app.process_name,
+                    'total_seconds': seconds_value,
+                    'activities_count': 1,
+                    'is_productive': getattr(app, 'is_productive', default_productive)
+                }
         
-        # Обновляем названия приложений для отображения
-        for app in apps:
-            process_name = app.process_name.lower() if app.process_name else ""
-            if process_name in self.app_name_mapping:
-                app.name = self.app_name_mapping[process_name]
-                app.save()
+        # Преобразуем в список и сортируем по времени
+        apps_data = sorted(grouped_apps.values(), key=lambda x: x['total_seconds'], reverse=True)
         
-        # Получаем данные по дням для графика - принудительно обновляем
+        # Общее количество секунд для всех приложений
+        all_apps_seconds = sum(app['total_seconds'] for app in apps_data)
+        
+        # Форматируем время для каждого приложения и рассчитываем проценты
+        for app in apps_data:
+            app['formatted_time'] = format_duration(app['total_seconds'])
+            app['percentage'] = round((app['total_seconds'] / all_apps_seconds) * 100, 1) if all_apps_seconds > 0 else 0
+            
+            # Для совместимости с шаблоном добавляем тренд (пока что нейтральный)
+            app['trend'] = 0
+            app['trend_class'] = 'bg-secondary'
+            app['is_new'] = False
+        
+        # Создаем объекты для совместимости с шаблоном
+        apps = []
+        for app_data in apps_data:
+            class AppMock:
+                def __init__(self, data):
+                    for key, value in data.items():
+                        setattr(self, key, value)
+                        
+            apps.append(AppMock(app_data))
+        
+        # Получаем данные по дням для графика
         daily_data = []
         for i in range(days):
             date = today - timedelta(days=days-1-i)
             day_activities = activities.filter(start_time__date=date)
             
             day_seconds = 0
+            day_productive_seconds = 0
+            
             for activity in day_activities:
+                # Проверяем, не системное ли это приложение
+                if is_system_process(activity.application.process_name):
+                    continue
+                    
                 if activity.duration:
-                    day_seconds += activity.duration.total_seconds()
+                    activity_seconds = activity.duration.total_seconds()
                 elif activity.start_time and activity.end_time:
                     duration = activity.end_time - activity.start_time
-                    day_seconds += duration.total_seconds()
+                    activity_seconds = duration.total_seconds()
+                else:
+                    continue
+                
+                day_seconds += activity_seconds
+                
+                # Проверяем продуктивность
+                if activity.application.is_productive:
+                    day_productive_seconds += activity_seconds
             
             daily_data.append({
                 'date': date,
                 'hours': round(day_seconds / 3600, 1),
+                'productive_hours': round(day_productive_seconds / 3600, 1),
                 'minutes': round(day_seconds / 60, 0)
             })
         
-        # Проверка и создание демо-данных, если нет реальных
+        # Убедимся, что у нас есть данные для графиков
         if not daily_data:
             for i in range(days):
                 date = today - timedelta(days=days-1-i)
                 daily_data.append({
                     'date': date,
                     'hours': 0,
+                    'productive_hours': 0,
                     'minutes': 0
                 })
         
-        # Убедимся, что у нас есть хотя бы одно приложение для пирожка
-        if not apps.exists():
-            # Создаем фиктивное приложение
-            dummy_app = Application()
-            dummy_app.name = "Нет данных"
-            dummy_app.percentage = 100
-            dummy_app.formatted_time = "00:00:00"
-            dummy_app.trend = 0
-            dummy_app.trend_class = 'bg-secondary'
-            apps = [dummy_app]
-        
         # Рассчитываем продуктивность
-        productive_apps = [app for app in apps if getattr(app, 'is_productive', False)]
-        productive_seconds = sum(app.total_seconds for app in productive_apps if getattr(app, 'total_seconds', None))
-        productivity_percent = round((productive_seconds / all_apps_seconds) * 100) if all_apps_seconds > 0 else 0
-        
-        # Логируем информацию о продуктивных приложениях для отладки
-        print(f"[DEBUG] Продуктивные приложения: {len(productive_apps)}")
-        for app in productive_apps:
-            print(f"[DEBUG] Продуктивное приложение: {app.name}, время: {getattr(app, 'total_seconds', 0)}")
-        print(f"[DEBUG] Всего продуктивное время: {productive_seconds}, общее время: {all_apps_seconds}, процент: {productivity_percent}%")
-        
-        # Убедимся, что продуктивность считается правильно
-        if not productive_apps and all_apps_seconds > 0:
-            # Проверим статус продуктивных приложений в базе данных
-            app_ids = [app.id for app in apps if hasattr(app, 'id')]
-            productive_db_apps = Application.objects.filter(id__in=app_ids, is_productive=True)
-            
-            if productive_db_apps.exists():
-                print(f"[DEBUG] Найдены продуктивные приложения в БД, но не в текущей выборке: {productive_db_apps.count()}")
-                # Принудительно помечаем приложения как продуктивные
-                for app in apps:
-                    if hasattr(app, 'id') and productive_db_apps.filter(id=app.id).exists():
-                        app.is_productive = True
-                
-                # Пересчитываем продуктивность
-                productive_apps = [app for app in apps if getattr(app, 'is_productive', False)]
-                productive_seconds = sum(app.total_seconds for app in productive_apps if getattr(app, 'total_seconds', None))
-                productivity_percent = round((productive_seconds / all_apps_seconds) * 100) if all_apps_seconds > 0 else 0
+        productive_seconds = sum(app['total_seconds'] for app in apps_data if app.get('is_productive', False))
+        productivity_percent = round((productive_seconds / all_apps_seconds) * 100, 1) if all_apps_seconds > 0 else 0
         
         # Добавляем данные в контекст
-        context['apps'] = apps
-        context['formatted_time'] = formatted_time
-        context['keyboard_activity'] = keyboard_activity
-        context['today_activity'] = activities.select_related('application').order_by('-start_time')[:10]
-        context['daily_data'] = daily_data
-        context['average_daily_time'] = average_daily_time
-        context['average_daily_keystrokes'] = average_daily_keystrokes
-        context['productivity_percent'] = productivity_percent
+        context.update({
+            'apps': apps,
+            'formatted_time': formatted_time,
+            'keyboard_activity': keyboard_activity,
+            'today_activity': activities.select_related('application').order_by('-start_time')[:10],
+            'daily_data': daily_data,
+            'average_daily_time': average_daily_time,
+            'average_daily_keystrokes': average_daily_keystrokes,
+            'productivity_percent': productivity_percent
+        })
         
-        print(f"[DEBUG] Statistics Timestamp: {context['timestamp']}, Time: {formatted_time}, Keystrokes: {keyboard_activity}")
+        print(f"[DEBUG] Statistics - Apps found: {len(apps)}, Total time: {formatted_time}, Productivity: {productivity_percent}%")
         
         return context
 
@@ -474,51 +410,6 @@ class KeyboardActivityViewSet(viewsets.ModelViewSet):
 
 class DashboardView(LoginRequiredMixin, TemplateView):
     template_name = 'dashboard.html'
-    
-    # Словарь для отображения понятных названий приложений
-    app_name_mapping = {
-        'browser.exe': 'Yandex Браузер',
-        'chrome.exe': 'Google Chrome',
-        'firefox.exe': 'Mozilla Firefox',
-        'msedge.exe': 'Microsoft Edge',
-        'opera.exe': 'Opera',
-        'safari.exe': 'Safari',
-        'brave.exe': 'Brave Browser',
-        'vivaldi.exe': 'Vivaldi',
-        'iexplore.exe': 'Internet Explorer',
-        'word.exe': 'Microsoft Word',
-        'excel.exe': 'Microsoft Excel',
-        'powerpnt.exe': 'Microsoft PowerPoint',
-        'outlook.exe': 'Microsoft Outlook',
-        'winword.exe': 'Microsoft Word',
-        'notepad.exe': 'Notepad',
-        'notepad++.exe': 'Notepad++',
-        'code.exe': 'Visual Studio Code',
-        'devenv.exe': 'Visual Studio',
-        'pycharm64.exe': 'PyCharm',
-        'idea64.exe': 'IntelliJ IDEA',
-        'photoshop.exe': 'Adobe Photoshop',
-        'illustrator.exe': 'Adobe Illustrator',
-        'acrobat.exe': 'Adobe Acrobat',
-        'acrord32.exe': 'Adobe Reader',
-        'slack.exe': 'Slack',
-        'teams.exe': 'Microsoft Teams',
-        'discord.exe': 'Discord',
-        'telegram.exe': 'Telegram',
-        'whatsapp.exe': 'WhatsApp',
-        'skype.exe': 'Skype',
-        'zoom.exe': 'Zoom',
-        'steam.exe': 'Steam',
-        'spotify.exe': 'Spotify',
-        'vlc.exe': 'VLC Media Player',
-        'wmplayer.exe': 'Windows Media Player',
-        'explorer.exe': 'Windows Explorer',
-        'cmd.exe': 'Командная строка',
-        'powershell.exe': 'PowerShell',
-        'python.exe': 'Python',
-        'javaw.exe': 'Java',
-        'node.exe': 'Node.js'
-    }
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -532,11 +423,16 @@ class DashboardView(LoginRequiredMixin, TemplateView):
         today_activities = UserActivity.objects.filter(
             user=user,
             start_time__date=today
-        ).select_related('application').order_by('-start_time')[:10]  # Ограничиваем до 10 последних записей
+        ).select_related('application').order_by('-start_time')[:10]
+        
+        # Фильтруем системные процессы из активностей
+        filtered_activities = []
+        for activity in today_activities:
+            if not is_system_process(activity.application.process_name):
+                filtered_activities.append(activity)
         
         # Убедимся, что у каждой активности есть правильная длительность
-        for activity in today_activities:
-            # Если длительность не установлена, но есть начало и конец, рассчитываем её
+        for activity in filtered_activities:
             if not activity.duration and activity.start_time and activity.end_time:
                 activity.duration = activity.end_time - activity.start_time
                 activity.save()
@@ -552,150 +448,159 @@ class DashboardView(LoginRequiredMixin, TemplateView):
             elif activity.start_time and not activity.end_time:
                 current_time = timezone.now()
                 activity.current_duration = current_time - activity.start_time
-                # Для корректного отображения в шаблоне, преобразуем в строку
                 seconds = int(activity.current_duration.total_seconds())
                 hours, remainder = divmod(seconds, 3600)
                 minutes, seconds = divmod(remainder, 60)
                 activity.formatted_duration = f"{hours}:{minutes:02d}:{seconds:02d}"
         
-        context['today_activity'] = today_activities
+        context['today_activity'] = filtered_activities[:10]  # Ограничиваем до 10
         
-        # Получаем активные приложения
-        active_apps = Application.objects.filter(
+        # Получаем активные приложения (только пользовательские)
+        active_apps_queryset = Application.objects.filter(
             useractivity__user=user,
             useractivity__start_time__date=today
         ).distinct()
         
-        # Обновляем названия активных приложений
-        for app in active_apps:
-            process_name = app.process_name.lower() if app.process_name else ""
-            if process_name in self.app_name_mapping:
-                app.name = self.app_name_mapping[process_name]
-                app.save()
+        # Фильтруем системные процессы
+        active_apps = filter_user_applications(active_apps_queryset)
 
         # Получаем статистику за сегодня
-        # Добавляем общее время работы за сегодня
-        # Используем прямой SQL-запрос для более точного расчета
-        from django.db import connection
-        from django.db.models import Sum
-        
-        # Используем объекты Django вместо прямого SQL для совместимости с SQLite
-        # Исправляем расчет времени работы, чтобы оно корректно отображалось
         activities = UserActivity.objects.filter(
             user=user,
             start_time__date=today
         )
         
-        # Рассчитываем общее время работы на основе всех активностей
+        # Рассчитываем общее время работы на основе пользовательских приложений
         total_seconds = 0
+        keyboard_total = 0
+        
         for activity in activities:
+            # Пропускаем системные процессы
+            if is_system_process(activity.application.process_name):
+                continue
+                
             if activity.duration:
                 total_seconds += activity.duration.total_seconds()
             elif activity.start_time and activity.end_time:
                 duration = activity.end_time - activity.start_time
                 total_seconds += duration.total_seconds()
-        
-        # Создаем объект timedelta для отображения
-        total_work_time = timedelta(seconds=int(total_seconds))
+            
+            keyboard_total += activity.keyboard_presses or 0
         
         # Форматируем время в строку для отображения
-        hours, remainder = divmod(int(total_seconds), 3600)
-        minutes, seconds = divmod(remainder, 60)
-        formatted_time = f"{hours}:{minutes:02d}:{seconds:02d}"
+        formatted_time = format_duration(total_seconds)
         
-        # Получаем все приложения пользователя за сегодня
-        apps = Application.objects.filter(
+        # Получаем все приложения пользователя за сегодня с группировкой
+        apps_queryset = Application.objects.filter(
             useractivity__user=user,
             useractivity__start_time__date=today
         ).annotate(
             total_time=Sum('useractivity__duration'),
-            # Добавляем поле для отформатированного времени
             total_seconds=Sum(ExpressionWrapper(
                 F('useractivity__duration'), 
                 output_field=models.IntegerField()
             ))
-        ).order_by('-total_time')
+        ).order_by('-total_time').distinct()
         
-        # Рассчитываем проценты для приложений
-        all_apps_seconds = sum(app.total_seconds for app in apps if getattr(app, 'total_seconds', None))
+        # Применяем фильтрацию и группировку
+        apps_data = []
+        grouped_apps = {}
         
-        # Форматируем время для каждого приложения и добавляем проценты
-        for app in apps:
-            if hasattr(app, 'total_seconds') and app.total_seconds:
-                # Преобразуем время в секунды, разделив на 1000000 если значение слишком большое
-                seconds_value = app.total_seconds
-                if seconds_value > 100000:  # Если значение слишком большое, вероятно это микросекунды
-                    seconds_value = seconds_value / 1000000
+        for app in apps_queryset:
+            # Проверяем, не системный ли это процесс
+            if is_system_process(app.process_name):
+                continue
                 
-                hours, remainder = divmod(int(seconds_value), 3600)
-                minutes, seconds = divmod(remainder, 60)
-                app.formatted_time = f"{hours}:{minutes:02d}:{seconds:02d}"
+            # Нормализуем название приложения
+            normalized_result = normalize_app_name(app.process_name)
+            if normalized_result[0] is None:
+                continue
                 
-                # Добавляем процент от общего времени
-                app.percentage = round((app.total_seconds / all_apps_seconds) * 100, 1) if all_apps_seconds > 0 else 0
+            normalized_name, default_productive = normalized_result
+            
+            # Преобразуем время правильно
+            seconds_value = getattr(app, 'total_seconds', 0) or 0
+            if seconds_value > 100000:
+                seconds_value = seconds_value / 1000000
+            
+            if normalized_name in grouped_apps:
+                grouped_apps[normalized_name]['total_seconds'] += seconds_value
             else:
-                app.formatted_time = "00:00:00"
-                app.percentage = 0
+                grouped_apps[normalized_name] = {
+                    'id': app.id,
+                    'name': normalized_name,
+                    'process_name': app.process_name,
+                    'total_seconds': seconds_value,
+                    'is_productive': getattr(app, 'is_productive', default_productive)
+                }
         
-        # Обновляем названия приложений для отображения
-        for app in apps:
-            process_name = app.process_name.lower() if app.process_name else ""
-            if process_name in self.app_name_mapping:
-                # Обновляем название приложения в базе данных
-                app.name = self.app_name_mapping[process_name]
-                app.save()
+        # Преобразуем в список и рассчитываем проценты
+        apps_data = sorted(grouped_apps.values(), key=lambda x: x['total_seconds'], reverse=True)
+        all_apps_seconds = sum(app['total_seconds'] for app in apps_data)
         
-        # Создаем почасовую статистику для графика
+        for app in apps_data:
+            app['formatted_time'] = format_duration(app['total_seconds'])
+            app['percentage'] = round((app['total_seconds'] / all_apps_seconds) * 100, 1) if all_apps_seconds > 0 else 0
+        
+        # Создаем объекты для совместимости с шаблоном
+        apps = []
+        for app_data in apps_data:
+            class AppMock:
+                def __init__(self, data):
+                    for key, value in data.items():
+                        setattr(self, key, value)
+            apps.append(AppMock(app_data))
+        
+        # Создаем почасовую статистику для графика (исключая системные процессы)
         hourly_activity = []
         for hour in range(24):
             start_hour = timezone.make_aware(datetime.combine(today, time(hour=hour, minute=0)))
             end_hour = timezone.make_aware(datetime.combine(today, time(hour=hour + 1 if hour < 23 else 23, minute=59, second=59)))
             
-            # Получаем активности только за этот час
             hour_activities = activities.filter(
                 start_time__gte=start_hour,
                 start_time__lt=end_hour
             )
             
-            # Рассчитываем общее время активности за час
             hour_seconds = 0
             for activity in hour_activities:
+                # Пропускаем системные процессы
+                if is_system_process(activity.application.process_name):
+                    continue
+                    
                 if activity.duration:
                     hour_seconds += activity.duration.total_seconds()
                 elif activity.start_time and activity.end_time:
                     duration = activity.end_time - activity.start_time
                     hour_seconds += duration.total_seconds()
             
-            # Переводим секунды в минуты
             hour_minutes = round(hour_seconds / 60, 0)
-            
             hourly_activity.append({
                 'hour': hour,
                 'minutes': hour_minutes,
                 'seconds': hour_seconds
             })
         
+        # Рассчитываем продуктивность
+        productive_seconds = sum(app['total_seconds'] for app in apps_data if app.get('is_productive', False))
+        productivity_percent = round((productive_seconds / all_apps_seconds) * 100, 1) if all_apps_seconds > 0 else 0
+        
         today_stats = {
-            'total_work_time': total_work_time,
+            'total_work_time': timedelta(seconds=int(total_seconds)),
             'formatted_time': formatted_time,
+            'total_hours': total_seconds / 3600,
             'apps': apps,
-            
-            # Получаем количество нажатий клавиш из модели UserActivity с использованием SQL
-            'keystrokes': UserActivity.objects.filter(
-                user=user,
-                start_time__date=today
-            ).aggregate(total_keystrokes=Sum('keyboard_presses'))['total_keystrokes'] or 0,
+            'keystrokes': keyboard_total,
+            'productivity_percent': productivity_percent
         }
 
-        # Готовим данные напрямую без кэширования
         context.update({
             'active_apps': active_apps,
             'today_stats': today_stats,
-            'today_activity': context['today_activity'],
             'hourly_activity': hourly_activity
         })
         
-        print(f"[DEBUG] Timestamp: {context['timestamp']}, Time: {formatted_time}, Keystrokes: {today_stats['keystrokes']}")
+        print(f"[DEBUG] Dashboard - Apps: {len(apps)}, Time: {formatted_time}, Productivity: {productivity_percent}%")
         
         return context
 
@@ -1407,56 +1312,37 @@ class DashboardAPIView(APIView):
             'unique_apps': len(app_statistics)
         })
 
-class ToggleProductiveAPIView(APIView):
-    """
-    API для переключения статуса продуктивности приложения.
-    """
-    permission_classes = [permissions.IsAuthenticated]
-    
-    def post(self, request, format=None):
+@csrf_exempt
+@require_POST
+@login_required
+def toggle_productive(request):
+    """API для переключения статуса продуктивности приложения"""
+    try:
+        data = json.loads(request.body)
+        app_id = data.get('app_id')
+        is_productive = data.get('is_productive', False)
+        
+        if not app_id:
+            return JsonResponse({'success': False, 'error': 'app_id is required'})
+        
+        # Находим приложение пользователя
         try:
-            app_id = request.data.get('app_id')
-            is_productive = request.data.get('is_productive')
+            app = Application.objects.get(id=app_id, user=request.user)
+            app.is_productive = is_productive
+            app.save()
             
-            if app_id is None:
-                return Response({
-                    'success': False,
-                    'error': 'app_id is required'
-                }, status=status.HTTP_400_BAD_REQUEST)
-            
-            # Получаем приложение пользователя
-            try:
-                app = Application.objects.get(
-                    id=app_id, 
-                    user=request.user
-                )
-            except Application.DoesNotExist:
-                return Response({
-                    'success': False,
-                    'error': 'Application not found'
-                }, status=status.HTTP_404_NOT_FOUND)
-            
-            # Обновляем статус продуктивности
-            app.is_productive = bool(is_productive)
-            app.save(update_fields=['is_productive'])
-            
-            # Очищаем кэш
-            cache.clear()
-            
-            logger.info(f"Пользователь {request.user.username} изменил статус продуктивности приложения {app.name} на {app.is_productive}")
-            
-            return Response({
-                'success': True,
-                'app_id': app.id,
-                'is_productive': app.is_productive,
-                'app_name': app.name
+            return JsonResponse({
+                'success': True, 
+                'message': f'Приложение {app.name} {"отмечено как продуктивное" if is_productive else "больше не продуктивное"}'
             })
             
-        except Exception as e:
-            logger.error(f"Ошибка при переключении продуктивности: {str(e)}", exc_info=True)
-            return Response({
-                'success': False,
-                'error': f'Внутренняя ошибка сервера: {str(e)}'
-            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        except Application.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'Application not found'})
+            
+    except json.JSONDecodeError:
+        return JsonResponse({'success': False, 'error': 'Invalid JSON'})
+    except Exception as e:
+        logger.error(f"Error in toggle_productive: {e}")
+        return JsonResponse({'success': False, 'error': 'Internal server error'})
 
 # Конец новых API_views
