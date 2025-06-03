@@ -152,7 +152,7 @@ class UserActivityAdmin(admin.ModelAdmin):
 
 @admin.register(KeyboardActivity)
 class KeyboardActivityAdmin(admin.ModelAdmin):
-    list_display = ['user', 'application_name', 'formatted_timestamp', 'key_count']
+    list_display = ['user', 'application_name', 'formatted_timestamp', 'key_pressed']
     list_filter = ['user', 'timestamp', 'application']
     search_fields = ['user__username', 'application__name']
     date_hierarchy = 'timestamp'
