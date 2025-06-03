@@ -1,3 +1,4 @@
+import importlib
 import sys
 import json
 import requests
@@ -19,7 +20,7 @@ from pathlib import Path
 import configparser
 import os
 import threading
-from logging.handlers import RotatingFileHandler
+from logging.handlers import RotatingFileHandler, WatchedFileHandler
 import queue
 import sqlite3
 from typing import Dict, List, Optional, Any, Tuple
@@ -28,9 +29,21 @@ import re
 import warnings
 import random
 import string
-import win32gui
-import win32process
-import jwt
+import platform
+import tempfile
+try:
+    import win32gui
+    import win32process
+    import win32api
+    import win32con
+except ImportError:
+    # Не загружаем win32 модули на не-Windows системах
+    pass
+try:
+    import jwt
+except ImportError:
+    # jwt может быть не установлен
+    pass
 
 def get_base_path():
     """Получение базового пути к ресурсам"""
@@ -41,41 +54,134 @@ def get_base_path():
         base_path = os.path.abspath(".")
     return Path(base_path)
 
+def get_app_data_dir(app_name="TimeTracker"):
+    """
+    Получение директории для хранения данных приложения, 
+    совместимой с разными ОС.
+    
+    Args:
+        app_name: Имя приложения для создания поддиректории
+        
+    Returns:
+        Path: Путь к директории для хранения данных
+    """
+    system = platform.system()
+    
+    if system == "Windows":
+        # На Windows используем %APPDATA%
+        base_dir = os.environ.get("APPDATA")
+        if not base_dir:
+            base_dir = os.path.join(os.path.expanduser("~"), "AppData", "Roaming")
+    elif system == "Linux":
+        # На Linux используем ~/.config
+        base_dir = os.path.join(os.path.expanduser("~"), ".config")
+    elif system == "Darwin":
+        # На macOS используем ~/Library/Application Support
+        base_dir = os.path.join(os.path.expanduser("~"), "Library", "Application Support")
+    else:
+        # Для других ОС используем временную директорию
+        base_dir = tempfile.gettempdir()
+    
+    # Создаем полный путь к директории приложения
+    app_dir = Path(os.path.join(base_dir, app_name))
+    
+    # Создаем директорию, если она не существует
+    app_dir.mkdir(parents=True, exist_ok=True)
+    
+    return app_dir
+
 # Настройка логирования
 def setup_logging():
-    log_dir = Path('logs')
+    """
+    Настраивает логирование с учетом особенностей ОС.
+    
+    Returns:
+        logger: Настроенный объект логгера
+    """
+    # Получаем директорию для хранения логов
+    app_data_dir = get_app_data_dir()
+    log_dir = app_data_dir / 'logs'
     log_dir.mkdir(exist_ok=True)
     
     log_file = log_dir / 'tracker.log'
     
-    # Настройка ротации логов (5 файлов по 1MB каждый)
-    file_handler = RotatingFileHandler(
-        log_file,
-        maxBytes=1024*1024,
-        backupCount=5,
-        encoding='utf-8'
-    )
+    logger = logging.getLogger('TimeTracker')
+    logger.setLevel(logging.INFO)
     
-    console_handler = logging.StreamHandler()
+    # Очищаем существующие обработчики логов, если они есть
+    if logger.handlers:
+        for handler in logger.handlers[:]:
+            logger.removeHandler(handler)
     
     formatter = logging.Formatter(
         '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
     )
     
-    file_handler.setFormatter(formatter)
+    # Консольный обработчик
+    console_handler = logging.StreamHandler()
     console_handler.setFormatter(formatter)
-    
-    logger = logging.getLogger('TimeTracker')
-    logger.setLevel(logging.INFO)
-    logger.addHandler(file_handler)
     logger.addHandler(console_handler)
     
+    # Выбираем обработчик файлов в зависимости от ОС
+    system = platform.system()
+    try:
+        if system == "Windows":
+            # На Windows используем обработчик с блокировкой файлов
+            # для предотвращения конфликтов доступа
+            file_handler = RotatingFileHandler(
+                log_file,
+                maxBytes=1024*1024,  # 1 МБ
+                backupCount=5,
+                encoding='utf-8',
+                delay=True  # Открываем файл только при необходимости записи
+            )
+            
+            # Добавляем обработчик с более безопасной ротацией для Windows
+            file_handler.setFormatter(formatter)
+            logger.addHandler(file_handler)
+        else:
+            # На Unix-системах используем WatchedFileHandler,
+            # который автоматически переоткрывает файл при ротации
+            file_handler = WatchedFileHandler(
+                log_file,
+                encoding='utf-8'
+            )
+            file_handler.setFormatter(formatter)
+            logger.addHandler(file_handler)
+            
+            # Дополнительно настраиваем ротацию через системный logrotate
+            # для Unix-систем (логика ротации в системе)
+    except Exception as e:
+        # Если не удалось настроить обработчик файлов, логируем ошибку
+        # и продолжаем работу только с консольным выводом
+        console_handler.setLevel(logging.WARNING)
+        logger.warning(f"Не удалось настроить логирование в файл: {e}")
+        
+        # Создаем резервный обработчик в безопасной директории
+        try:
+            backup_log_file = Path(tempfile.gettempdir()) / f'tracker_{random.randint(1000, 9999)}.log'
+            backup_handler = logging.FileHandler(backup_log_file, encoding='utf-8')
+            backup_handler.setFormatter(formatter)
+            logger.addHandler(backup_handler)
+            logger.info(f"Логирование перенаправлено в резервный файл: {backup_log_file}")
+        except Exception:
+            logger.warning("Не удалось создать резервный файл логов. Логирование только в консоль.")
+    
+    # Добавляем обработку ошибок логирования
+    logger.info(f"Логирование настроено. Файл логов: {log_file}")
     return logger
 
 logger = setup_logging()
 
 # Импортируем APIClient из api_client.py вместо использования встроенного класса
-from api_client import APIClient
+try:
+    from api_client import APIClient
+except ImportError:
+    logger.error("Не удалось импортировать APIClient. Проверьте наличие файла api_client.py")
+    class APIClient:
+        """Заглушка для APIClient в случае ошибки импорта"""
+        def __init__(self, *args, **kwargs):
+            pass
 
 # Этот класс больше не используется, но оставлен для совместимости с существующим кодом
 # который может ссылаться на него
@@ -350,8 +456,13 @@ class LoginDialog(QDialog):
                     if not config.has_section('Credentials'):
                         config.add_section('Credentials')
                     
+                    # Предотвращаем дублирование '/api/' в URL
+                    base_api_url = server_url.rstrip('/')
+                    if not base_api_url.endswith('/api'):
+                        base_api_url += '/api'
+                        
                     # Сохраняем токен и данные пользователя
-                    config.set('Credentials', 'api_base_url', server_url.rstrip('/') + '/api/')
+                    config.set('Credentials', 'api_base_url', base_api_url + '/')
                     config.set('Credentials', 'auth_token', self.api_client.token)
                     config.set('Credentials', 'username', username)
                     
@@ -405,176 +516,249 @@ class TimeTrackerApp(QMainWindow):
     login_required_signal = pyqtSignal()
 
     def __init__(self, parent=None):
+        """Инициализация приложения"""
         super().__init__(parent)
-
-        # Инициализация путей и базовой конфигурации до UI
-        self.config_path = Path(get_base_path()) / 'config.ini'
-        self.config = self.load_config() 
-
-        # Инициализация session и других атрибутов, зависящих от config
-        self.session = requests.Session()
-        self.api_base_url = self.config.get('Credentials', 'api_base_url', fallback='http://localhost:8000/api/') 
-        self.user_id = self.config.get('Credentials', 'user_id', fallback=None)
-        auth_token = self.config.get('Credentials', 'auth_token', fallback=None)
-        if auth_token:
-            self.session.headers.update({'Authorization': f'Bearer {auth_token}'})
         
-        # machine_id теперь должен быть корректно загружен или создан в self.load_config()
-        # и сохранен в self.config
-        self.machine_id = self.config.get('Settings', 'machine_id') 
-        if not self.machine_id:
-            # Эта ситуация не должна возникать, если load_config и get_machine_id работают правильно,
-            # но на всякий случай добавим лог и попытку пересоздать
-            logger.error("КРИТИЧЕСКАЯ ОШИБКА: machine_id отсутствует в конфигурации ПОСЛЕ вызова load_config. Попытка исправить.")
-            self.machine_id = self.get_machine_id(self.config) 
-            if not self.machine_id: 
-                logger.critical("Не удалось установить machine_id! Приложение может работать некорректно.")
-                # Можно рассмотреть вариант с генерацией временного ID или прерыванием работы
-                self.machine_id = "error_machine_id_" + ''.join(random.choices(string.ascii_lowercase + string.digits, k=16))
-
-        # Очередь для активностей
+        # Инициализация переменных класса
+        self.tracking_active = False
+        self.tracking_paused = False  # Добавляем переменную для паузы отслеживания
+        self.api_client = None
+        self.keyboard_listener = None
+        self.mouse_listener = None
         self.activity_queue = queue.Queue()
-
-        # Атрибуты для отслеживания состояния
-        self.current_activity_data = None 
-        self.activity_start_time = None 
-        self.last_activity_time = time.time() 
-        self.idle_threshold_seconds = self.config.getint('Settings', 'idle_threshold_seconds', fallback=300)
-        self.is_idle = False 
-        self.keyboard_press_count = 0  # Счетчик нажатий клавиш
-        # self.active_window_details = {'app_name': '', 'window_title': ''} # Этот атрибут больше не используется
+        self.current_activity = None
+        self.current_activity_data = {}  # Инициализируем пустым словарем
+        self.db_connection = None
+        self.config = None
+        self.keyboard_press_count = 0
+        self.mouse_move_count = 0
+        self.mouse_click_count = 0
+        self.last_window_title = ""
+        self.last_app_name = ""
+        self.app_list = None
+        self.config_loaded = False
+        self.is_idle = False
+        self.last_activity_time = time.time()
+        self.activities_to_send = []
+        self.activity_start_time = None  # Время начала текущей активности
+        self.idle_threshold_seconds = 300  # По умолчанию 5 минут
+        self.session = requests.Session()  # Инициализируем сессию для HTTP запросов
         
-        # Кэш для хранения соответствия имен приложений и их ID на сервере
-        self.app_cache = {}
-        
-        # Конфигурация отслеживаемых приложений и игнорируемых процессов
-        self.tracked_applications_config = {} 
-        # Расширенный список игнорируемых системных процессов
+        # Список игнорируемых системных процессов
         self.ignored_processes = [
-            # Системные процессы Windows
-            'explorer.exe', 'dllhost.exe', 'ShellExperienceHost.exe', 'SearchUI.exe', 'LockApp.exe', 'System Idle Process',
-            'svchost.exe', 'csrss.exe', 'smss.exe', 'wininit.exe', 'services.exe', 'lsass.exe', 'winlogon.exe',
-            'fontdrvhost.exe', 'dwm.exe', 'taskhostw.exe', 'sihost.exe', 'ctfmon.exe', 'conhost.exe', 'rundll32.exe',
-            'RuntimeBroker.exe', 'WmiPrvSE.exe', 'spoolsv.exe', 'SearchIndexer.exe', 'audiodg.exe', 'dasHost.exe',
-            # Службы и процессы Intel
-            'igfxCUIService.exe', 'igfxEM.exe', 'igfxHK.exe', 'igfxTray.exe', 'IntelCpHDCPSvc.exe', 'IntelCpHeciSvc.exe',
-            # Службы и процессы NVIDIA
-            'nvvsvc.exe', 'nvxdsync.exe', 'NVDisplay.Container.exe', 'nvtray.exe',
-            # Другие системные службы
-            'AggregatorHost.exe', 'ApplicationFrameHost.exe', 'BTSystemService.exe', 'CrossDeviceService.exe',
-            'DDVCollectorSvcApi.exe', 'DDVDataCollector.exe', 'DDVRulesProcessor.exe', 'GameManagerService.exe',
-            'HPNetworkCommunicator.exe', 'Integration.Service.exe', 'IntelCpHDCPSvc.exe', 'IntelCpHeciSvc.exe',
-            'Licensing.Service.exe', 'LocationNotificationWindows.exe', 'Lsalso.exe', 'Maestro.Service.exe',
-            'MemCompression', 'MpDefenderCoreService.exe', 'MsMpEng.exe', 'NVDisplay.Container.exe',
-            'Registry', 'SecurityHealthService.exe', 'SgrmBroker.exe', 'System', 'SystemSettings.exe',
-            'TextInputHost.exe', 'UserOOBEBroker.exe', 'WUDFHost.exe', 'WerFault.exe', 'WindowsInternal.ComposableShell',
-            'YourPhone.exe', 'armsvc.exe', 'esif_assist_64.exe', 'esif_uf.exe', 'jhi_service.exe', 'mDNSResponder.exe',
-            'sqlwriter.exe', 'unsecapp.exe', 'wsappx', 'wuauclt.exe'
+            "explorer.exe", 
+            "system", 
+            "system idle process", 
+            "dwm.exe", 
+            "taskhost.exe", 
+            "taskhostw.exe", 
+            "svchost.exe",
+            "runtimebroker.exe",
+            "searchui.exe",
+            "shellexperiencehost.exe",
+            "winlogon.exe",
+            "wininit.exe",
+            "csrss.exe",
+            "services.exe",
+            "lsass.exe",
+            "fontdrvhost.exe",
+            "smss.exe"
         ]
-        self.load_tracked_applications_config() 
         
-        # Состояние паузы отслеживания
-        self.tracking_paused = False
-        self.pause_action = None # Для QAction в меню трея
+        # Получаем пути к данным и конфигурации в зависимости от ОС
+        self.app_data_dir = get_app_data_dir()
+        self.setup_app_directories()
         
-        # Другие таймеры
-        self.update_app_list_timer = QTimer(self)
-        self.update_app_list_timer.timeout.connect(self.update_app_list)
-        self.update_app_list_timer.start(10000)  # Обновляем список каждые 10 секунд
-
-        self.check_connection_timer = QTimer(self)
-        self.check_connection_timer.timeout.connect(self.check_connection)
-        self.check_connection_timer.start(30000)
-
-        # Уменьшаем интервал отправки для работы в режиме реального времени
-        send_interval_seconds = self.config.getint('Settings', 'send_interval_seconds', fallback=10) # Уменьшаем до 10 секунд по умолчанию
-        self.send_data_timer = QTimer(self)
-        self.send_data_timer.timeout.connect(self.send_activity_data) 
-        self.send_data_timer.start(send_interval_seconds * 1000)
+        # Загружаем конфигурацию
+        self.config = self.load_config() 
+        self.config_loaded = True
         
-        # Сохраняем новый интервал в конфигурацию
-        if not self.config.has_section('Settings'):
-            self.config.add_section('Settings')
-        self.config.set('Settings', 'send_interval_seconds', str(send_interval_seconds))
-        self._save_config(self.config)
-
-        # UI инициализируется после базовой настройки
-        # self.tracker = TimeTracker() 
-        self.init_ui() 
-        self.init_tray_icon() 
+        # Проверяем и исправляем конфигурацию
+        self.validate_and_fix_config()
         
-        # Настройка слушателей и основного таймера трекинга
-        self.setup_activity_listeners_and_tracking_timer() 
+        # Загружаем значение порога бездействия из конфигурации, если есть
+        if self.config.has_section('Settings') and self.config.has_option('Settings', 'idle_threshold_seconds'):
+            self.idle_threshold_seconds = self.config.getint('Settings', 'idle_threshold_seconds')
         
-        # Подключаем сигнал для повторной авторизации
-        self.login_required_signal.connect(self.show_login_dialog_if_needed)
-
-        # Таймер для периодического обновления интерфейса
-        self.update_ui_timer = QTimer(self)
-        self.update_ui_timer.timeout.connect(self.periodic_ui_update)
-        self.update_ui_timer.start(1000)  # Обновляем интерфейс каждую секунду
-
-        # Автоматически запускаем отслеживание при старте приложения
-        QTimer.singleShot(1000, self.start_tracking)
-
-        if not auth_token:
-             # Используем QTimer.singleShot для вызова диалога логина после инициализации основного окна
-             QTimer.singleShot(0, self.show_login_dialog_if_needed)
+        # Инициализируем API клиент
+        self.init_api_client()
+        
+        # Загружаем конфигурацию отслеживания
+        self.load_tracked_applications_config()
+        
+        # Инициализируем пользовательский интерфейс
+        self.init_ui()
+        
+        # Настраиваем иконку в системном трее
+        self.init_tray_icon()
+        
+        # Устанавливаем слушатели активности и таймеры
+        self.setup_activity_listeners_and_tracking_timer()
+        
+        # Запускаем обновление списка приложений
+        self.update_app_list()
+        
+        # Проверяем соединение с сервером
+        QTimer.singleShot(1000, self.check_connection)
+        
+        # Запускаем обновление UI и проверку соединения
+        self.ui_update_timer = QTimer(self)
+        self.ui_update_timer.timeout.connect(self.periodic_ui_update)
+        self.ui_update_timer.start(5000)  # Обновляем каждые 5 секунд
+        
+        # Отображаем окно входа, если необходимо
+        QTimer.singleShot(1500, self.show_login_dialog_if_needed)
+        
+        logger.info("Приложение TimeTracker успешно инициализировано")
+        
+    def setup_app_directories(self):
+        """Создает необходимые директории для работы приложения"""
+        # Создаем основные директории
+        # data_dir - для хранения локальных данных (БД SQLite, кэш и т.д.)
+        # logs_dir - для хранения логов
+        # config_dir - для хранения конфигурационных файлов
+        
+        self.data_dir = self.app_data_dir / 'data'
+        self.logs_dir = self.app_data_dir / 'logs'
+        self.config_dir = self.app_data_dir
+        
+        # Создаем директории, если они не существуют
+        for directory in [self.data_dir, self.logs_dir, self.config_dir]:
+            directory.mkdir(exist_ok=True, parents=True)
+            
+        # Устанавливаем путь к базе данных SQLite
+        self.db_path = self.data_dir / 'activity.db'
+        
+        logger.info(f"Директории приложения настроены: {self.app_data_dir}")
+        
+    def init_api_client(self):
+        """Инициализирует API клиент для связи с сервером"""
+        try:
+            # Получаем базовый URL API из конфигурации
+            base_url = self.config.get('API', 'base_url', fallback='http://localhost:8000')
+            
+            # Проверяем формат URL и корректируем его при необходимости
+            if base_url.endswith('/api/api'):
+                # Исправляем ошибку дублирования /api
+                base_url = base_url.replace('/api/api', '/api')
+            elif not '/api' in base_url:
+                # Добавляем /api, если его нет
+                base_url = base_url.rstrip('/') + '/api'
+                
+            # Записываем обратно в конфигурацию, если URL был исправлен
+            if base_url != self.config.get('API', 'base_url', fallback=''):
+                self.config.set('API', 'base_url', base_url)
+                self._save_config()
+                
+            # Создаем экземпляр APIClient
+            self.api_client = APIClient(base_url)
+            
+            # Сохраняем базовый URL для использования в других методах
+            self.api_base_url = base_url
+            
+            # Пробуем восстановить токен из конфигурации
+            token = self.config.get('API', 'token', fallback=None)
+            if token:
+                self.api_client.token = token
+                logger.info("Токен API восстановлен из конфигурации")
+                
+            logger.info(f"API клиент инициализирован с базовым URL: {base_url}")
+        except Exception as e:
+            logger.error(f"Ошибка при инициализации API клиента: {e}")
+            # Создаем заглушку для API клиента в случае ошибки
+            self.api_client = type('DummyAPIClient', (), {
+                'login': lambda *args, **kwargs: (False, "Ошибка подключения к API"),
+                'get_applications': lambda *args, **kwargs: [],
+                'get_application_id': lambda *args, **kwargs: None,
+                'token': None
+            })
 
     def load_config(self) -> configparser.ConfigParser:
-        """Загружает конфигурацию из файла или создает новую, если файл отсутствует/поврежден."""
+        """Загрузка конфигурации из файла config.ini"""
         config = configparser.ConfigParser()
-        if self.config_path.exists() and self.config_path.is_file():
+        
+        # Используем кросс-платформенный путь к файлу конфигурации
+        app_data_dir = get_app_data_dir()
+        config_file = app_data_dir / 'config.ini'
+        
+        # Переменная для хранения местоположения конфигурационного файла
+        self.config_file_path = config_file
+        
+        # Список возможных расположений конфигурационного файла
+        config_locations = [
+            config_file,                     # Основной путь в директории данных приложения
+            Path('config.ini'),              # В текущей директории
+            Path('desktop_app/config.ini'),  # В поддиректории проекта
+            Path(get_base_path()) / 'config.ini',  # В базовой директории приложения
+        ]
+        
+        loaded = False
+        
+        # Пробуем загрузить из всех возможных мест
+        for loc in config_locations:
             try:
-                config.read(self.config_path, encoding='utf-8')
-                logger.info(f"Конфигурация успешно загружена из {self.config_path}")
-                # Проверка на наличие machine_id и его генерация при необходимости
-                if not config.has_section('Settings') or \
-                   not config.has_option('Settings', 'machine_id') or \
-                   not config.get('Settings', 'machine_id'):
-                    logger.warning("'machine_id' не найден или пуст в конфигурации. Генерирую новый.")
-                    _ = self.get_machine_id(config) # Передаем текущий объект config
-                    self._save_config(config) # Сохраняем после обновления machine_id
-            except configparser.Error as e:
-                logger.error(f"Ошибка чтения конфигурационного файла {self.config_path}: {e}. Создается новый файл.", exc_info=True)
-                config = self.create_default_config()
-                self.get_machine_id(config)
-                self._save_config(config)
+                if loc.exists():
+                    config.read(loc, encoding='utf-8')
+                    logger.info(f"Конфигурация загружена из {loc}")
+                    self.config_file_path = loc  # Запоминаем путь к загруженному файлу
+                    loaded = True
+                    break
             except Exception as e:
-                logger.error(f"Непредвиденная ошибка при загрузке конфигурации {self.config_path}: {e}. Создается новый файл.", exc_info=True)
-                config = self.create_default_config()
-                self.get_machine_id(config)
-                self._save_config(config)
-        else:
-            logger.warning(f"Конфигурационный файл {self.config_path} не найден. Создается новый.")
+                logger.warning(f"Ошибка при загрузке конфигурации из {loc}: {e}")
+        
+        # Если не нашли конфигурацию, создаем новую
+        if not loaded:
+            logger.info("Конфигурационный файл не найден. Создание новой конфигурации.")
             config = self.create_default_config()
-            self.get_machine_id(config)
-            self._save_config(config)
-
-        # Гарантируем наличие основных секций
-        default_sections = {
-            'Credentials': self.create_default_config().items('Credentials'),
-            'Settings': self.create_default_config().items('Settings'),
-            'Applications': self.create_default_config().items('Applications')
-        }
-        
-        made_changes_to_config = False
-        for section_name, default_items in default_sections.items():
-            if not config.has_section(section_name):
-                logger.warning(f"Секция [{section_name}] отсутствует в конфигурации. Добавляю стандартную.")
-                config.add_section(section_name)
-                made_changes_to_config = True
             
-            for key, value in default_items:
-                if not config.has_option(section_name, key):
-                    logger.warning(f"Опция {key} отсутствует в секции [{section_name}]. Добавляю значение по умолчанию: {value}")
-                    config.set(section_name, key, value)
-                    made_changes_to_config = True
+            # Сохраняем новую конфигурацию в предпочтительном месте
+            try:
+                with open(self.config_file_path, 'w', encoding='utf-8') as f:
+                    config.write(f)
+                logger.info(f"Создан новый конфигурационный файл: {self.config_file_path}")
+            except Exception as e:
+                logger.error(f"Не удалось сохранить новую конфигурацию: {e}")
+                
+                # Пробуем сохранить в текущей директории как запасной вариант
+                try:
+                    local_config_path = Path('config.ini')
+                    with open(local_config_path, 'w', encoding='utf-8') as f:
+                        config.write(f)
+                    self.config_file_path = local_config_path
+                    logger.info(f"Создан новый конфигурационный файл в текущей директории: {local_config_path}")
+                except Exception as backup_error:
+                    logger.error(f"Не удалось сохранить резервную конфигурацию: {backup_error}")
+                    # Продолжаем с конфигурацией в памяти, без сохранения
         
-        if made_changes_to_config:
-            self._save_config(config)
-            
+        # Проверяем, содержит ли конфигурация все необходимые разделы и поля
+        self._ensure_config_complete(config)
+        
         return config
+        
+    def _ensure_config_complete(self, config: configparser.ConfigParser) -> None:
+        """
+        Проверяет и дополняет конфигурацию необходимыми полями
+        
+        Args:
+            config: Объект конфигурации для проверки и дополнения
+        """
+        default_config = self.create_default_config()
+        
+        # Проверяем и добавляем недостающие разделы и параметры
+        for section in default_config.sections():
+            if not config.has_section(section):
+                config.add_section(section)
+                
+            for key, value in default_config[section].items():
+                if not config.has_option(section, key):
+                    config.set(section, key, value)
+        
+        # Добавляем или обновляем machine_id, если его нет
+        if not config.has_option('Settings', 'machine_id') or not config['Settings']['machine_id']:
+            config.set('Settings', 'machine_id', self.get_machine_id(config))
+            
+        # Сохраняем обновленную конфигурацию, если были изменения
+        self._save_config(config)
         
     def get_machine_id(self, current_config: configparser.ConfigParser) -> str:
         """Получает или генерирует уникальный ID машины."""
@@ -596,42 +780,90 @@ class TimeTrackerApp(QMainWindow):
         return machine_id
         
     def create_default_config(self) -> configparser.ConfigParser:
-        """Создает конфигурацию по умолчанию."""
+        """Создает объект конфигурации со значениями по умолчанию"""
         config = configparser.ConfigParser()
         
-        # Секция Credentials - для данных авторизации
+        # API и серверные настройки
+        config.add_section('API')
+        config.set('API', 'base_url', 'http://147.45.153.16:8000')
+        config.set('API', 'token', '')
+        
+        config.add_section('Server')
+        config.set('Server', 'base_url', 'http://147.45.153.16:8000')
+        config.set('Server', 'username', '')
+        config.set('Server', 'password', '')
+        config.set('Server', 'token', '')
+        
+        # Основные настройки
+        config.add_section('Settings')
+        config.set('Settings', 'update_interval', '5')
+        config.set('Settings', 'log_level', 'INFO')
+        config.set('Settings', 'auto_start', 'false')
+        config.set('Settings', 'minimize_to_tray', 'true')
+        config.set('Settings', 'machine_id', '')  # Будет заполнено позже
+        config.set('Settings', 'idle_threshold_seconds', '300')
+        config.set('Settings', 'send_interval_seconds', '10')
+        config.set('Settings', 'max_send_batch_size', '20')
+        config.set('Settings', 'demo_mode', 'false')
+        
+        # Отслеживаемые приложения
+        config.add_section('Applications')
+        
+        # Настройки логирования
+        config.add_section('Logging')
+        config.set('Logging', 'level', 'INFO')
+        config.set('Logging', 'file', 'activity.log')
+        
+        # Метаданные
+        config.add_section('Meta')
+        config.set('Meta', 'locked', 'false')
+        
+        # Учетные данные
         config.add_section('Credentials')
-        config.set('Credentials', 'api_base_url', 'http://localhost:8000/api/')
+        # Правильный формат URL без дублирования /api
+        config.set('Credentials', 'api_base_url', 'http://147.45.153.16:8000/api/')
         config.set('Credentials', 'username', '')
         config.set('Credentials', 'auth_token', '')
         config.set('Credentials', 'user_id', '')
         
-        # Секция Settings - для настроек приложения
-        config.add_section('Settings')
-        config.set('Settings', 'machine_id', '')  # Будет установлен отдельно
-        config.set('Settings', 'idle_threshold_seconds', '300')  # 5 минут по умолчанию
-        config.set('Settings', 'send_interval_seconds', '10')   # 10 секунд по умолчанию
-        config.set('Settings', 'max_send_batch_size', '20')     # До 20 записей за раз
-        config.set('Settings', 'demo_mode', 'False')            # Демо-режим выключен по умолчанию
-        
-        # Секция Applications - для списка отслеживаемых приложений
-        config.add_section('Applications')
+        # Платформенно-зависимые настройки
+        config.add_section('Platform')
+        config.set('Platform', 'system', platform.system())
+        config.set('Platform', 'version', platform.version())
+        config.set('Platform', 'machine', platform.machine())
         
         return config
         
     def _save_config(self, config_object_to_save: Optional[configparser.ConfigParser] = None):
-        """Сохраняет конфигурацию в файл."""
+        """Сохраняет конфигурацию в файл"""
+        config_to_save = config_object_to_save or self.config
         try:
-            # Проверяем, был ли передан отдельный объект конфигурации
-            config_to_save = config_object_to_save if config_object_to_save else self.config
-            
-            with open(self.config_path, 'w', encoding='utf-8') as config_file:
+            if not hasattr(self, 'config_file_path'):
+                # Если путь к файлу конфигурации не установлен, используем кросс-платформенный путь
+                self.config_file_path = get_app_data_dir() / 'config.ini'
+                
+            # Создаем директорию для конфигурации, если она не существует
+            os.makedirs(os.path.dirname(self.config_file_path), exist_ok=True)
+                
+            with open(self.config_file_path, 'w', encoding='utf-8') as config_file:
                 config_to_save.write(config_file)
-            logger.info(f"Конфигурация успешно сохранена в {self.config_path}")
+                
+            logger.info(f"Конфигурация успешно сохранена в {self.config_file_path}")
             return True
         except Exception as e:
-            logger.error(f"Ошибка при сохранении конфигурации: {e}", exc_info=True)
-            return False
+            logger.error(f"Ошибка при сохранении конфигурации: {e}")
+            
+            # Пробуем сохранить в текущей директории как запасной вариант
+            try:
+                local_config_path = Path('config.ini')
+                with open(local_config_path, 'w', encoding='utf-8') as f:
+                    config_to_save.write(f)
+                self.config_file_path = local_config_path
+                logger.info(f"Конфигурация сохранена в резервное место: {local_config_path}")
+                return True
+            except Exception as backup_error:
+                logger.error(f"Не удалось сохранить резервную конфигурацию: {backup_error}")
+                return False
             
     def load_tracked_applications_config(self):
         """Загружает конфигурацию отслеживаемых приложений."""
@@ -644,98 +876,181 @@ class TimeTrackerApp(QMainWindow):
         logger.info(f"Загружено {len(self.tracked_applications_config)} отслеживаемых приложений.")
 
     def setup_activity_listeners_and_tracking_timer(self):
-        # Настройка слушателей и основного таймера трекинга
-        self.keyboard_listener = keyboard.Listener(on_press=self.on_keyboard_press)
-        self.mouse_listener = mouse.Listener(on_move=self.on_mouse_move, on_click=self.on_mouse_click)
-        
-        # Запускаем слушатели
-        self.keyboard_listener.start()
-        self.mouse_listener.start()
-        
-        # Запускаем поток отслеживания активности
-        self.process_activity_thread = threading.Thread(target=self.track_activity, daemon=True)
-        self.process_activity_thread.start()
-        
-        # Таймер для проверки простоя
-        self.idle_check_timer = QTimer(self)
-        self.idle_check_timer.timeout.connect(self.check_idle_state)
-        self.idle_check_timer.start(5000)  # Проверяем каждые 5 секунд
-        
-    def on_keyboard_press(self, key):
-        """Обработчик нажатия клавиш."""
+        """Настройка слушателей и основного таймера трекинга"""
         try:
-            # Обновляем время последней активности
-            self.last_activity_time = time.time()
-            
-            # Если состояние было "простой", меняем на "активно"
-            if self.is_idle:
-                self.is_idle = False
-                logger.info("Пользователь снова активен (нажатие клавиши)")
+            # Проверяем, установлены ли библиотеки pynput, psutil
+            if 'keyboard' not in sys.modules or 'mouse' not in sys.modules:
+                logger.warning("Библиотеки pynput не установлены. Отслеживание клавиатуры и мыши отключено.")
+                return
                 
-            # Увеличиваем счетчик нажатий для текущей активности
+            # Инициализируем счетчики активности, если их нет
+            if not hasattr(self, 'keyboard_press_count'):
+                self.keyboard_press_count = 0
+            if not hasattr(self, 'mouse_click_count'):
+                self.mouse_click_count = 0
+            if not hasattr(self, 'mouse_move_count'):
+                self.mouse_move_count = 0
+                
+            # Безопасное создание слушателей без методов подавления
+            try:
+                # Используем безопасные обработчики событий
+                self.keyboard_listener = keyboard.Listener(
+                    on_press=lambda key: self.on_keyboard_press(key),
+                    on_release=None
+                )
+            except Exception as e:
+                logger.error(f"Ошибка при создании слушателя клавиатуры: {e}")
+                self.keyboard_listener = None
+                
+            try:
+                # Обходим проблему с NotImplementedError при подавлении событий мыши
+                self.mouse_listener = mouse.Listener(
+                    on_move=lambda x, y: self.on_mouse_move(x, y),
+                    on_click=lambda x, y, button, pressed: self.on_mouse_click(x, y, button, pressed),
+                    on_scroll=None
+                )
+            except Exception as e:
+                logger.error(f"Ошибка при создании слушателя мыши: {e}")
+                self.mouse_listener = None
+                
+            # Запускаем слушатели, если они были успешно созданы
+            if self.keyboard_listener:
+                try:
+                    if not self.keyboard_listener.is_alive():
+                        self.keyboard_listener.start()
+                        logger.info("Слушатель клавиатуры запущен успешно")
+                except Exception as e:
+                    logger.error(f"Ошибка при запуске слушателя клавиатуры: {e}")
+                    self.keyboard_listener = None
+                    
+            if self.mouse_listener:
+                try:
+                    if not self.mouse_listener.is_alive():
+                        self.mouse_listener.start()
+                        logger.info("Слушатель мыши запущен успешно")
+                except Exception as e:
+                    logger.error(f"Ошибка при запуске слушателя мыши: {e}")
+                    self.mouse_listener = None
+                    
+            # Настраиваем таймер обновления интерфейса
+            update_interval_seconds = self.config.getint('Settings', 'update_interval', fallback=5)
+            self.tracking_timer = QTimer(self)
+            self.tracking_timer.timeout.connect(self.update_tracking)
+            self.tracking_timer.start(update_interval_seconds * 1000)  # Преобразуем секунды в миллисекунды
+            
+            # Запускаем таймер отправки данных каждые 30 секунд
+            self.sending_timer = QTimer(self)
+            self.sending_timer.timeout.connect(self.send_activity_data)
+            self.sending_timer.start(30000)  # 30 секунд
+            
+            logger.info(f"Настройка слушателей и таймеров завершена успешно. Интервал обновления: {update_interval_seconds} сек.")
+        except Exception as e:
+            logger.error(f"Ошибка при настройке слушателей активности: {e}", exc_info=True)
+            
+    def on_keyboard_press(self, key):
+        """Обработчик нажатия клавиши"""
+        try:
+            # Инкрементируем счетчик нажатий клавиш
             self.keyboard_press_count += 1
             
-            # Добавляем отладочную информацию, если нужно
-            # logger.debug(f"Нажата клавиша: {key}. Всего нажатий: {self.keyboard_press_count}")
-        except Exception as e:
-            logger.error(f"Ошибка при обработке нажатия клавиши: {e}", exc_info=True)
-    
-    def on_mouse_move(self, x, y):
-        """Обработчик движения мыши."""
-        try:
-            # Обновляем время последней активности
+            # Обновляем время последней активности для обнаружения простоя
             self.last_activity_time = time.time()
             
-            # Если состояние было "простой", меняем на "активно"
+            # Каждые 10 нажатий логируем информацию для отладки
+            if self.keyboard_press_count % 10 == 0:
+                logger.debug(f"Зарегистрировано {self.keyboard_press_count} нажатий клавиш")
+                
+            # Если находились в режиме простоя, выходим из него
             if self.is_idle:
-                self.is_idle = False
-                logger.info("Пользователь снова активен (движение мыши)")
+                self.handle_idle_state_change(False)
         except Exception as e:
-            logger.error(f"Ошибка при обработке движения мыши: {e}", exc_info=True)
-    
-    def on_mouse_click(self, x, y, button, pressed):
-        """Обработчик кликов мыши."""
+            logger.error(f"Ошибка при обработке нажатия клавиши: {e}")
+        
+        # Функция должна возвращать значение для продолжения слушателя
+        return True
+        
+    def on_mouse_move(self, x, y):
+        """Обработчик движения мыши"""
         try:
-            if pressed:  # Обрабатываем только нажатия, не отпускания
-                # Обновляем время последней активности
+            # Инкрементируем счетчик движений мыши
+            self.mouse_move_count += 1
+            
+            # Обновляем время последней активности для обнаружения простоя
+            self.last_activity_time = time.time()
+            
+            # Логируем каждое 100-е движение для экономии места в логах
+            if self.mouse_move_count % 100 == 0:
+                logger.debug(f"Зарегистрировано {self.mouse_move_count} движений мыши")
+                
+            # Если находились в режиме простоя, выходим из него
+            if self.is_idle:
+                self.handle_idle_state_change(False)
+        except Exception as e:
+            logger.error(f"Ошибка при обработке движения мыши: {e}")
+            
+        # Функция должна возвращать значение для продолжения слушателя
+        return True
+        
+    def on_mouse_click(self, x, y, button, pressed):
+        """Обработчик клика мыши"""
+        try:
+            # Считаем только нажатия кнопок мыши, не отпускания
+            if pressed:
+                # Инкрементируем счетчик кликов мыши
+                self.mouse_click_count += 1
+                
+                # Обновляем время последней активности для обнаружения простоя
                 self.last_activity_time = time.time()
                 
-                # Если состояние было "простой", меняем на "активно"
+                # Логируем каждый 5-й клик для экономии места в логах
+                if self.mouse_click_count % 5 == 0:
+                    logger.debug(f"Зарегистрировано {self.mouse_click_count} кликов мыши")
+                    
+                # Если находились в режиме простоя, выходим из него
                 if self.is_idle:
-                    self.is_idle = False
-                    logger.info("Пользователь снова активен (клик мыши)")
+                    self.handle_idle_state_change(False)
         except Exception as e:
-            logger.error(f"Ошибка при обработке клика мыши: {e}", exc_info=True)
+            logger.error(f"Ошибка при обработке клика мыши: {e}")
+            
+        # Функция должна возвращать значение для продолжения слушателя
+        return True
     
     def check_idle_state(self):
         """Проверяет, находится ли пользователь в состоянии простоя."""
         try:
+            # Получаем время с последней активности пользователя
             current_time = time.time()
             idle_time = current_time - self.last_activity_time
             
-            # Если превышен порог и пользователь еще не считается неактивным
-            if idle_time > self.idle_threshold_seconds and not self.is_idle:
-                self.is_idle = True
-                logger.info(f"Пользователь неактивен (прошло {idle_time:.1f} секунд)")
-                
-                # Если есть текущая сессия активности, завершаем ее
-                if self.current_activity_data:
-                    self.end_current_activity_session(event_type="idle")
-                    
-                # Обновляем UI
-                self.status_bar.showMessage("Пользователь неактивен")
-                if hasattr(self, 'tray_icon') and self.tray_icon:
-                    self.tray_icon.setToolTip("Пользователь неактивен")
+            # Получаем порог простоя из конфигурации, если он не был установлен ранее
+            if not hasattr(self, 'idle_threshold_seconds') or self.idle_threshold_seconds is None:
+                self.idle_threshold_seconds = self.config.getint('Settings', 'idle_threshold_seconds', fallback=300)
+                logger.debug(f"Установлен порог простоя: {self.idle_threshold_seconds} секунд")
             
-            # Если пользователь стал активен, но считается неактивным
-            elif idle_time <= self.idle_threshold_seconds and self.is_idle:
-                self.is_idle = False
-                logger.info("Пользователь снова активен")
+            # Проверяем, превышено ли время простоя
+            if idle_time > self.idle_threshold_seconds and not self.is_idle:
+                # Пользователь перешел в состояние простоя
+                self.is_idle = True
+                logger.info(f"Пользователь перешел в состояние простоя (неактивен {int(idle_time)} секунд)")
                 
-                # Обновляем UI
-                self.status_bar.showMessage("Пользователь активен")
-                if hasattr(self, 'tray_icon') and self.tray_icon:
-                    self.tray_icon.setToolTip("Пользователь активен")
+                # Обновляем UI, если он доступен
+                if hasattr(self, 'status_bar'):
+                    self.status_bar.showMessage(f"Простой (неактивен {int(idle_time)} секунд)")
+                
+                # Приостанавливаем текущую сессию активности, если она есть
+                if self.current_activity:
+                    self.end_current_activity()
+            
+            # Проверяем, вернулся ли пользователь из состояния простоя
+            elif idle_time <= self.idle_threshold_seconds and self.is_idle:
+                # Пользователь вернулся из состояния простоя
+                self.is_idle = False
+                logger.info("Пользователь вернулся из состояния простоя")
+                
+                # Обновляем UI, если он доступен
+                if hasattr(self, 'status_bar'):
+                    self.status_bar.showMessage("Активен")
+        
         except Exception as e:
             logger.error(f"Ошибка при проверке состояния простоя: {e}", exc_info=True)
     
@@ -750,10 +1065,26 @@ class TimeTrackerApp(QMainWindow):
         current_app_name = None
         current_window_title = None
         
+        # Инициализируем атрибут для отслеживания паузы, если он отсутствует
+        if not hasattr(self, 'tracking_paused'):
+            self.tracking_paused = False
+            
+        # Убедимся, что список игнорируемых процессов существует
+        if not hasattr(self, 'ignored_processes') or self.ignored_processes is None:
+            # Создаем список игнорируемых системных процессов, если он не был инициализирован
+            self.ignored_processes = [
+                "explorer.exe", "system", "system idle process", 
+                "dwm.exe", "taskhost.exe", "taskhostw.exe", "svchost.exe",
+                "runtimebroker.exe", "searchui.exe", "shellexperiencehost.exe",
+                "winlogon.exe", "wininit.exe", "csrss.exe", "services.exe",
+                "lsass.exe", "fontdrvhost.exe", "smss.exe"
+            ]
+            logger.info("Инициализирован список игнорируемых процессов")
+        
         while True:
             try:
                 # Если отслеживание на паузе, пропускаем итерацию
-                if self.tracking_paused:
+                if hasattr(self, 'tracking_paused') and self.tracking_paused:
                     time.sleep(1)
                     continue
                 
@@ -768,19 +1099,34 @@ class TimeTrackerApp(QMainWindow):
                 app_name = active_window_info.get('app_name', '')
                 window_title = active_window_info.get('window_title', '')
                 
-                # Проверяем, является ли приложение игнорируемым системным процессом
-                if app_name.lower() in (proc.lower() for proc in self.ignored_processes):
-                    # Если это игнорируемый процесс, и у нас есть текущая сессия активности,
+                # Проверяем, что имя процесса не пустое и не содержит только цифры
+                if not app_name or app_name.isdigit():
+                    time.sleep(1)
+                    continue
+                
+                # Безопасная проверка на игнорируемые процессы
+                should_ignore = False
+                if app_name and hasattr(self, 'ignored_processes') and self.ignored_processes:
+                    app_name_lower = app_name.lower()
+                    # Проверяем, входит ли процесс в список игнорируемых
+                    for ignored_proc in self.ignored_processes:
+                        if ignored_proc.lower() == app_name_lower:
+                            should_ignore = True
+                            break
+                
+                # Если это игнорируемый процесс
+                if should_ignore:
+                    # Если у нас есть текущая сессия активности,
                     # завершаем ее только если она не относится к тому же игнорируемому процессу
-                    if self.current_activity_data:
-                        if self.current_activity_data['app_name'].lower() != app_name.lower():
+                    if self.current_activity_data and app_name:
+                        if self.current_activity_data.get('app_name', '').lower() != app_name.lower():
                             logger.debug(f"Обнаружен игнорируемый процесс: {app_name}. Завершаем текущую сессию.")
                             self.end_current_activity_session(event_type="ignored_process")
                     time.sleep(1)
                     continue
                 
                 # Если это система или пустое имя, пропускаем итерацию
-                if not app_name or app_name.lower() in ['system', 'system idle process']:
+                if not app_name or app_name.lower() in ['system', 'system idle process'] or app_name.isdigit():
                     time.sleep(1)
                     continue
                 
@@ -1079,43 +1425,56 @@ class TimeTrackerApp(QMainWindow):
         self._login_dialog_active = True
         
         try:
-            # Проверяем токен во всех возможных местах
+            # Инициализируем сессию, если она отсутствует
+            if not hasattr(self, 'session') or self.session is None:
+                self.session = requests.Session()
+                logger.info("Сессия HTTP запросов инициализирована")
+                
+            # Проверяем наличие и действительность токена
             auth_token = None
             token_is_valid = False
             
-            # Проверяем токен в секции Credentials
+            # Пытаемся загрузить токен из конфигурации
             if self.config.has_section('Credentials') and self.config.has_option('Credentials', 'auth_token'):
                 auth_token = self.config.get('Credentials', 'auth_token')
                 
-            # Если не нашли, проверяем в секции Server
-            if not auth_token and self.config.has_section('Server') and self.config.has_option('Server', 'token'):
-                auth_token = self.config.get('Server', 'token')
-                
-            # Если не нашли, проверяем в секции API
-            if not auth_token and self.config.has_section('API') and self.config.has_option('API', 'token'):
-                auth_token = self.config.get('API', 'token')
-                
-            # Если не нашли, проверяем в корне файла
-            if not auth_token and self.config.has_option('DEFAULT', 'token'):
-                auth_token = self.config.get('DEFAULT', 'token')
-                
-            # Если токен найден, проверяем его валидность
+            # Проверяем действительность токена
             if auth_token:
                 try:
-                    # Декодируем токен и проверяем срок действия
-                    token_data = jwt.decode(auth_token, options={"verify_signature": False})
-                    exp_timestamp = token_data.get('exp')
-                    if exp_timestamp:
-                        expiration_time = datetime.fromtimestamp(exp_timestamp)
-                        if datetime.now() < expiration_time:
-                            token_is_valid = True
-                            logger.info("Пользователь уже аутентифицирован (токен действителен).")
-                        else:
-                            logger.warning(f"Токен истек {expiration_time}. Требуется повторная авторизация.")
+                    # Если в конфигурации есть api_base_url, используем его
+                    if self.config.has_section('Credentials') and self.config.has_option('Credentials', 'api_base_url'):
+                        self.api_base_url = self.config.get('Credentials', 'api_base_url')
+                        
+                        # Исправляем URL, если в нем дублируется /api
+                        if self.api_base_url.endswith('/api/api/'):
+                            self.api_base_url = self.api_base_url.replace('/api/api/', '/api/')
+                            self.config.set('Credentials', 'api_base_url', self.api_base_url)
+                            self._save_config()
+                            logger.info(f"Исправлен URL с дублированием /api: {self.api_base_url}")
+                            
+                    # Проверяем токен, делая запрос к серверу
+                    verify_url = f"{self.api_base_url}verify-token/"
+                    # Убедимся, что URL не содержит дублирования /api
+                    if '/api/api/' in verify_url:
+                        verify_url = verify_url.replace('/api/api/', '/api/')
+                        
+                    headers = {'Authorization': f'Bearer {auth_token}'}
+                    response = requests.get(verify_url, headers=headers, timeout=5)
+                    
+                    if response.status_code == 200:
+                        token_is_valid = True
+                        # Проверяем, получен ли user_id и сохраняем его
+                        if 'user_id' in response.json():
+                            self.user_id = response.json()['user_id']
+                            if not self.config.has_section('Credentials'):
+                                self.config.add_section('Credentials')
+                            self.config.set('Credentials', 'user_id', str(self.user_id))
+                            self._save_config(self.config)
                     else:
-                        logger.warning("Токен не содержит информации о сроке действия.")
+                        logger.warning(f"Токен недействителен, код ответа: {response.status_code}")
                 except Exception as e:
-                    logger.error(f"Ошибка при проверке токена: {e}")
+                    logger.warning(f"Загруженный токен истек, требуется повторная авторизация")
+                    token_is_valid = False
                     
             # Если токен не найден или недействителен, показываем диалог авторизации
             if not auth_token or not token_is_valid:
@@ -1126,34 +1485,50 @@ class TimeTrackerApp(QMainWindow):
                 if login_dialog.exec_() == QDialog.Accepted:
                     # После успешного логина LoginDialog должен обновить self.config
                     # и атрибуты self.api_base_url, self.user_id, self.session.headers
-                    self.api_base_url = self.config.get('Credentials', 'api_base_url')
-                    self.user_id = self.config.get('Credentials', 'user_id')
-                    new_auth_token = self.config.get('Credentials', 'auth_token')
-                    self.session.headers.update({'Authorization': f'Bearer {new_auth_token}'})
-                    logger.info("Вход выполнен успешно через диалог.")
+                    if self.config.has_section('Credentials') and self.config.has_option('Credentials', 'api_base_url'):
+                        self.api_base_url = self.config.get('Credentials', 'api_base_url')
+                    if self.config.has_section('Credentials') and self.config.has_option('Credentials', 'user_id'):
+                        self.user_id = self.config.get('Credentials', 'user_id')
+                    if self.config.has_section('Credentials') and self.config.has_option('Credentials', 'auth_token'):
+                        new_auth_token = self.config.get('Credentials', 'auth_token')
+                        if not hasattr(self, 'session') or self.session is None:
+                            self.session = requests.Session()
+                        self.session.headers.update({'Authorization': f'Bearer {new_auth_token}'})
+                        logger.info("Вход выполнен успешно через диалог.")
+                    
                     # Перезапускаем таймер отправки данных, если интервал мог измениться
                     send_interval_seconds = self.config.getint('Settings', 'send_interval_seconds', fallback=60)
-                    self.send_data_timer.setInterval(send_interval_seconds * 1000)
+                    if hasattr(self, 'send_data_timer'):
+                        self.send_data_timer.setInterval(send_interval_seconds * 1000)
                     
                     # Обновляем состояние подключения в интерфейсе
-                    self.connection_status.setText(f"Статус подключения: Подключено ({self.api_base_url})")
-                    self.connection_status.setStyleSheet("QLabel { color: green; }")
+                    if hasattr(self, 'connection_status'):
+                        self.connection_status.setText(f"Статус подключения: Подключено ({self.api_base_url})")
+                        self.connection_status.setStyleSheet("QLabel { color: green; }")
                 else:
                     logger.warning("Диалог входа отменен пользователем или работа в оффлайн-режиме.")
                     # Проверяем, выбран ли оффлайн-режим
                     if self.config.getboolean('Settings', 'demo_mode', fallback=False):
-                        self.connection_status.setText("Статус подключения: Оффлайн-режим")
-                        self.connection_status.setStyleSheet("QLabel { color: orange; }")
+                        if hasattr(self, 'connection_status'):
+                            self.connection_status.setText("Статус подключения: Оффлайн-режим")
+                            self.connection_status.setStyleSheet("QLabel { color: orange; }")
                     else:
-                        self.connection_status.setText("Статус подключения: Не авторизовано")
-                        self.connection_status.setStyleSheet("QLabel { color: red; }")
+                        if hasattr(self, 'connection_status'):
+                            self.connection_status.setText("Статус подключения: Не авторизовано")
+                            self.connection_status.setStyleSheet("QLabel { color: red; }")
                         QMessageBox.warning(self, "Внимание", 
                                         "Авторизация не выполнена. Отслеживание активности будет работать в ограниченном режиме.")
             else:
                 # Если токен действителен, обновляем UI
-                self.connection_status.setText(f"Статус подключения: Подключено ({self.api_base_url})")
-                self.connection_status.setStyleSheet("QLabel { color: green; }")
+                if hasattr(self, 'connection_status'):
+                    self.connection_status.setText(f"Статус подключения: Подключено ({self.api_base_url})")
+                    self.connection_status.setStyleSheet("QLabel { color: green; }")
                 logger.info("Пользователь уже аутентифицирован (токен найден и действителен).")
+        except Exception as e:
+            logger.error(f"Ошибка при проверке авторизации: {e}", exc_info=True)
+            if hasattr(self, 'connection_status'):
+                self.connection_status.setText("Статус подключения: Ошибка")
+                self.connection_status.setStyleSheet("QLabel { color: red; }")
         finally:
             # Снимаем флаг после завершения диалога
             self._login_dialog_active = False
@@ -1561,11 +1936,15 @@ class TimeTrackerApp(QMainWindow):
             
             # Создаем запись об активности
             start_time = time.time()
+            
+            # Используем новый метод для получения UTC времени в формате ISO
+            start_time_iso_utc = self.get_utc_now_iso()
+            
             self.current_activity_data = {
                 'app_name': app_name,
                 'window_title': window_title,
                 'start_time': start_time,
-                'start_time_iso_utc': datetime.utcnow().isoformat() + 'Z',
+                'start_time_iso_utc': start_time_iso_utc,
                 'is_useful': is_useful,
                 'keyboard_presses': 0  # Начальное значение счетчика нажатий
             }
@@ -1617,9 +1996,12 @@ class TimeTrackerApp(QMainWindow):
             # Сбрасываем счетчик после добавления в активность
             self.keyboard_press_count = 0
         
+        # Используем новый метод для получения UTC времени в формате ISO
+        current_time_utc = self.get_utc_now_iso()
+        
         activity_entry.update({
             'end_time': end_time,
-            'end_time_iso_utc': datetime.utcnow().isoformat() + 'Z',
+            'end_time_iso_utc': current_time_utc,
             'duration_seconds': duration_seconds,
             'event_type': event_type
         })
@@ -1647,32 +2029,81 @@ class TimeTrackerApp(QMainWindow):
         # Очистка данных текущей сессии
         self.current_activity_data = None
         self.activity_start_time = None
+        
+        # Принудительно запускаем отправку данных, если размер очереди достиг определенного предела
+        if self.activity_queue.qsize() >= 3:
+            self.send_activity_data()
+            
         return activity_entry
         
     def get_discovered_applications(self) -> List[str]:
         """Возвращает список уникальных имен запущенных приложений."""
         discovered_apps = set()
         try:
-            for proc in psutil.process_iter(['name']):
+            # Создаем безопасную копию списка игнорируемых процессов
+            ignored_processes = []
+            if hasattr(self, 'ignored_processes') and self.ignored_processes:
+                ignored_processes = [p.lower() for p in self.ignored_processes]
+            else:
+                # Используем стандартный список игнорируемых системных процессов
+                ignored_processes = [
+                    "explorer.exe", "system", "system idle process", 
+                    "dwm.exe", "taskhost.exe", "taskhostw.exe", "svchost.exe",
+                    "runtimebroker.exe", "searchui.exe", "shellexperiencehost.exe",
+                    "winlogon.exe", "wininit.exe", "ctfmon.exe", "sihost.exe",
+                    "applicationframehost.exe", "windowsinternal.composableshell.experiences",
+                    "lockapp.exe", "python.exe", "pythonw.exe", "cmd.exe", "powershell.exe"
+                ]
+            
+            # Получаем список процессов
+            for proc in psutil.process_iter(['pid', 'name', 'exe']):
                 try:
-                    app_name = proc.info['name']
-                    if app_name and app_name.strip(): # Проверяем, что имя не пустое
-                        # Приводим к нижнему регистру для унификации
-                        discovered_apps.add(app_name.lower())
+                    proc_info = proc.info
+                    proc_name = proc_info['name']
+                    
+                    # Если имя процесса пустое или None, пропускаем
+                    if not proc_name:
+                        continue
+                        
+                    # Нормализуем имя процесса - убираем расширение .exe
+                    if proc_name.lower().endswith('.exe'):
+                        proc_name = proc_name[:-4]
+                    
+                    # Пропускаем игнорируемые процессы
+                    if proc_name.lower() in [p.lower() for p in ignored_processes] or proc_name.lower() + '.exe' in [p.lower() for p in ignored_processes]:
+                        continue
+                    
+                    # Дополнительная проверка на системные и временные процессы
+                    if proc_name.startswith('_') or proc_name.startswith('tmp') or proc_name.startswith('pid_'):
+                        continue
+                        
+                    # Пропускаем процессы без имени или только с цифрами
+                    if not proc_name or proc_name.isdigit() or not any(c.isalpha() for c in proc_name):
+                        continue
+                        
+                    # Проверка на пропуск процессов с именами, состоящими только из цифр и специальных символов
+                    if all(not c.isalpha() for c in proc_name):
+                        continue
+                    
+                    # Добавляем имя процесса в список обнаруженных приложений
+                    discovered_apps.add(proc_name)
                 except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
-                    # Эти исключения ожидаемы для некоторых процессов
-                    continue 
+                    # Пропускаем процессы, к которым нет доступа или которые уже завершились
+                    pass
                 except Exception as e:
-                    logger.debug(f"Ошибка при получении имени процесса {proc.pid if hasattr(proc, 'pid') else 'N/A'}: {e}")
+                    # Логируем ошибку и продолжаем
+                    logger.error(f"Ошибка при обработке процесса: {e}")
+            
+            # Сортируем список для более стабильного вывода
+            discovered_apps_list = sorted(list(discovered_apps))
+            
+            # Добавляем отладочную информацию
+            logger.debug(f"Обнаружено {len(discovered_apps_list)} приложений")
+            
+            return discovered_apps_list
         except Exception as e:
-            logger.error(f"Ошибка при итерации по процессам: {e}", exc_info=True)
-        
-        # Можно добавить фильтрацию по self.ignored_processes, если это нужно глобально,
-        # или оставить это на усмотрение SettingsDialog
-        # filtered_apps = {app for app in discovered_apps if app not in self.ignored_processes}
-        
-        logger.debug(f"Обнаруженные приложения: {sorted(list(discovered_apps))}")
-        return sorted(list(discovered_apps))
+            logger.error(f"Ошибка при получении списка приложений: {e}", exc_info=True)
+            return []
 
     def update_tracked_applications_config(self, new_tracked_config: Dict[str, bool]):
         """Обновляет конфигурацию отслеживаемых приложений и сохраняет ее."""
@@ -1798,12 +2229,23 @@ class TimeTrackerApp(QMainWindow):
             api_url = self.config.get('DEFAULT', 'base_url')
         else:
             api_url = 'http://localhost:8000'
+        
+        # Исправляем потенциально некорректный URL API
+        if '/api/api' in api_url:
+            api_url = api_url.replace('/api/api', '/api')
+            logger.info(f"Исправлен дублированный путь API в URL: {api_url}")
             
-        # Добавляем /api/ если необходимо
+        # Убедимся, что URL заканчивается на /api/
         if not api_url.endswith('/api/'):
-            api_url = api_url.rstrip('/') + '/api/'
-            
-        api_url += 'activities/'
+            if api_url.endswith('/api'):
+                api_url += '/'
+            elif not '/api' in api_url:
+                api_url = api_url.rstrip('/') + '/api/'
+        
+        activities_url = f"{api_url}activities/"
+        
+        # Логируем URL для отладки
+        logger.info(f"URL для отправки активностей: {activities_url}")
         
         if not auth_token:
             logger.warning("Отсутствует токен авторизации. Переключение в демо-режим.")
@@ -1843,9 +2285,9 @@ class TimeTrackerApp(QMainWindow):
                 
                 # Если поля не заполнены, сгенерируем текущие значения
                 if not start_time:
-                    start_time = datetime.now(tz=datetime.UTC).isoformat()
+                    start_time = self.get_utc_now_iso()
                 if not end_time:
-                    end_time = datetime.now(tz=datetime.UTC).isoformat()
+                    end_time = self.get_utc_now_iso()
                 
                 # Сервер ожидает определенный формат данных
                 # Добавляем все обязательные поля
@@ -1881,6 +2323,11 @@ class TimeTrackerApp(QMainWindow):
                 
                 # Проверяем, есть ли уже такое приложение в кэше
                 app_id = None
+                
+                # Для предотвращения возможных ошибок с неинициализированным кэшем
+                if not hasattr(self, 'app_cache'):
+                    self.app_cache = {}
+                
                 if app_name.lower() in self.app_cache:
                     app_id = self.app_cache[app_name.lower()]
                     logger.debug(f"Найден ID в кэше для {app_name}: {app_id}")
@@ -1895,7 +2342,8 @@ class TimeTrackerApp(QMainWindow):
                         }
                         
                         # Отправляем запрос на создание приложения
-                        app_url = f"{self.api_base_url}applications/"
+                        app_url = f"{api_url}applications/"
+                        
                         logger.info(f"Отправляем запрос на создание приложения: {app_url}")
                         app_response = self.session.post(app_url, json=app_data)
                         
@@ -1908,7 +2356,7 @@ class TimeTrackerApp(QMainWindow):
                         else:
                             # Если не удалось создать, используем ID=1 по умолчанию
                             app_id = 1
-                            logger.warning(f"Не удалось создать приложение {app_name}, используем ID по умолчанию")
+                            logger.warning(f"Не удалось создать приложение {app_name}, используем ID по умолчанию. Код ответа: {app_response.status_code}")
                     except Exception as e:
                         # В случае ошибки используем ID=1
                         app_id = 1
@@ -1951,7 +2399,7 @@ class TimeTrackerApp(QMainWindow):
                 
             # Отправляем данные на сервер
             logger.info(f"Отправка {len(activities_to_send_payload)} записей активности на сервер.")
-            logger.info(f"API URL: {api_url}, Токен: {auth_token[:10]}...")
+            logger.info(f"API URL: {activities_url}, Токен: {auth_token[:10]}...")
             
             # Сервер ожидает отдельные записи, а не массив
             # Отправляем каждую запись по отдельности
@@ -1960,7 +2408,7 @@ class TimeTrackerApp(QMainWindow):
                 try:
                     # Добавляем отладочную информацию о пайлоаде
                     logger.info(f"Отправляем пайлоад: {payload}")
-                    response = self.session.post(api_url, json=payload, headers=headers, timeout=30)
+                    response = self.session.post(activities_url, json=payload, headers=headers, timeout=30)
                     if response.status_code in [200, 201]:
                         success_count += 1
                         logger.info(f"Успешно отправлено: {response.status_code} - {response.text}")
@@ -2085,6 +2533,14 @@ class TimeTrackerApp(QMainWindow):
         else:
             api_url = 'http://localhost:8000/api'
             
+        # Проверяем на дублирование /api в URL
+        if api_url.endswith('/api/api'):
+            api_url = api_url.replace('/api/api', '/api')
+            # Сохраняем исправленный URL в конфигурацию
+            if self.config.has_section('Credentials'):
+                self.config.set('Credentials', 'api_base_url', api_url + '/')
+                self._save_config()
+                
         try:
             # Проверяем соединение напрямую через запрос
             headers = {'Authorization': f'Bearer {auth_token}'} if auth_token else {}
@@ -2120,24 +2576,33 @@ class TimeTrackerApp(QMainWindow):
         """Периодически обновляет интерфейс с текущими данными"""
         try:
             # Обновляем отображение текущей активности
-            if self.current_activity_data:
+            if hasattr(self, 'current_activity_data') and self.current_activity_data:
                 app_name = self.current_activity_data.get('app_name', '')
                 
                 # Обновляем отображение времени активности
-                if self.activity_start_time:
+                if hasattr(self, 'activity_start_time') and self.activity_start_time:
                     elapsed = time.time() - self.activity_start_time
                     hours, remainder = divmod(int(elapsed), 3600)
                     minutes, seconds = divmod(remainder, 60)
                     time_str = f"{hours:02}:{minutes:02}:{seconds:02}"
-                    self.current_activity_time_label.setText(f"Время: {time_str}")
+                    
+                    if hasattr(self, 'current_activity_time_label'):
+                        self.current_activity_time_label.setText(f"Время: {time_str}")
                     
                 # Обновляем отображение клавиатурной активности
-                self.keyboard_activity_label.setText(f"Клавиатурная активность: {self.keyboard_press_count} нажатий")
+                if hasattr(self, 'keyboard_activity_label'):
+                    self.keyboard_activity_label.setText(f"Клавиатурная активность: {self.keyboard_press_count} нажатий")
                 
                 # Обновляем статус бар
-                self.status_bar.showMessage(f"Отслеживается: {app_name} - {time_str} - Клавиатура: {self.keyboard_press_count}")
+                if hasattr(self, 'status_bar') and hasattr(self, 'activity_start_time') and self.activity_start_time:
+                    elapsed = time.time() - self.activity_start_time
+                    hours, remainder = divmod(int(elapsed), 3600)
+                    minutes, seconds = divmod(remainder, 60)
+                    time_str = f"{hours:02}:{minutes:02}:{seconds:02}"
+                    self.status_bar.showMessage(f"Отслеживается: {app_name} - {time_str} - Клавиатура: {self.keyboard_press_count}")
             else:
-                self.status_bar.showMessage("Нет активной сессии отслеживания")
+                if hasattr(self, 'status_bar'):
+                    self.status_bar.showMessage("Нет активной сессии отслеживания")
                 
         except Exception as e:
             logger.error(f"Ошибка при периодическом обновлении UI: {e}", exc_info=True)
@@ -2189,6 +2654,263 @@ class TimeTrackerApp(QMainWindow):
         except Exception as e:
             logger.error(f"Ошибка при синхронизации продуктивных приложений с сервера: {e}", exc_info=True)
             return False
+
+    def validate_and_fix_config(self):
+        """Проверяет конфигурацию на наличие ошибок и исправляет их"""
+        logger.info("Проверка и исправление конфигурации")
+        
+        try:
+            # Проверяем и исправляем URL API
+            if self.config.has_section('Credentials') and self.config.has_option('Credentials', 'api_base_url'):
+                api_url = self.config.get('Credentials', 'api_base_url')
+                
+                # Исправляем дублирование /api
+                if '/api/api' in api_url:
+                    fixed_url = api_url.replace('/api/api', '/api')
+                    self.config.set('Credentials', 'api_base_url', fixed_url)
+                    logger.info(f"Исправлен URL API с дублированием: {api_url} -> {fixed_url}")
+                    
+            # Проверяем наличие атрибута ignored_processes и устанавливаем его, если он отсутствует
+            if not hasattr(self, 'ignored_processes') or self.ignored_processes is None:
+                self.ignored_processes = [
+                    "explorer.exe", "system", "system idle process", 
+                    "dwm.exe", "taskhost.exe", "taskhostw.exe", "svchost.exe",
+                    "runtimebroker.exe", "searchui.exe", "shellexperiencehost.exe",
+                    "winlogon.exe", "wininit.exe", "csrss.exe", "services.exe",
+                    "lsass.exe", "fontdrvhost.exe", "smss.exe"
+                ]
+                logger.info("Установлен атрибут ignored_processes")
+                
+            # Сохраняем изменения в конфигурацию
+            self._save_config()
+            
+            return True
+        except Exception as e:
+            logger.error(f"Ошибка при проверке и исправлении конфигурации: {e}")
+            return False
+            
+    def __init__(self, parent=None):
+        """Инициализация приложения"""
+        super().__init__(parent)
+
+        # Инициализация переменных класса
+        self.tracking_active = False
+        self.tracking_paused = False  # Добавляем переменную для паузы отслеживания
+        self.api_client = None
+        self.keyboard_listener = None
+        self.mouse_listener = None
+        self.activity_queue = queue.Queue()
+        self.current_activity = None
+        self.current_activity_data = {}  # Инициализируем пустым словарем
+        self.db_connection = None
+        self.config = None
+        self.keyboard_press_count = 0
+        self.mouse_move_count = 0
+        self.mouse_click_count = 0
+        self.last_window_title = ""
+        self.last_app_name = ""
+        self.app_list = None
+        self.config_loaded = False
+        self.is_idle = False
+        self.last_activity_time = time.time()
+        self.activities_to_send = []
+        self.activity_start_time = None  # Время начала текущей активности
+        self.idle_threshold_seconds = 300  # По умолчанию 5 минут
+        self.session = requests.Session()  # Инициализируем сессию для HTTP запросов
+        
+        # Список игнорируемых системных процессов
+        self.ignored_processes = [
+            "explorer.exe", 
+            "system", 
+            "system idle process", 
+            "dwm.exe", 
+            "taskhost.exe", 
+            "taskhostw.exe", 
+            "svchost.exe",
+            "runtimebroker.exe",
+            "searchui.exe",
+            "shellexperiencehost.exe",
+            "winlogon.exe",
+            "wininit.exe",
+            "csrss.exe",
+            "services.exe",
+            "lsass.exe",
+            "fontdrvhost.exe",
+            "smss.exe"
+        ]
+        
+        # Получаем пути к данным и конфигурации в зависимости от ОС
+        self.app_data_dir = get_app_data_dir()
+        self.setup_app_directories()
+        
+        # Загружаем конфигурацию
+        self.config = self.load_config() 
+        self.config_loaded = True
+        
+        # Проверяем и исправляем конфигурацию
+        self.validate_and_fix_config()
+        
+        # Загружаем значение порога бездействия из конфигурации, если есть
+        if self.config.has_section('Settings') and self.config.has_option('Settings', 'idle_threshold_seconds'):
+            self.idle_threshold_seconds = self.config.getint('Settings', 'idle_threshold_seconds')
+        
+        # Инициализируем API клиент
+        self.init_api_client()
+        
+        # Загружаем конфигурацию отслеживания
+        self.load_tracked_applications_config()
+        
+        # Инициализируем пользовательский интерфейс
+        self.init_ui()
+        
+        # Настраиваем иконку в системном трее
+        self.init_tray_icon()
+        
+        # Устанавливаем слушатели активности и таймеры
+        self.setup_activity_listeners_and_tracking_timer()
+        
+        # Запускаем обновление списка приложений
+        self.update_app_list()
+        
+        # Проверяем соединение с сервером
+        QTimer.singleShot(1000, self.check_connection)
+        
+        # Запускаем обновление UI и проверку соединения
+        self.ui_update_timer = QTimer(self)
+        self.ui_update_timer.timeout.connect(self.periodic_ui_update)
+        self.ui_update_timer.start(5000)  # Обновляем каждые 5 секунд
+        
+        # Отображаем окно входа, если необходимо
+        QTimer.singleShot(1500, self.show_login_dialog_if_needed)
+        
+        logger.info("Приложение TimeTracker успешно инициализировано")
+
+    def get_process_name(self, window_handle) -> Tuple[str, str]:
+        """
+        Получает имя запущенного процесса и заголовок окна.
+        Возвращает кортеж (app_name, window_title)
+        """
+        try:
+            if window_handle is None:
+                return "Unknown", "Unknown Window"
+                
+            # Получаем PID активного окна
+            pid = win32process.GetWindowThreadProcessId(window_handle)[1]
+            
+            # Попытка получить имя процесса через win32process
+            try:
+                # Получаем дескриптор процесса
+                process_handle = win32api.OpenProcess(win32con.PROCESS_QUERY_INFORMATION | win32con.PROCESS_VM_READ, False, pid)
+                
+                # Получаем путь к исполняемому файлу
+                exe_path = win32process.GetModuleFileNameEx(process_handle, 0)
+                
+                # Закрываем дескриптор процесса
+                win32api.CloseHandle(process_handle)
+                
+                # Извлекаем имя файла из полного пути
+                app_name = os.path.basename(exe_path)
+                
+                # Логирование для отладки
+                logger.debug(f"Получено имя процесса через win32process: {app_name} (PID: {pid})")
+            except Exception as e:
+                # Если не удалось получить через win32process, пробуем через psutil
+                logger.debug(f"Не удалось получить имя через win32process: {e}")
+                
+                try:
+                    process = psutil.Process(pid)
+                    app_name = process.name()
+                    logger.debug(f"Получено имя процесса через psutil: {app_name} (PID: {pid})")
+                except Exception as e2:
+                    # Если не удалось и через psutil, возвращаем значение по умолчанию
+                    logger.error(f"Не удалось получить имя процесса через psutil: {e2}")
+                    app_name = f"pid_{pid}"
+            
+            # Получаем заголовок окна
+            window_title = win32gui.GetWindowText(window_handle)
+            
+            # Если заголовок пустой, используем имя процесса как заголовок
+            if not window_title:
+                window_title = app_name
+            
+            # Нормализуем имя процесса - убираем расширение файла, если оно есть
+            if app_name.lower().endswith('.exe'):
+                app_name = app_name[:-4]  # Убираем расширение .exe
+                
+            # Логируем полученные данные для отладки
+            logger.debug(f"Определено имя процесса и заголовок: {app_name}, {window_title}")
+            
+            return app_name, window_title
+            
+        except Exception as e:
+            # В случае любой ошибки возвращаем безопасные значения по умолчанию
+            logger.error(f"Ошибка при получении имени процесса: {e}", exc_info=True)
+            return "Unknown", "Unknown Window"
+
+    def validate_compatibility(self):
+        """Проверяет совместимость с версией Python и зависимостями."""
+        try:
+            # Проверяем версию Python
+            python_version = sys.version_info
+            logger.info(f"Версия Python: {python_version.major}.{python_version.minor}.{python_version.micro}")
+            
+            # Проверяем наличие datetime.UTC (добавлено в Python 3.11)
+            has_datetime_utc = hasattr(datetime, 'UTC')
+            logger.info(f"Поддержка datetime.UTC: {has_datetime_utc}")
+            
+            # Если datetime.UTC не доступен, создаем альтернативу
+            if not has_datetime_utc:
+                # Создаем timezone для UTC если его нет
+                if not hasattr(datetime, 'UTC'):
+                    try:
+                        # Пытаемся использовать timezone
+                        datetime.UTC = datetime.timezone.utc
+                        logger.info("Создан альтернативный datetime.UTC используя datetime.timezone.utc")
+                    except Exception:
+                        # Если timezone тоже недоступен, создаем функцию-заглушку
+                        def utcnow_with_z():
+                            """Создает строку ISO формата с UTC и 'Z' на конце."""
+                            return datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z'
+                        self.utcnow_with_z = utcnow_with_z
+                        logger.info("Создана функция-заглушка utcnow_with_z")
+            
+            # Проверяем доступность необходимых модулей
+            required_modules = ['PyQt5', 'requests', 'psutil', 'win32gui', 'win32process', 'pynput']
+            missing_modules = []
+            
+            for module in required_modules:
+                try:
+                    importlib.import_module(module)
+                except ImportError:
+                    missing_modules.append(module)
+            
+            if missing_modules:
+                logger.warning(f"Отсутствуют следующие модули: {', '.join(missing_modules)}")
+            else:
+                logger.info("Все необходимые модули доступны")
+                
+            # Возвращаем True, если все проверки прошли успешно
+            return True
+        except Exception as e:
+            logger.error(f"Ошибка при проверке совместимости: {e}", exc_info=True)
+            return False
+            
+    def get_utc_now_iso(self):
+        """Возвращает текущее время в формате ISO с UTC и 'Z' на конце."""
+        try:
+            if hasattr(datetime, 'UTC'):
+                # Используем datetime.UTC если доступен (Python 3.11+)
+                return datetime.now(datetime.UTC).isoformat() + 'Z'
+            elif hasattr(datetime, 'timezone') and hasattr(datetime.timezone, 'utc'):
+                # Используем datetime.timezone.utc для более старых версий
+                return datetime.now(datetime.timezone.utc).isoformat() + 'Z'
+            else:
+                # Для очень старых версий используем utcnow
+                return datetime.utcnow().isoformat() + 'Z'
+        except Exception as e:
+            logger.error(f"Ошибка при получении UTC времени: {e}")
+            # В случае ошибки возвращаем текущее время без UTC
+            return datetime.now().isoformat() + 'Z'
 
 
 class SettingsDialog(QDialog):

@@ -1,145 +1,225 @@
-import PyInstaller.__main__
-import os
-import shutil
-from pathlib import Path
-import site
-import sys
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Скрипт для сборки приложения TimeTracker для Linux
+"""
 
-def build_app():
-    # Пути к файлам
-    current_dir = Path(__file__).parent
-    main_script = current_dir / 'main.py'
-    icon_file = current_dir / 'icon.png'
-    config_file = current_dir / 'config.ini'
+import os
+import sys
+import shutil
+import platform
+import subprocess
+from pathlib import Path
+
+def check_requirements():
+    """Проверяет необходимые зависимости для сборки"""
+    print("Проверка зависимостей...")
     
-    # Проверим структуру PyQt5
-    pyqt5_path = None
-    for site_packages in site.getsitepackages():
-        pyqt5_candidate = Path(site_packages) / 'PyQt5'
-        if pyqt5_candidate.exists():
-            pyqt5_path = pyqt5_candidate
-            break
+    # Проверяем, что мы на Linux
+    if platform.system() != "Linux":
+        print(f"Ошибка: Этот скрипт должен выполняться на Linux, а не на {platform.system()}")
+        return False
     
-    if not pyqt5_path:
-        raise RuntimeError("PyQt5 не найден в site-packages")
+    # Проверяем наличие PyInstaller
+    try:
+        subprocess.run(["pyinstaller", "--version"], capture_output=True, check=True)
+        print("PyInstaller найден")
+    except (subprocess.SubprocessError, FileNotFoundError):
+        print("Ошибка: PyInstaller не установлен. Установите его командой: pip install pyinstaller")
+        return False
     
-    print(f"PyQt5 найден в: {pyqt5_path}")
+    # Проверяем наличие необходимых пакетов
+    required_packages = ["PyQt5", "pynput", "psutil", "requests", "PyJWT"]
+    missing_packages = []
     
-    # Проверим существование директорий с плагинами Qt
-    qt_platform_path = None
-    qt_styles_path = None
-    qt_imageformats_path = None
+    for package in required_packages:
+        try:
+            __import__(package)
+        except ImportError:
+            missing_packages.append(package)
     
-    # Проверяем различные возможные пути для Linux
-    possible_paths = [
-        pyqt5_path / 'Qt5' / 'plugins',
-        pyqt5_path / 'Qt' / 'plugins',
-        pyqt5_path / 'plugins',
-        Path('/usr/lib/qt5/plugins'),
-        Path('/usr/lib/x86_64-linux-gnu/qt5/plugins')
-    ]
+    if missing_packages:
+        print(f"Ошибка: Следующие пакеты не установлены: {', '.join(missing_packages)}")
+        print("Установите их командой: pip install " + " ".join(missing_packages))
+        return False
     
-    # Ищем существующие пути для плагинов
-    for base_path in possible_paths:
-        if (base_path / 'platforms').exists():
-            qt_platform_path = base_path / 'platforms'
-            print(f"Найдены платформенные плагины: {qt_platform_path}")
-        
-        if (base_path / 'styles').exists():
-            qt_styles_path = base_path / 'styles'
-            print(f"Найдены плагины стилей: {qt_styles_path}")
-            
-        if (base_path / 'imageformats').exists():
-            qt_imageformats_path = base_path / 'imageformats'
-            print(f"Найдены плагины форматов изображений: {qt_imageformats_path}")
+    print("Все зависимости установлены")
+    return True
+
+def create_desktop_file(build_path, version="1.0"):
+    """Создает .desktop файл для запуска приложения из меню Linux"""
+    desktop_file_content = f"""[Desktop Entry]
+Name=TimeTracker
+Comment=Приложение для отслеживания активности на компьютере
+Exec={build_path}/TimeTracker
+Icon={build_path}/icon.png
+Terminal=false
+Type=Application
+Categories=Utility;
+Version={version}
+"""
     
-    # Создаем директорию для сборки
-    build_dir = current_dir / 'build'
-    dist_dir = current_dir / 'dist'
+    # Создаем директорию для .desktop файла, если её нет
+    desktop_dir = Path.home() / ".local" / "share" / "applications"
+    desktop_dir.mkdir(parents=True, exist_ok=True)
+    
+    # Путь к .desktop файлу
+    desktop_file_path = desktop_dir / "timetracker.desktop"
+    
+    # Сохраняем файл
+    with open(desktop_file_path, "w", encoding="utf-8") as file:
+        file.write(desktop_file_content)
+    
+    # Делаем файл исполняемым
+    os.chmod(desktop_file_path, 0o755)
+    
+    print(f"Создан файл запуска в меню: {desktop_file_path}")
+    return desktop_file_path
+
+def create_autostart_file(desktop_file_path):
+    """Создает ссылку на .desktop файл в автозапуске"""
+    # Директория автозапуска
+    autostart_dir = Path.home() / ".config" / "autostart"
+    autostart_dir.mkdir(parents=True, exist_ok=True)
+    
+    # Путь к файлу автозапуска
+    autostart_file_path = autostart_dir / "timetracker.desktop"
+    
+    # Копируем .desktop файл в директорию автозапуска
+    shutil.copy2(desktop_file_path, autostart_file_path)
+    
+    print(f"Создан файл автозапуска: {autostart_file_path}")
+    return autostart_file_path
+
+def build_application():
+    """Выполняет сборку приложения с помощью PyInstaller"""
+    print("Начинаем сборку приложения...")
+    
+    # Путь к директории сборки
+    dist_dir = Path("dist")
+    build_dir = Path("build")
     
     # Очищаем предыдущие сборки
-    if build_dir.exists():
-        shutil.rmtree(build_dir)
     if dist_dir.exists():
         shutil.rmtree(dist_dir)
+    if build_dir.exists():
+        shutil.rmtree(build_dir)
     
-    # Базовые параметры сборки
-    params = [
-        str(main_script),  # Основной скрипт
-        '--name=TimeTracker',  # Имя приложения
-        '--onefile',  # Собираем в один файл
-        '--windowed',  # Без консоли
-        f'--add-data={icon_file}:.',  # Добавляем иконку
-        f'--add-data={config_file}:.',  # Добавляем конфиг
-        '--clean',  # Очистка перед сборкой
-        '--noconfirm',  # Без подтверждений
-        
-        # PyQt5 специфичные параметры
-        '--hidden-import=PyQt5',
-        '--hidden-import=PyQt5.QtCore',
-        '--hidden-import=PyQt5.QtGui',
-        '--hidden-import=PyQt5.QtWidgets',
-        '--hidden-import=PyQt5.QtNetwork',
-        '--hidden-import=PyQt5.sip',
+    # Параметры для PyInstaller
+    pyinstaller_args = [
+        "pyinstaller",
+        "--name=TimeTracker",
+        "--onefile",
+        "--windowed",
+        "--add-data=icon.png:.",
+        "--icon=icon.png",
+        "main.py"
     ]
     
-    # Добавляем плагины только если они существуют
-    if qt_platform_path:
-        params.append(f'--add-binary={qt_platform_path}/*:platforms')
-    
-    if qt_styles_path:
-        params.append(f'--add-binary={qt_styles_path}/*:styles')
-    
-    if qt_imageformats_path:
-        params.append(f'--add-binary={qt_imageformats_path}/*:imageformats')
-    
-    # Отключаем ненужные модули Qt
-    params.extend([
-        '--exclude-module=PyQt5.Qt3DCore',
-        '--exclude-module=PyQt5.Qt3DRender',
-        '--exclude-module=PyQt5.Qt3DInput',
-        '--exclude-module=PyQt5.Qt3DLogic',
-        '--exclude-module=PyQt5.Qt3DAnimation',
-        '--exclude-module=PyQt5.Qt3DExtras',
-        '--exclude-module=PyQt5.QtWebEngine',
-        '--exclude-module=PyQt5.QtMultimedia',
-        '--exclude-module=PyQt5.QtQuick',
-    ])
-    
-    # Если нам не удалось найти плагины Qt, попробуем собрать версию без них
-    if not qt_platform_path and not qt_styles_path and not qt_imageformats_path:
-        print("ВНИМАНИЕ: Не найдены плагины Qt. Сборка может быть неполной и несовместимой с Windows.")
-    
-    # Запускаем сборку
-    print("Запуск PyInstaller со следующими параметрами:")
-    for param in params:
-        print(f"  {param}")
+    try:
+        # Запускаем PyInstaller
+        subprocess.run(pyinstaller_args, check=True)
+        print("Сборка успешно выполнена")
         
-    PyInstaller.__main__.run(params)
-    
-    # Создаем директории для логов и данных в dist
-    dist_dir = current_dir / 'dist'
-    if dist_dir.exists():
-        (dist_dir / 'logs').mkdir(exist_ok=True)
-        (dist_dir / 'data').mkdir(exist_ok=True)
+        # Создаем каталог для дополнительных файлов
+        build_path = dist_dir / "TimeTracker"
+        if not build_path.exists():
+            build_path = dist_dir  # Для onefile сборки
         
-        # Для Linux сборки файл не будет иметь .exe расширение
-        dist_exe = dist_dir / 'TimeTracker'
+        # Копируем конфигурационный файл, если он существует
+        config_file = Path("config.ini")
+        if config_file.exists():
+            shutil.copy2(config_file, build_path)
+            print(f"Конфигурационный файл скопирован в {build_path / 'config.ini'}")
         
-        # Переименовываем в .exe для совместимости с Windows
-        if dist_exe.exists():
-            target_exe = dist_dir / 'TimeTracker.exe'
-            shutil.copy2(dist_exe, target_exe)
-            print(f"Скопирован {dist_exe} в {target_exe}")
-            
-            # Копируем исполняемый файл в корневой каталог dist/ сервера
-            server_dist = Path(current_dir.parent, 'dist')
-            server_dist.mkdir(exist_ok=True)
-            server_target = server_dist / 'TimeTracker.exe'
-            shutil.copy2(dist_exe, server_target)
-            print(f"Скопирован {dist_exe} в {server_target}")
-    
-    print("Сборка завершена!")
+        # Копируем иконку
+        icon_file = Path("icon.png")
+        if icon_file.exists():
+            shutil.copy2(icon_file, build_path)
+            print(f"Файл иконки скопирован в {build_path / 'icon.png'}")
+        
+        return str(build_path.absolute())
+    except subprocess.SubprocessError as e:
+        print(f"Ошибка при сборке: {e}")
+        return None
 
-if __name__ == '__main__':
-    build_app() 
+def create_installation_script(build_path):
+    """Создает скрипт установки для Linux"""
+    install_script_content = f"""#!/bin/bash
+# Скрипт установки TimeTracker
+
+echo "Установка TimeTracker..."
+
+# Создаем директорию для приложения
+install_dir="$HOME/.local/share/TimeTracker"
+mkdir -p "$install_dir"
+
+# Копируем файлы
+cp -r "{build_path}/"* "$install_dir/"
+
+# Делаем исполняемым
+chmod +x "$install_dir/TimeTracker"
+
+# Создаем .desktop файл
+desktop_file="$HOME/.local/share/applications/timetracker.desktop"
+cat > "$desktop_file" << EOL
+[Desktop Entry]
+Name=TimeTracker
+Comment=Приложение для отслеживания активности на компьютере
+Exec=$install_dir/TimeTracker
+Icon=$install_dir/icon.png
+Terminal=false
+Type=Application
+Categories=Utility;
+Version=1.0
+EOL
+
+chmod +x "$desktop_file"
+
+# Создаем файл автозапуска
+mkdir -p "$HOME/.config/autostart"
+cp "$desktop_file" "$HOME/.config/autostart/"
+
+echo "TimeTracker успешно установлен!"
+echo "Вы можете запустить его из меню приложений или командой: $install_dir/TimeTracker"
+"""
+    
+    # Путь к скрипту установки
+    install_script_path = Path(build_path) / "install.sh"
+    
+    # Сохраняем скрипт
+    with open(install_script_path, "w", encoding="utf-8") as file:
+        file.write(install_script_content)
+    
+    # Делаем скрипт исполняемым
+    os.chmod(install_script_path, 0o755)
+    
+    print(f"Создан скрипт установки: {install_script_path}")
+    return install_script_path
+
+def main():
+    """Основная функция сборки и установки"""
+    print("=== Сборка TimeTracker для Linux ===")
+    
+    # Проверяем зависимости
+    if not check_requirements():
+        print("Сборка прервана из-за отсутствия необходимых зависимостей")
+        return 1
+    
+    # Собираем приложение
+    build_path = build_application()
+    if not build_path:
+        print("Сборка не удалась")
+        return 1
+    
+    # Создаем файлы для установки
+    create_installation_script(build_path)
+    
+    print("\nСборка успешно завершена!")
+    print(f"Исполняемый файл: {build_path}/TimeTracker")
+    print(f"Запустите скрипт {build_path}/install.sh для установки приложения")
+    
+    return 0
+
+if __name__ == "__main__":
+    sys.exit(main()) 
