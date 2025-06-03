@@ -166,8 +166,12 @@ class StatisticsView(LoginRequiredMixin, TemplateView):
                 def __init__(self, data):
                     for key, value in data.items():
                         setattr(self, key, value)
-                        
             apps.append(AppMock(app_data))
+        
+        # ОТЛАДКА: Проверяем что передаем в контекст
+        print(f"[DEBUG] Statistics - Создано {len(apps)} приложений:")
+        for i, app in enumerate(apps[:5]):  # Показываем первые 5
+            print(f"  App {i}: name='{app.name}', id={getattr(app, 'id', 'None')}, percentage={getattr(app, 'percentage', 0)}")
         
         # Получаем данные по дням для графика
         daily_data = []
@@ -551,6 +555,11 @@ class DashboardView(LoginRequiredMixin, TemplateView):
                     for key, value in data.items():
                         setattr(self, key, value)
             apps.append(AppMock(app_data))
+        
+        # ОТЛАДКА: Проверяем что передаем в контекст
+        print(f"[DEBUG] Dashboard - Создано {len(apps)} приложений:")
+        for i, app in enumerate(apps[:5]):  # Показываем первые 5
+            print(f"  App {i}: name='{app.name}', id={getattr(app, 'id', 'None')}, percentage={getattr(app, 'percentage', 0)}")
         
         # Создаем почасовую статистику для графика (исключая системные процессы)
         hourly_activity = []
