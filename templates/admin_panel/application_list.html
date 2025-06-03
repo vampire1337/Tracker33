@@ -1,56 +1,356 @@
 {% extends 'admin_panel/base_admin.html' %}
 
 {% block admin_content %}
-<h1 class="admin-title">Приложения</h1>
+<h1 class="admin-title">
+    <i class="fas fa-laptop me-3"></i>Настройка продуктивности приложений
+</h1>
+
+<!-- Объяснение что такое продуктивность -->
+<div class="section-description">
+    <h6><i class="fas fa-info-circle me-2"></i>Зачем это нужно?</h6>
+    <p>
+        Система отслеживает все программы, в которых работают сотрудники. Но не все программы — рабочие. 
+        Например, <strong>VS Code</strong> или <strong>Word</strong> — это работа, а <strong>YouTube</strong> или <strong>игры</strong> — развлечения.
+        Здесь ты настраиваешь, какие программы считать продуктивными (рабочими), а какие — нет. 
+        От этого зависит расчёт процента продуктивности пользователей.
+    </p>
+</div>
+
+<!-- Улучшенная статистика -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <div class="card bg-light">
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-md-3">
+                        <div class="border-end">
+                            <h4 class="text-primary mb-1">{{ applications|length }}</h4>
+                            <small class="text-muted">Всего программ</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="border-end">
+                            <h4 class="text-success mb-1" id="productive-count">
+                                {% for app in applications %}{% if app.is_productive %}1{% else %}0{% endif %}{% endfor %}
+                            </h4>
+                            <small class="text-muted">Продуктивных</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="border-end">
+                            <h4 class="text-warning mb-1" id="unproductive-count">
+                                {% for app in applications %}{% if not app.is_productive %}1{% else %}0{% endif %}{% endfor %}
+                            </h4>
+                            <small class="text-muted">Непродуктивных</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <h4 class="text-info mb-1">{{ total_activities|default:0 }}</h4>
+                        <small class="text-muted">Всего активности</small>
+                    </div>
+                </div>
+                
+                <!-- Прогресс-бар соотношения -->
+                <div class="mt-3">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <small class="text-muted">Соотношение продуктивных программ</small>
+                        <small class="text-muted" id="productivity-percentage">
+                            Обновляется автоматически
+                        </small>
+                    </div>
+                    <div class="progress" style="height: 8px;">
+                        <div class="progress-bar bg-success" id="productivity-bar" style="width: 50%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-warning">
+            <div class="card-body">
+                <h6 class="text-warning mb-2">
+                    <i class="fas fa-exclamation-triangle me-2"></i>Важно понимать
+                </h6>
+                <small>
+                    Изменение настроек продуктивности влияет на статистику всех пользователей. 
+                    Процент продуктивности пересчитывается автоматически.
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
 
 <div class="card">
+    <div class="card-header bg-light">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h5 class="mb-0">
+                    <i class="fas fa-list me-2"></i>Все отслеживаемые программы
+                </h5>
+                <small class="text-muted">
+                    Отсортированы по количеству активности (часто используемые сверху)
+                </small>
+            </div>
+        </div>
+    </div>
     <div class="card-body">
+        {% if applications %}
         <div class="table-responsive">
-            <table class="table table-striped">
-                <thead>
+            <table class="table table-hover">
+                <thead class="table-light">
                     <tr>
-                        <th>ID</th>
-                        <th>Название</th>
-                        <th>Процесс</th>
-                        <th>Пользователь</th>
-                        <th>Активно</th>
-                        <th>Продуктивное</th>
-                        <th>Активностей</th>
-                        <th>Создано</th>
+                        <th style="width: 60px;">
+                            <i class="fas fa-hashtag me-1"></i>ID
+                        </th>
+                        <th>
+                            <i class="fas fa-laptop me-1"></i>Программа
+                            <i class="fas fa-info-circle text-muted ms-1" 
+                               data-bs-toggle="tooltip" 
+                               title="Название программы и исполняемый файл"></i>
+                        </th>
+                        <th>
+                            <i class="fas fa-user me-1"></i>Кто использует
+                            <i class="fas fa-info-circle text-muted ms-1" 
+                               data-bs-toggle="tooltip" 
+                               title="Пользователь, который первым запустил эту программу"></i>
+                        </th>
+                        <th>
+                            <i class="fas fa-chart-bar me-1"></i>Популярность
+                            <i class="fas fa-info-circle text-muted ms-1" 
+                               data-bs-toggle="tooltip" 
+                               title="Количество сессий работы в этой программе"></i>
+                        </th>
+                        <th style="width: 200px;">
+                            <i class="fas fa-toggle-on me-1"></i>Продуктивность
+                            <i class="fas fa-info-circle text-muted ms-1" 
+                               data-bs-toggle="tooltip" 
+                               title="Считать ли эту программу рабочей или развлечением"></i>
+                        </th>
+                        <th>
+                            <i class="fas fa-calendar me-1"></i>Впервые замечена
+                        </th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for app in applications %}
-                    <tr>
-                        <td>{{ app.id }}</td>
-                        <td>{{ app.name }}</td>
-                        <td>{{ app.process_name }}</td>
-                        <td>{{ app.user.username|default:"Не указан" }}</td>
+                    <tr class="app-row {% if app.is_productive %}table-success{% else %}table-warning{% endif %}" data-app-id="{{ app.id }}">
                         <td>
-                            {% if app.is_active %}
-                                <span class="badge bg-success">Да</span>
+                            <span class="badge bg-secondary">{{ app.id }}</span>
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="me-3 app-icon">
+                                    {% if app.is_productive %}
+                                        <i class="fas fa-briefcase fa-2x text-success"></i>
+                                    {% else %}
+                                        <i class="fas fa-gamepad fa-2x text-warning"></i>
+                                    {% endif %}
+                                </div>
+                                <div>
+                                    <strong>{{ app.name }}</strong>
+                                    <br><small class="text-muted font-monospace">{{ app.process_name }}</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            {% if app.user %}
+                                <div class="d-flex align-items-center">
+                                    <div class="avatar-sm me-2 bg-primary text-white rounded-circle d-flex align-items-center justify-content-center">
+                                        {{ app.user.username|first|upper }}
+                                    </div>
+                                    <div>
+                                        <strong>{{ app.user.username }}</strong>
+                                        {% if app.user.get_full_name %}
+                                        <br><small class="text-muted">{{ app.user.get_full_name }}</small>
+                                        {% endif %}
+                                    </div>
+                                </div>
                             {% else %}
-                                <span class="badge bg-danger">Нет</span>
+                                <span class="text-muted">Системная</span>
                             {% endif %}
                         </td>
                         <td>
-                            {% if app.is_productive %}
-                                <span class="badge bg-success">Да</span>
-                            {% else %}
-                                <span class="badge bg-secondary">Нет</span>
-                            {% endif %}
+                            <div class="d-flex align-items-center">
+                                <div class="progress flex-grow-1 me-2" style="height: 8px;">
+                                    <div class="progress-bar bg-info" style="width: 30%"></div>
+                                </div>
+                                <span class="badge bg-info">{{ app.activity_count|default:0 }}</span>
+                            </div>
+                            <small class="text-muted">сессий работы</small>
                         </td>
-                        <td>{{ app.activity_count }}</td>
-                        <td>{{ app.created_at|date:"d.m.Y H:i" }}</td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="8" class="text-center">Нет приложений</td>
+                        <td>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input productivity-toggle" 
+                                       type="checkbox" 
+                                       id="productivity_{{ app.id }}"
+                                       data-app-id="{{ app.id }}"
+                                       {% if app.is_productive %}checked{% endif %}>
+                                <label class="form-check-label productivity-label" for="productivity_{{ app.id }}">
+                                    <span class="{% if app.is_productive %}text-success{% else %}text-warning{% endif %}">
+                                        <i class="{% if app.is_productive %}fas fa-briefcase{% else %}fas fa-gamepad{% endif %} me-1"></i>
+                                        <span class="label-text">{% if app.is_productive %}Рабочая{% else %}Развлечение{% endif %}</span>
+                                    </span>
+                                </label>
+                            </div>
+                        </td>
+                        <td>
+                            <div>
+                                <strong>{{ app.created_at|date:"d.m.Y" }}</strong>
+                                <br><small class="text-muted">{{ app.created_at|date:"H:i" }}</small>
+                            </div>
+                        </td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
+        
+        <!-- Полезные советы -->
+        <div class="mt-4">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="alert alert-success">
+                        <h6 class="alert-heading">
+                            <i class="fas fa-briefcase me-2"></i>Обычно продуктивные
+                        </h6>
+                        <ul class="mb-0 small">
+                            <li>Редакторы кода (VS Code, IntelliJ, Sublime)</li>
+                            <li>Браузеры на рабочих сайтах</li>
+                            <li>Офисные программы (Word, Excel, PowerPoint)</li>
+                            <li>Дизайн-программы (Photoshop, Figma)</li>
+                            <li>Терминал, командная строка</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="alert alert-warning">
+                        <h6 class="alert-heading">
+                            <i class="fas fa-gamepad me-2"></i>Обычно непродуктивные
+                        </h6>
+                        <ul class="mb-0 small">
+                            <li>Игры (Steam, любые .exe игр)</li>
+                            <li>Видео-платформы (YouTube, Netflix)</li>
+                            <li>Социальные сети</li>
+                            <li>Мессенджеры (если не рабочие)</li>
+                            <li>Развлекательные сайты</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-laptop fa-4x text-muted mb-3"></i>
+            <h4 class="text-muted">Приложения пока не обнаружены</h4>
+            <p class="text-muted">
+                Программы появятся здесь, когда пользователи начнут работать с отслеживающими клиентами
+            </p>
+        </div>
+        {% endif %}
     </div>
 </div>
+
+<style>
+.avatar-sm {
+    width: 32px;
+    height: 32px;
+    font-size: 14px;
+    font-weight: 600;
+}
+.form-check-input:checked {
+    background-color: #28a745;
+    border-color: #28a745;
+}
+.app-row {
+    transition: all 0.3s ease;
+}
+.productivity-toggle {
+    transform: scale(1.2);
+}
+.app-icon {
+    transition: all 0.3s ease;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Инициализация статистики при загрузке
+    updateStatistics();
+    
+    // Обработка переключения продуктивности
+    const toggles = document.querySelectorAll('.productivity-toggle');
+    
+    toggles.forEach(toggle => {
+        toggle.addEventListener('change', function() {
+            const appId = this.dataset.appId;
+            const isProductive = this.checked;
+            const row = document.querySelector(`tr[data-app-id="${appId}"]`);
+            const icon = row.querySelector('.app-icon i');
+            const label = row.querySelector('.productivity-label span');
+            const labelText = label.querySelector('.label-text');
+            
+            // Анимация переключения
+            row.style.opacity = '0.5';
+            
+            // Имитация AJAX запроса (в реальности нужно отправить на сервер)
+            setTimeout(() => {
+                // Обновляем визуальные элементы
+                if (isProductive) {
+                    row.className = 'app-row table-success';
+                    icon.className = 'fas fa-briefcase fa-2x text-success';
+                    label.className = 'text-success';
+                    label.querySelector('i').className = 'fas fa-briefcase me-1';
+                    labelText.textContent = 'Рабочая';
+                } else {
+                    row.className = 'app-row table-warning';
+                    icon.className = 'fas fa-gamepad fa-2x text-warning';
+                    label.className = 'text-warning';
+                    label.querySelector('i').className = 'fas fa-gamepad me-1';
+                    labelText.textContent = 'Развлечение';
+                }
+                
+                row.style.opacity = '1';
+                updateStatistics();
+                
+                // Показываем уведомление
+                showNotification(isProductive ? 'Приложение отмечено как продуктивное' : 'Приложение отмечено как непродуктивное');
+            }, 300);
+        });
+    });
+    
+    function updateStatistics() {
+        const productiveCount = document.querySelectorAll('.productivity-toggle:checked').length;
+        const totalCount = document.querySelectorAll('.productivity-toggle').length;
+        const unproductiveCount = totalCount - productiveCount;
+        
+        document.getElementById('productive-count').textContent = productiveCount;
+        document.getElementById('unproductive-count').textContent = unproductiveCount;
+        
+        const percentage = totalCount > 0 ? Math.round((productiveCount / totalCount) * 100) : 0;
+        document.getElementById('productivity-bar').style.width = percentage + '%';
+        document.getElementById('productivity-percentage').textContent = `${productiveCount} из ${totalCount} (${percentage}%)`;
+    }
+    
+    function showNotification(message) {
+        // Создаем временное уведомление
+        const notification = document.createElement('div');
+        notification.className = 'alert alert-success alert-dismissible fade show position-fixed';
+        notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+        notification.innerHTML = `
+            <i class="fas fa-check-circle me-2"></i>${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        
+        document.body.appendChild(notification);
+        
+        // Автоматически убираем через 3 секунды
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.remove();
+            }
+        }, 3000);
+    }
+});
+</script>
 {% endblock %} 

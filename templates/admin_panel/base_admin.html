@@ -8,25 +8,68 @@
         min-height: calc(100vh - 56px);
         background-color: #f8f9fa;
         padding-top: 20px;
+        border-right: 2px solid #e9ecef;
     }
     .admin-sidebar .nav-link {
         color: #495057;
-        border-radius: 0;
+        border-radius: 8px;
+        margin: 2px 8px;
+        padding: 12px 16px;
+        position: relative;
     }
     .admin-sidebar .nav-link.active {
         background-color: #007bff;
         color: white;
+        box-shadow: 0 2px 4px rgba(0,123,255,0.3);
     }
     .admin-sidebar .nav-link:hover:not(.active) {
         background-color: #e9ecef;
+        transform: translateX(3px);
+        transition: all 0.2s ease;
     }
     .admin-content {
-        padding: 20px;
+        padding: 30px;
+        background-color: #fff;
     }
     .admin-title {
-        margin-bottom: 20px;
+        margin-bottom: 30px;
+        border-bottom: 3px solid #007bff;
+        padding-bottom: 15px;
+        color: #2c3e50;
+        font-weight: 600;
+    }
+    .section-description {
+        background-color: #f8f9fa;
+        border-left: 4px solid #007bff;
+        padding: 15px 20px;
+        margin-bottom: 25px;
+        border-radius: 0 8px 8px 0;
+    }
+    .section-description h6 {
+        color: #007bff;
+        font-weight: 600;
+        margin-bottom: 8px;
+    }
+    .section-description p {
+        margin-bottom: 0;
+        color: #6c757d;
+        font-size: 14px;
+    }
+    .nav-section-title {
+        font-size: 12px;
+        font-weight: 600;
+        color: #6c757d;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin: 20px 16px 8px 16px;
+        padding-bottom: 4px;
         border-bottom: 1px solid #dee2e6;
-        padding-bottom: 10px;
+    }
+    .tooltip-icon {
+        color: #6c757d;
+        font-size: 12px;
+        margin-left: 5px;
+        cursor: help;
     }
 </style>
 {% endblock %}
@@ -34,42 +77,82 @@
 {% block content %}
 <div class="container-fluid">
     <div class="row">
-        <!-- Sidebar -->
+        <!-- Sidebar с понятным разделением -->
         <div class="col-md-2 admin-sidebar">
             <ul class="nav flex-column">
+                <!-- Основная информация -->
+                <div class="nav-section-title">Основное</div>
                 <li class="nav-item">
-                    <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}" href="{% url 'admin_panel:dashboard' %}">
-                        <i class="fas fa-tachometer-alt me-2"></i> Панель управления
+                    <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}" 
+                       href="{% url 'admin_panel:dashboard' %}"
+                       data-bs-toggle="tooltip" 
+                       title="Общий обзор системы - количество пользователей, активность, ключевые метрики">
+                        <i class="fas fa-tachometer-alt me-2"></i> Обзор системы
+                        <i class="fas fa-question-circle tooltip-icon"></i>
+                    </a>
+                </li>
+                
+                <!-- Управление пользователями -->
+                <div class="nav-section-title">Пользователи</div>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.resolver_match.url_name == 'users' or request.resolver_match.url_name == 'user_detail' or request.resolver_match.url_name == 'user_edit' %}active{% endif %}" 
+                       href="{% url 'admin_panel:users' %}"
+                       data-bs-toggle="tooltip" 
+                       title="Управление учетными записями: просмотр, редактирование, деактивация пользователей">
+                        <i class="fas fa-users me-2"></i> Учетные записи
+                        <i class="fas fa-question-circle tooltip-icon"></i>
+                    </a>
+                </li>
+                
+                <!-- Контроль продуктивности -->
+                <div class="nav-section-title">Продуктивность</div>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.resolver_match.url_name == 'applications' %}active{% endif %}" 
+                       href="{% url 'admin_panel:applications' %}"
+                       data-bs-toggle="tooltip" 
+                       title="Настройка продуктивности: какие программы считать рабочими, а какие - развлечениями">
+                        <i class="fas fa-laptop me-2"></i> Настройка приложений
+                        <i class="fas fa-question-circle tooltip-icon"></i>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link {% if request.resolver_match.url_name == 'users' or request.resolver_match.url_name == 'user_detail' or request.resolver_match.url_name == 'user_edit' %}active{% endif %}" href="{% url 'admin_panel:users' %}">
-                        <i class="fas fa-users me-2"></i> Пользователи
+                    <a class="nav-link {% if request.resolver_match.url_name == 'activities' %}active{% endif %}" 
+                       href="{% url 'admin_panel:activities' %}"
+                       data-bs-toggle="tooltip" 
+                       title="Просмотр записей активности: когда и в каких программах работали сотрудники">
+                        <i class="fas fa-chart-line me-2"></i> История активности
+                        <i class="fas fa-question-circle tooltip-icon"></i>
+                    </a>
+                </li>
+                
+                <!-- Техническое -->
+                <div class="nav-section-title">Техническое</div>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.resolver_match.url_name == 'logs' %}active{% endif %}" 
+                       href="{% url 'admin_panel:logs' %}"
+                       data-bs-toggle="tooltip" 
+                       title="Логи системы для диагностики проблем и отслеживания работы приложения">
+                        <i class="fas fa-file-alt me-2"></i> Системные логи
+                        <i class="fas fa-question-circle tooltip-icon"></i>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link {% if request.resolver_match.url_name == 'applications' %}active{% endif %}" href="{% url 'admin_panel:applications' %}">
-                        <i class="fas fa-laptop me-2"></i> Приложения
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link {% if request.resolver_match.url_name == 'activities' %}active{% endif %}" href="{% url 'admin_panel:activities' %}">
-                        <i class="fas fa-chart-line me-2"></i> Активность
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link {% if request.resolver_match.url_name == 'logs' %}active{% endif %}" href="{% url 'admin_panel:logs' %}">
-                        <i class="fas fa-file-alt me-2"></i> Логи
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link {% if request.resolver_match.url_name == 'database' %}active{% endif %}" href="{% url 'admin_panel:database' %}">
+                    <a class="nav-link {% if request.resolver_match.url_name == 'database' %}active{% endif %}" 
+                       href="{% url 'admin_panel:database' %}"
+                       data-bs-toggle="tooltip" 
+                       title="⚠️ Прямой просмотр базы данных - только для опытных администраторов!">
                         <i class="fas fa-database me-2"></i> База данных
+                        <i class="fas fa-exclamation-triangle text-warning ms-1" style="font-size: 10px;"></i>
                     </a>
                 </li>
-                <li class="nav-item mt-4">
-                    <a class="nav-link" href="{% url 'dashboard' %}">
-                        <i class="fas fa-arrow-left me-2"></i> Вернуться на сайт
+                
+                <!-- Навигация -->
+                <div class="nav-section-title">Навигация</div>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'dashboard' %}"
+                       data-bs-toggle="tooltip" 
+                       title="Вернуться к обычному интерфейсу пользователя">
+                        <i class="fas fa-arrow-left me-2"></i> К пользователю
                     </a>
                 </li>
             </ul>
@@ -80,8 +163,9 @@
             {% if messages %}
                 <div class="messages">
                     {% for message in messages %}
-                        <div class="alert alert-{{ message.tags }}">
+                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
                             {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                         </div>
                     {% endfor %}
                 </div>
@@ -91,4 +175,14 @@
         </div>
     </div>
 </div>
+
+<script>
+// Инициализация tooltips
+document.addEventListener('DOMContentLoaded', function() {
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+});
+</script>
 {% endblock %} 

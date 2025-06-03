@@ -1,156 +1,385 @@
 {% extends 'admin_panel/base_admin.html' %}
 
 {% block admin_content %}
-<h1 class="admin-title">Информация о пользователе</h1>
+<h1 class="admin-title">
+    <i class="fas fa-user-circle me-3"></i>Подробная информация о пользователе
+</h1>
+
+<!-- Объяснение раздела -->
+<div class="section-description">
+    <h6><i class="fas fa-info-circle me-2"></i>Что здесь можно увидеть?</h6>
+    <p>
+        Детальная карточка пользователя показывает всю важную информацию: личные данные, права доступа, 
+        статистику активности и список программ, которые он использует. Это помогает понять, 
+        как именно человек работает в системе и есть ли у него проблемы с доступом.
+    </p>
+</div>
+
+<!-- Краткая статистика пользователя -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body text-center">
+                <i class="fas fa-chart-line fa-2x mb-2"></i>
+                <h4>{{ activities|length }}</h4>
+                <small>Сессий работы</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body text-center">
+                <i class="fas fa-laptop fa-2x mb-2"></i>
+                <h4>{{ applications|length }}</h4>
+                <small>Разных программ</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body text-center">
+                <i class="fas fa-keyboard fa-2x mb-2"></i>
+                <h4>
+                    {% for activity in activities %}{{ activity.keyboard_presses|add:0 }}{% endfor %}
+                </h4>
+                <small>Всего нажатий</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body text-center">
+                <i class="fas fa-calendar fa-2x mb-2"></i>
+                <h4>
+                    {% if user_obj.last_login %}
+                        {{ user_obj.last_login|timesince }}
+                    {% else %}
+                        Никогда
+                    {% endif %}
+                </h4>
+                <small>Последний вход</small>
+            </div>
+        </div>
+    </div>
+</div>
 
 <div class="row mb-4">
+    <!-- Основная информация -->
     <div class="col-md-6">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="card-title mb-0">Основная информация</h5>
+        <div class="card h-100">
+            <div class="card-header bg-light">
+                <div class="d-flex align-items-center">
+                    <div class="avatar-lg me-3 bg-primary text-white rounded-circle d-flex align-items-center justify-content-center">
+                        {{ user_obj.username|first|upper }}
+                    </div>
+                    <div>
+                        <h5 class="card-title mb-0">{{ user_obj.username }}</h5>
+                        <small class="text-muted">
+                            {% if user_obj.get_full_name %}
+                                {{ user_obj.get_full_name }}
+                            {% else %}
+                                Имя не указано
+                            {% endif %}
+                        </small>
+                    </div>
+                </div>
             </div>
             <div class="card-body">
-                <table class="table">
+                <table class="table table-borderless">
                     <tr>
-                        <th style="width: 150px;">ID:</th>
-                        <td>{{ user_obj.id }}</td>
+                        <th style="width: 40%;">
+                            <i class="fas fa-hashtag me-2 text-muted"></i>ID в системе:
+                        </th>
+                        <td>
+                            <span class="badge bg-secondary">{{ user_obj.id }}</span>
+                        </td>
                     </tr>
                     <tr>
-                        <th>Имя пользователя:</th>
-                        <td>{{ user_obj.username }}</td>
+                        <th>
+                            <i class="fas fa-envelope me-2 text-muted"></i>Email:
+                        </th>
+                        <td>
+                            {% if user_obj.email %}
+                                <a href="mailto:{{ user_obj.email }}" class="text-decoration-none">
+                                    {{ user_obj.email }}
+                                </a>
+                            {% else %}
+                                <span class="text-muted">Не указан</span>
+                            {% endif %}
+                        </td>
                     </tr>
                     <tr>
-                        <th>Email:</th>
-                        <td>{{ user_obj.email }}</td>
-                    </tr>
-                    <tr>
-                        <th>Полное имя:</th>
-                        <td>{{ user_obj.get_full_name }}</td>
-                    </tr>
-                    <tr>
-                        <th>Статус:</th>
+                        <th>
+                            <i class="fas fa-toggle-on me-2 text-muted"></i>Статус аккаунта:
+                        </th>
                         <td>
                             {% if user_obj.is_active %}
-                                <span class="badge bg-success">Активен</span>
+                                <span class="badge bg-success">
+                                    <i class="fas fa-check me-1"></i>Активен
+                                </span>
+                                <small class="text-muted d-block">Может входить в систему</small>
                             {% else %}
-                                <span class="badge bg-danger">Неактивен</span>
+                                <span class="badge bg-danger">
+                                    <i class="fas fa-ban me-1"></i>Заблокирован
+                                </span>
+                                <small class="text-danger d-block">Доступ запрещен</small>
                             {% endif %}
                         </td>
                     </tr>
                     <tr>
-                        <th>Роли:</th>
+                        <th>
+                            <i class="fas fa-crown me-2 text-muted"></i>Права доступа:
+                        </th>
                         <td>
                             {% if user_obj.is_superuser %}
-                                <span class="badge bg-primary">Суперпользователь</span>
-                            {% endif %}
-                            {% if user_obj.is_staff %}
-                                <span class="badge bg-info">Персонал</span>
-                            {% endif %}
-                            {% if not user_obj.is_superuser and not user_obj.is_staff %}
-                                <span class="badge bg-secondary">Обычный пользователь</span>
+                                <span class="badge bg-primary me-1">
+                                    <i class="fas fa-crown me-1"></i>Суперпользователь
+                                </span>
+                                <small class="text-muted d-block">Полный доступ к админке</small>
+                            {% elif user_obj.is_staff %}
+                                <span class="badge bg-info me-1">
+                                    <i class="fas fa-user-tie me-1"></i>Персонал
+                                </span>
+                                <small class="text-muted d-block">Ограниченные права</small>
+                            {% else %}
+                                <span class="badge bg-secondary me-1">
+                                    <i class="fas fa-user me-1"></i>Обычный пользователь
+                                </span>
+                                <small class="text-muted d-block">Только просмотр своей статистики</small>
                             {% endif %}
                         </td>
                     </tr>
                     <tr>
-                        <th>Дата регистрации:</th>
-                        <td>{{ user_obj.date_joined|date:"d.m.Y H:i" }}</td>
+                        <th>
+                            <i class="fas fa-calendar-plus me-2 text-muted"></i>Дата регистрации:
+                        </th>
+                        <td>
+                            <strong>{{ user_obj.date_joined|date:"d.m.Y" }}</strong>
+                            <small class="text-muted d-block">в {{ user_obj.date_joined|time:"H:i" }}</small>
+                        </td>
                     </tr>
                     <tr>
-                        <th>Последний вход:</th>
-                        <td>{{ user_obj.last_login|date:"d.m.Y H:i" }}</td>
+                        <th>
+                            <i class="fas fa-sign-in-alt me-2 text-muted"></i>Последний вход:
+                        </th>
+                        <td>
+                            {% if user_obj.last_login %}
+                                <strong>{{ user_obj.last_login|date:"d.m.Y" }}</strong>
+                                <small class="text-muted d-block">
+                                    в {{ user_obj.last_login|time:"H:i" }} ({{ user_obj.last_login|timesince }} назад)
+                                </small>
+                            {% else %}
+                                <span class="text-warning">
+                                    <i class="fas fa-exclamation-triangle me-1"></i>Никогда не входил
+                                </span>
+                                <small class="text-muted d-block">Возможно, есть проблемы с учетными данными</small>
+                            {% endif %}
+                        </td>
                     </tr>
                 </table>
                 
-                <div class="mt-3">
+                <div class="mt-4 d-flex gap-2">
                     <a href="{% url 'admin_panel:user_edit' user_obj.pk %}" class="btn btn-primary">
-                        <i class="fas fa-edit me-2"></i> Редактировать
+                        <i class="fas fa-edit me-2"></i>Редактировать
                     </a>
-                    <a href="{% url 'admin_panel:users' %}" class="btn btn-secondary">
-                        <i class="fas fa-arrow-left me-2"></i> Назад к списку
+                    <a href="{% url 'admin_panel:users' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>К списку пользователей
                     </a>
                 </div>
             </div>
         </div>
     </div>
     
+    <!-- Программы пользователя -->
     <div class="col-md-6">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="card-title mb-0">Приложения пользователя</h5>
+        <div class="card h-100">
+            <div class="card-header bg-light">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-laptop me-2"></i>Используемые программы
+                    </h5>
+                    <span class="badge bg-info">{{ applications|length }}</span>
+                </div>
+                <small class="text-muted">
+                    Список всех программ, в которых работал этот пользователь
+                </small>
             </div>
             <div class="card-body">
+                {% if applications %}
                 <div class="table-responsive">
-                    <table class="table table-striped">
-                        <thead>
+                    <table class="table table-hover table-sm">
+                        <thead class="table-light">
                             <tr>
-                                <th>Название</th>
-                                <th>Процесс</th>
-                                <th>Активностей</th>
-                                <th>Продуктивное</th>
+                                <th>Программа</th>
+                                <th>Сессий</th>
+                                <th>Тип</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for app in applications %}
                             <tr>
-                                <td>{{ app.name }}</td>
-                                <td>{{ app.process_name }}</td>
-                                <td>{{ app.activity_count }}</td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="me-2">
+                                            {% if app.is_productive %}
+                                                <i class="fas fa-briefcase text-success" title="Продуктивная программа"></i>
+                                            {% else %}
+                                                <i class="fas fa-gamepad text-warning" title="Непродуктивная программа"></i>
+                                            {% endif %}
+                                        </div>
+                                        <div>
+                                            <strong>{{ app.name }}</strong>
+                                            <br><small class="text-muted font-monospace">{{ app.process_name }}</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge bg-info">{{ app.activity_count|default:0 }}</span>
+                                </td>
                                 <td>
                                     {% if app.is_productive %}
-                                        <span class="badge bg-success">Да</span>
+                                        <span class="badge bg-success">Рабочая</span>
                                     {% else %}
-                                        <span class="badge bg-secondary">Нет</span>
+                                        <span class="badge bg-warning">Развлечение</span>
                                     {% endif %}
                                 </td>
-                            </tr>
-                            {% empty %}
-                            <tr>
-                                <td colspan="4" class="text-center">Нет приложений</td>
                             </tr>
                             {% endfor %}
                         </tbody>
                     </table>
                 </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-laptop fa-3x text-muted mb-3"></i>
+                    <p class="text-muted">Пользователь пока не работал ни в одной программе</p>
+                    <small>Программы появятся здесь после установки и запуска клиента отслеживания</small>
+                </div>
+                {% endif %}
             </div>
         </div>
     </div>
 </div>
 
+<!-- История активности -->
 <div class="card">
-    <div class="card-header">
-        <h5 class="card-title mb-0">Последние активности</h5>
+    <div class="card-header bg-light">
+        <div class="d-flex justify-content-between align-items-center">
+            <h5 class="card-title mb-0">
+                <i class="fas fa-history me-2"></i>Последние сессии работы
+            </h5>
+            <span class="badge bg-info">Показано последние 20 записей</span>
+        </div>
+        <small class="text-muted">
+            Каждая запись = время работы в одной программе до переключения на другую
+        </small>
     </div>
     <div class="card-body">
+        {% if activities %}
         <div class="table-responsive">
-            <table class="table table-striped">
-                <thead>
+            <table class="table table-hover">
+                <thead class="table-light">
                     <tr>
                         <th>Дата и время</th>
-                        <th>Приложение</th>
-                        <th>Начало</th>
-                        <th>Окончание</th>
+                        <th>Программа</th>
+                        <th>Период работы</th>
                         <th>Длительность</th>
-                        <th>Нажатия клавиш</th>
+                        <th>Активность</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for activity in activities %}
-                    <tr>
-                        <td>{{ activity.start_time|date:"d.m.Y H:i:s" }}</td>
-                        <td>{{ activity.application.name }}</td>
-                        <td>{{ activity.start_time|time:"H:i:s" }}</td>
-                        <td>{{ activity.end_time|time:"H:i:s" }}</td>
-                        <td>{{ activity.duration }}</td>
-                        <td>{{ activity.keyboard_presses }}</td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="6" class="text-center">Нет активности</td>
+                    <tr class="{% if activity.application.is_productive %}table-success{% else %}table-warning{% endif %}">
+                        <td>
+                            <strong>{{ activity.start_time|date:"d.m.Y" }}</strong>
+                            <br><small class="text-muted">{{ activity.start_time|date:"H:i:s" }}</small>
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="me-2">
+                                    {% if activity.application.is_productive %}
+                                        <i class="fas fa-briefcase text-success" title="Продуктивная программа"></i>
+                                    {% else %}
+                                        <i class="fas fa-gamepad text-warning" title="Непродуктивная программа"></i>
+                                    {% endif %}
+                                </div>
+                                <div>
+                                    <strong>{{ activity.application.name }}</strong>
+                                    <br><small class="text-muted font-monospace">{{ activity.application.process_name }}</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="text-success">{{ activity.start_time|time:"H:i:s" }}</span>
+                            →
+                            <span class="text-danger">{{ activity.end_time|time:"H:i:s" }}</span>
+                        </td>
+                        <td>
+                            <div class="badge bg-info">{{ activity.duration }}</div>
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="me-2">
+                                    {% if activity.keyboard_presses > 100 %}
+                                        <i class="fas fa-fire text-danger" title="Очень активная работа"></i>
+                                    {% elif activity.keyboard_presses > 50 %}
+                                        <i class="fas fa-check text-success" title="Активная работа"></i>
+                                    {% elif activity.keyboard_presses > 10 %}
+                                        <i class="fas fa-minus text-warning" title="Умеренная активность"></i>
+                                    {% else %}
+                                        <i class="fas fa-sleep text-muted" title="Низкая активность"></i>
+                                    {% endif %}
+                                </div>
+                                <div>
+                                    <strong>{{ activity.keyboard_presses }}</strong>
+                                    <br><small class="text-muted">нажатий</small>
+                                </div>
+                            </div>
+                        </td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
+        
+        <!-- Объяснение -->
+        <div class="mt-3">
+            <div class="alert alert-info">
+                <h6 class="alert-heading">
+                    <i class="fas fa-lightbulb me-2"></i>Как читать эту таблицу
+                </h6>
+                <ul class="mb-0 small">
+                    <li><span class="badge bg-success me-1"></span> Зелёные строки — работа в продуктивных программах</li>
+                    <li><span class="badge bg-warning me-1"></span> Жёлтые строки — работа в развлекательных программах</li>
+                    <li><strong>Период работы:</strong> когда началась и закончилась работа в программе</li>
+                    <li><strong>Нажатия клавиш:</strong> показатель активности (много = активная работа)</li>
+                </ul>
+            </div>
+        </div>
+        
+        {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-chart-line fa-4x text-muted mb-3"></i>
+            <h4 class="text-muted">Активность не обнаружена</h4>
+            <p class="text-muted">Записи появятся здесь, когда пользователь начнет работать с установленным клиентом</p>
+            <div class="alert alert-warning mt-3">
+                <strong>Возможные причины:</strong>
+                <ul class="mb-0">
+                    <li>Клиент отслеживания не установлен</li>
+                    <li>Клиент не настроен или отключен</li>
+                    <li>Пользователь еще не работал за компьютером</li>
+                </ul>
+            </div>
+        </div>
+        {% endif %}
     </div>
 </div>
+
+<style>
+.avatar-lg {
+    width: 64px;
+    height: 64px;
+    font-size: 28px;
+    font-weight: 600;
+}
+</style>
 {% endblock %} 

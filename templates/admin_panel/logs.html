@@ -1,54 +1,340 @@
 {% extends 'admin_panel/base_admin.html' %}
 
 {% block admin_content %}
-<h1 class="admin-title">Просмотр логов</h1>
+<h1 class="admin-title">
+    <i class="fas fa-file-alt me-3"></i>Системные логи и диагностика
+</h1>
 
-<div class="card mb-4">
-    <div class="card-header">
-        <h5 class="card-title mb-0">Выберите файл лога</h5>
-    </div>
-    <div class="card-body">
-        <div class="row">
-            <div class="col-md-6">
-                <div class="list-group">
+<!-- Объяснение раздела -->
+<div class="section-description">
+    <h6><i class="fas fa-info-circle me-2"></i>Для чего нужны логи?</h6>
+    <p>
+        Логи — это записи о работе системы. Здесь ты найдешь информацию об ошибках, предупреждениях 
+        и важных событиях. Это первое место, куда нужно смотреть при возникновении проблем. 
+        <strong>Ошибки обычно выделены красным</strong>, предупреждения — жёлтым.
+    </p>
+</div>
+
+<div class="row">
+    <!-- Выбор файла логов -->
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header bg-light">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-folder me-2"></i>Доступные файлы логов
+                </h5>
+                <small class="text-muted">Выберите файл для просмотра</small>
+            </div>
+            <div class="card-body p-0">
+                {% if log_files %}
+                <div class="list-group list-group-flush">
                     {% for log_file in log_files %}
-                    <a href="?log={{ log_file }}" class="list-group-item list-group-item-action {% if selected_log == log_file %}active{% endif %}">
-                        {{ log_file }}
+                    <a href="?log={{ log_file }}" 
+                       class="list-group-item list-group-item-action d-flex justify-content-between align-items-center {% if selected_log == log_file %}active{% endif %}">
+                        <div>
+                            <i class="fas fa-file-alt me-2"></i>
+                            <strong>{{ log_file }}</strong>
+                        </div>
+                        {% if selected_log == log_file %}
+                            <i class="fas fa-eye text-white"></i>
+                        {% endif %}
                     </a>
-                    {% empty %}
-                    <div class="list-group-item text-center">Нет доступных логов</div>
                     {% endfor %}
                 </div>
-            </div>
-            
-            <div class="col-md-6">
-                <div class="alert alert-info">
-                    <h5 class="alert-heading">Информация</h5>
-                    <p>Выберите файл лога из списка слева, чтобы просмотреть его содержимое.</p>
-                    <p class="mb-0">Отображаются последние 1000 строк лога.</p>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-folder-open fa-3x text-muted mb-3"></i>
+                    <p class="text-muted">Файлы логов не найдены</p>
+                    <small>Возможно, система еще не создала логи или путь к ним неправильный</small>
                 </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Информационная панель -->
+        <div class="card mt-3 border-info">
+            <div class="card-header bg-info text-white">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-lightbulb me-2"></i>Полезные советы
+                </h6>
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled mb-0 small">
+                    <li class="mb-2">
+                        <i class="fas fa-exclamation-circle text-danger me-2"></i>
+                        <strong>ERROR</strong> — серьёзные ошибки, требующие внимания
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-exclamation-triangle text-warning me-2"></i>
+                        <strong>WARNING</strong> — предупреждения, стоит проверить
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-info-circle text-info me-2"></i>
+                        <strong>INFO</strong> — обычная информация о работе
+                    </li>
+                    <li>
+                        <i class="fas fa-bug text-secondary me-2"></i>
+                        <strong>DEBUG</strong> — детальная отладочная информация
+                    </li>
+                </ul>
             </div>
         </div>
     </div>
-</div>
-
-{% if selected_log %}
-<div class="card">
-    <div class="card-header d-flex justify-content-between align-items-center">
-        <h5 class="card-title mb-0">Содержимое файла: {{ selected_log }}</h5>
-        <a href="?log={{ selected_log }}" class="btn btn-sm btn-outline-primary">Обновить</a>
-    </div>
-    <div class="card-body">
-        {% if error %}
-            <div class="alert alert-danger">{{ error }}</div>
-        {% elif log_content %}
-            <div class="bg-dark text-light p-3" style="max-height: 600px; overflow-y: auto;">
-                <pre style="white-space: pre-wrap;">{{ log_content }}</pre>
+    
+    <!-- Содержимое логов -->
+    <div class="col-md-8">
+        {% if selected_log %}
+        <div class="card">
+            <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                <div>
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-file-code me-2"></i>{{ selected_log }}
+                    </h5>
+                    <small class="text-muted">Последние 1000 строк</small>
+                </div>
+                <div>
+                    <a href="?log={{ selected_log }}" class="btn btn-sm btn-outline-primary">
+                        <i class="fas fa-sync-alt me-1"></i>Обновить
+                    </a>
+                </div>
             </div>
+            <div class="card-body">
+                {% if error %}
+                    <div class="alert alert-danger">
+                        <h6 class="alert-heading">
+                            <i class="fas fa-exclamation-circle me-2"></i>Ошибка чтения файла
+                        </h6>
+                        <p class="mb-0">{{ error }}</p>
+                    </div>
+                {% elif log_content %}
+                    <!-- Панель управления просмотром -->
+                    <div class="mb-3 d-flex justify-content-between align-items-center">
+                        <div class="btn-group" role="group">
+                            <input type="checkbox" class="btn-check" id="wrap-lines" checked>
+                            <label class="btn btn-outline-secondary btn-sm" for="wrap-lines">
+                                <i class="fas fa-text-width me-1"></i>Перенос строк
+                            </label>
+                            
+                            <input type="checkbox" class="btn-check" id="highlight-errors">
+                            <label class="btn btn-outline-secondary btn-sm" for="highlight-errors">
+                                <i class="fas fa-search me-1"></i>Выделить ошибки
+                            </label>
+                        </div>
+                        
+                        <div class="input-group" style="width: 250px;">
+                            <input type="text" class="form-control form-control-sm" 
+                                   id="search-input" placeholder="Поиск в логах...">
+                            <button class="btn btn-outline-secondary btn-sm" type="button" id="search-btn">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Область с логами -->
+                    <div class="log-container bg-dark text-light p-3 rounded" 
+                         style="max-height: 600px; overflow-y: auto; font-family: 'Courier New', monospace;">
+                        <pre id="log-content" style="white-space: pre-wrap; margin: 0;">{{ log_content }}</pre>
+                    </div>
+                    
+                    <!-- Статистика -->
+                    <div class="mt-3">
+                        <div class="row text-center">
+                            <div class="col-md-3">
+                                <small class="text-muted">Всего строк</small>
+                                <div id="total-lines" class="fw-bold">-</div>
+                            </div>
+                            <div class="col-md-3">
+                                <small class="text-danger">Ошибки</small>
+                                <div id="error-count" class="fw-bold text-danger">-</div>
+                            </div>
+                            <div class="col-md-3">
+                                <small class="text-warning">Предупреждения</small>
+                                <div id="warning-count" class="fw-bold text-warning">-</div>
+                            </div>
+                            <div class="col-md-3">
+                                <small class="text-muted">Найдено</small>
+                                <div id="search-count" class="fw-bold">-</div>
+                            </div>
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="alert alert-warning">
+                        <h6 class="alert-heading">
+                            <i class="fas fa-file-excel me-2"></i>Файл пуст
+                        </h6>
+                        <p class="mb-0">
+                            Выбранный файл лога пуст или не может быть прочитан. 
+                            Это может быть нормально, если система только запущена.
+                        </p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
         {% else %}
-            <div class="alert alert-warning">Файл лога пуст или не может быть прочитан.</div>
+        <!-- Экран выбора файла -->
+        <div class="card">
+            <div class="card-body text-center py-5">
+                <i class="fas fa-search fa-4x text-muted mb-4"></i>
+                <h4 class="text-muted mb-3">Выберите файл лога</h4>
+                <p class="text-muted mb-4">
+                    Кликните на файл в списке слева, чтобы просмотреть его содержимое. 
+                    Логи помогают диагностировать проблемы и понять, как работает система.
+                </p>
+                
+                <div class="alert alert-info">
+                    <h6 class="alert-heading">
+                        <i class="fas fa-question-circle me-2"></i>Что искать в логах?
+                    </h6>
+                    <ul class="list-unstyled mb-0 text-start">
+                        <li class="mb-1">• <strong>Ошибки подключения</strong> к базе данных</li>
+                        <li class="mb-1">• <strong>Проблемы авторизации</strong> пользователей</li>
+                        <li class="mb-1">• <strong>Ошибки обработки</strong> данных от клиентов</li>
+                        <li>• <strong>Предупреждения</strong> о производительности</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
         {% endif %}
     </div>
 </div>
-{% endif %}
+
+<style>
+.log-container {
+    border: 1px solid #dee2e6;
+}
+
+.log-container::-webkit-scrollbar {
+    width: 8px;
+}
+
+.log-container::-webkit-scrollbar-track {
+    background: #2d3748;
+}
+
+.log-container::-webkit-scrollbar-thumb {
+    background: #4a5568;
+    border-radius: 4px;
+}
+
+.log-container::-webkit-scrollbar-thumb:hover {
+    background: #718096;
+}
+
+.highlight-error {
+    background-color: #dc3545 !important;
+    color: white !important;
+    padding: 2px 4px;
+    border-radius: 3px;
+}
+
+.highlight-warning {
+    background-color: #ffc107 !important;
+    color: black !important;
+    padding: 2px 4px;
+    border-radius: 3px;
+}
+
+.highlight-search {
+    background-color: #007bff !important;
+    color: white !important;
+    padding: 2px 4px;
+    border-radius: 3px;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const logContent = document.getElementById('log-content');
+    const wrapToggle = document.getElementById('wrap-lines');
+    const highlightToggle = document.getElementById('highlight-errors');
+    const searchInput = document.getElementById('search-input');
+    const searchBtn = document.getElementById('search-btn');
+    
+    if (!logContent) return;
+    
+    // Подсчет статистики
+    updateStatistics();
+    
+    // Обработка переноса строк
+    if (wrapToggle) {
+        wrapToggle.addEventListener('change', function() {
+            logContent.style.whiteSpace = this.checked ? 'pre-wrap' : 'pre';
+        });
+    }
+    
+    // Выделение ошибок
+    if (highlightToggle) {
+        highlightToggle.addEventListener('change', function() {
+            highlightErrors(this.checked);
+        });
+    }
+    
+    // Поиск
+    if (searchInput && searchBtn) {
+        searchBtn.addEventListener('click', performSearch);
+        searchInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                performSearch();
+            }
+        });
+    }
+    
+    function updateStatistics() {
+        const content = logContent.textContent;
+        const lines = content.split('\n');
+        const errors = content.match(/ERROR|error|Error/g) || [];
+        const warnings = content.match(/WARNING|WARN|warning|warn/g) || [];
+        
+        document.getElementById('total-lines').textContent = lines.length;
+        document.getElementById('error-count').textContent = errors.length;
+        document.getElementById('warning-count').textContent = warnings.length;
+    }
+    
+    function highlightErrors(enable) {
+        let content = logContent.innerHTML;
+        
+        if (enable) {
+            // Выделяем ошибки и предупреждения
+            content = content.replace(/(ERROR|error|Error[^\n]*)/g, '<span class="highlight-error">$1</span>');
+            content = content.replace(/(WARNING|WARN|warning|warn[^\n]*)/g, '<span class="highlight-warning">$1</span>');
+        } else {
+            // Убираем выделение
+            content = content.replace(/<span class="highlight-(error|warning)">(.*?)<\/span>/g, '$2');
+        }
+        
+        logContent.innerHTML = content;
+    }
+    
+    function performSearch() {
+        const query = searchInput.value.trim();
+        let content = logContent.textContent;
+        
+        // Очищаем предыдущие результаты поиска
+        logContent.innerHTML = content;
+        
+        if (query) {
+            const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+            const matches = content.match(regex) || [];
+            
+            content = logContent.innerHTML.replace(regex, '<span class="highlight-search">$1</span>');
+            logContent.innerHTML = content;
+            
+            document.getElementById('search-count').textContent = matches.length;
+            
+            // Прокручиваем к первому результату
+            const firstMatch = logContent.querySelector('.highlight-search');
+            if (firstMatch) {
+                firstMatch.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        } else {
+            document.getElementById('search-count').textContent = '-';
+        }
+        
+        // Повторно применяем выделение ошибок если включено
+        if (highlightToggle && highlightToggle.checked) {
+            highlightErrors(true);
+        }
+    }
+});
+</script>
 {% endblock %} 

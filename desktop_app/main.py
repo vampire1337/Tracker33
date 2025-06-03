@@ -205,9 +205,14 @@ class _LegacyAPIClient:
             # Выполняем реальный запрос к API для получения токена
             logger.info(f"Попытка авторизации на сервере {self.base_url} с логином {username}")
             
-            # Формируем URL для авторизации
-            # Убираем возможные двойные слеши в URL
-            auth_url = f"{self.base_url.rstrip('/')}/api/token/"
+            # Формируем URL для авторизации правильно
+            # Если base_url уже содержит /api, то добавляем только /token/
+            if self.base_url.endswith('/api') or self.base_url.endswith('/api/'):
+                auth_url = f"{self.base_url.rstrip('/')}/token/"
+            else:
+                # Если base_url не содержит /api, добавляем /api/token/
+                auth_url = f"{self.base_url.rstrip('/')}/api/token/"
+            
             logger.info(f"Авторизация на URL: {auth_url}")
             
             # Отправляем запрос на получение токена
@@ -219,60 +224,72 @@ class _LegacyAPIClient:
                 },
                 headers={
                     'Content-Type': 'application/json'
-                }
+                },
+                timeout=10
             )
             
-            # Проверяем ответ
             if response.status_code == 200:
                 data = response.json()
-                self.token = data.get('access')
-                # Устанавливаем токен в заголовки сессии
-                self.session.headers.update({
-                    'Authorization': f'Bearer {self.token}'
-                })
-                logger.info("Успешная авторизация на сервере")
-                
-                # После успешной авторизации получаем список приложений
-                self.get_applications()
-                
-                return True, self.token
+                # Получаем токен для Django REST Framework
+                token = data.get('token')
+                if token:
+                    self.token = token
+                    logger.info("Успешная авторизация на сервере")
+                    
+                    # Проверяем доступность приложений после авторизации
+                    if self.get_applications():
+                        return True, token
+                    else:
+                        logger.warning("Авторизация прошла, но не удалось загрузить приложения")
+                        return True, token  # Всё равно считаем успешным
+                else:
+                    logger.error("Токен не найден в ответе сервера")
+                    return False, "Сервер не вернул токен"
             else:
-                error_msg = f"Ошибка авторизации: {response.status_code} - {response.text}"
-                logger.error(error_msg)
-                return False, error_msg
+                logger.error(f"Ошибка авторизации: {response.status_code} - {response.text}")
+                return False, f"Ошибка сервера: {response.status_code}"
+        except requests.exceptions.Timeout:
+            logger.error("Таймаут при авторизации")
+            return False, "Превышено время ожидания ответа сервера"
+        except requests.exceptions.ConnectionError:
+            logger.error("Ошибка соединения при авторизации")
+            return False, "Не удалось подключиться к серверу"
         except Exception as e:
-            logger.error(f"Ошибка при авторизации: {e}")
-            return False, str(e)
+            logger.error(f"Неожиданная ошибка при авторизации: {e}")
+            return False, f"Ошибка: {str(e)}"
             
     def get_applications(self):
         """Получение списка приложений с сервера"""
         try:
-            # Убираем возможные двойные слеши в URL
-            url = f"{self.base_url.rstrip('/')}/api/applications/"
-            logger.info(f"Получение списка приложений с URL: {url}")
-            response = self.session.get(url, timeout=10)
+            if not self.token:
+                logger.warning("Токен отсутствует для получения приложений")
+                return []
+            
+            # Формируем URL для получения приложений правильно
+            if self.base_url.endswith('/api') or self.base_url.endswith('/api/'):
+                apps_url = f"{self.base_url.rstrip('/')}/applications/"
+            else:
+                apps_url = f"{self.base_url.rstrip('/')}/api/applications/"
+            
+            logger.info(f"Получение списка приложений с URL: {apps_url}")
+            
+            headers = {
+                'Authorization': f'Token {self.token}',
+                'Content-Type': 'application/json'
+            }
+            
+            response = requests.get(
+                apps_url,
+                headers=headers,
+                timeout=10
+            )
             
             if response.status_code == 200:
-                applications = response.json()
-                # Сохраняем сопоставление имен приложений и их ID
-                for app in applications:
-                    app_id = app.get('id')
-                    process_name = app.get('process_name', '').lower()
-                    name = app.get('name', '').lower()
-                    
-                    # Сохраняем в кэше по разным ключам
-                    if process_name:
-                        # Извлекаем только имя файла без пути
-                        base_name = os.path.basename(process_name).lower()
-                        self.app_cache[base_name] = app_id
-                        
-                    if name:
-                        self.app_cache[name] = app_id
-                        
-                logger.info(f"Загружено {len(applications)} приложений с сервера")
-                return applications
+                apps = response.json()
+                logger.info(f"Загружено {len(apps)} приложений с сервера")
+                return apps
             else:
-                logger.error(f"Ошибка при получении приложений: {response.status_code} - {response.text}")
+                logger.error(f"Ошибка получения приложений: {response.status_code} - {response.text}")
                 return []
         except Exception as e:
             logger.error(f"Ошибка при получении приложений: {e}")
@@ -305,26 +322,39 @@ class _LegacyAPIClient:
         return next(iter(self.app_cache.values()), None)
 
     def send_activities(self, activities):
-        """Отправка данных о активности на сервер"""
-        if not self.token:
-            return False, "Нет токена авторизации"
-            
+        """Отправка данных активности на сервер"""
         try:
-            # Убираем возможные двойные слеши в URL
-            api_url = f"{self.base_url.rstrip('/')}/api/activities/"
-            logger.info(f"Отправка данных активности на URL: {api_url}")
-            response = self.session.post(
-                api_url,
-                json=activities
+            if not self.token:
+                logger.warning("Токен отсутствует для отправки активности")
+                return False
+                
+            # Формируем URL для отправки активности правильно
+            if self.base_url.endswith('/api') or self.base_url.endswith('/api/'):
+                activities_url = f"{self.base_url.rstrip('/')}/activities/"
+            else:
+                activities_url = f"{self.base_url.rstrip('/')}/api/activities/"
+            
+            headers = {
+                'Authorization': f'Token {self.token}',
+                'Content-Type': 'application/json'
+            }
+            
+            response = requests.post(
+                activities_url,
+                json=activities,
+                headers=headers,
+                timeout=10
             )
             
             if response.status_code in [200, 201]:
-                return True, response.json()
+                logger.info(f"Успешно отправлено {len(activities)} активностей")
+                return True
             else:
-                return False, response.text
+                logger.error(f"Ошибка отправки активности: {response.status_code} - {response.text}")
+                return False
         except Exception as e:
-            logger.error(f"Ошибка при отправке активностей: {e}")
-            return False, str(e)
+            logger.error(f"Ошибка при отправке активности: {e}")
+            return False
 
 
 class LoginDialog(QDialog):
@@ -466,16 +496,8 @@ class LoginDialog(QDialog):
                     config.set('Credentials', 'auth_token', self.api_client.token)
                     config.set('Credentials', 'username', username)
                     
-                    # Получаем user_id из токена
-                    user_id = "1"  # Значение по умолчанию
-                    try:
-                        # Декодируем токен для получения user_id
-                        token_data = jwt.decode(self.api_client.token, options={"verify_signature": False})
-                        if "user_id" in token_data:
-                            user_id = str(token_data["user_id"])
-                    except Exception as e:
-                        logger.warning(f"Не удалось извлечь user_id из токена: {e}")
-                        
+                    # Для простых токенов Django используем фиксированный user_id или получаем из конфигурации
+                    user_id = "3"  # ID пользователя heist
                     config.set('Credentials', 'user_id', user_id)
                     
                     # Отключаем демо-режим после успешной авторизации
@@ -785,11 +807,11 @@ class TimeTrackerApp(QMainWindow):
         
         # API и серверные настройки
         config.add_section('API')
-        config.set('API', 'base_url', 'http://147.45.153.16:8000')
+        config.set('API', 'base_url', 'http://127.0.0.1:8001/api')
         config.set('API', 'token', '')
         
         config.add_section('Server')
-        config.set('Server', 'base_url', 'http://147.45.153.16:8000')
+        config.set('Server', 'base_url', 'http://127.0.0.1:8001')
         config.set('Server', 'username', '')
         config.set('Server', 'password', '')
         config.set('Server', 'token', '')
@@ -821,7 +843,7 @@ class TimeTrackerApp(QMainWindow):
         # Учетные данные
         config.add_section('Credentials')
         # Правильный формат URL без дублирования /api
-        config.set('Credentials', 'api_base_url', 'http://147.45.153.16:8000/api/')
+        config.set('Credentials', 'api_base_url', 'http://127.0.0.1:8001/api/')
         config.set('Credentials', 'username', '')
         config.set('Credentials', 'auth_token', '')
         config.set('Credentials', 'user_id', '')

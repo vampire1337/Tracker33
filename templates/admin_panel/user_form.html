@@ -2,84 +2,284 @@
 {% load admin_extras %}
 
 {% block admin_content %}
-<h1 class="admin-title">Редактирование пользователя</h1>
+<h1 class="admin-title">
+    <i class="fas fa-user-edit me-3"></i>Редактирование пользователя
+</h1>
 
-<div class="card">
-    <div class="card-body">
-        <form method="post">
-            {% csrf_token %}
-            
-            <div class="row mb-3">
-                <div class="col-md-6">
-                    <div class="mb-3">
-                        <label for="{{ form.username.id_for_label }}" class="form-label">Имя пользователя</label>
-                        {{ form.username.errors }}
-                        {{ form.username|add_class:"form-control" }}
+<!-- Объяснение раздела -->
+<div class="section-description">
+    <h6><i class="fas fa-info-circle me-2"></i>Что здесь можно изменить?</h6>
+    <p>
+        Здесь ты можешь изменить личные данные пользователя, настроить права доступа и управлять активностью аккаунта. 
+        <strong>Будь осторожен с правами доступа</strong> — суперпользователь получает полный доступ к админке, 
+        а отключение аккаунта заблокирует вход в систему.
+    </p>
+</div>
+
+<div class="row">
+    <!-- Форма редактирования -->
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-light">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-edit me-2"></i>Данные пользователя
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <!-- Личные данные -->
+                    <div class="mb-4">
+                        <h6 class="text-primary border-bottom pb-2 mb-3">
+                            <i class="fas fa-id-card me-2"></i>Личная информация
+                        </h6>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.username.id_for_label }}" class="form-label">
+                                        <i class="fas fa-user me-1"></i>Имя пользователя
+                                        <span class="text-danger">*</span>
+                                    </label>
+                                    {% if form.username.errors %}
+                                        <div class="alert alert-danger py-2">
+                                            {{ form.username.errors }}
+                                        </div>
+                                    {% endif %}
+                                    {{ form.username|add_class:"form-control" }}
+                                    <div class="form-text">
+                                        <i class="fas fa-info-circle me-1"></i>
+                                        Используется для входа в систему
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.email.id_for_label }}" class="form-label">
+                                        <i class="fas fa-envelope me-1"></i>Email
+                                    </label>
+                                    {% if form.email.errors %}
+                                        <div class="alert alert-danger py-2">
+                                            {{ form.email.errors }}
+                                        </div>
+                                    {% endif %}
+                                    {{ form.email|add_class:"form-control" }}
+                                    <div class="form-text">
+                                        <i class="fas fa-info-circle me-1"></i>
+                                        Для восстановления пароля и уведомлений
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.first_name.id_for_label }}" class="form-label">
+                                        <i class="fas fa-user-circle me-1"></i>Имя
+                                    </label>
+                                    {% if form.first_name.errors %}
+                                        <div class="alert alert-danger py-2">
+                                            {{ form.first_name.errors }}
+                                        </div>
+                                    {% endif %}
+                                    {{ form.first_name|add_class:"form-control" }}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.last_name.id_for_label }}" class="form-label">
+                                        <i class="fas fa-user-circle me-1"></i>Фамилия
+                                    </label>
+                                    {% if form.last_name.errors %}
+                                        <div class="alert alert-danger py-2">
+                                            {{ form.last_name.errors }}
+                                        </div>
+                                    {% endif %}
+                                    {{ form.last_name|add_class:"form-control" }}
+                                </div>
+                            </div>
+                        </div>
                     </div>
+                    
+                    <!-- Безопасность -->
+                    <div class="mb-4">
+                        <h6 class="text-warning border-bottom pb-2 mb-3">
+                            <i class="fas fa-shield-alt me-2"></i>Безопасность и доступ
+                        </h6>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label for="{{ form.password.id_for_label }}" class="form-label">
+                                        <i class="fas fa-key me-1"></i>Новый пароль
+                                    </label>
+                                    {% if form.password.errors %}
+                                        <div class="alert alert-danger py-2">
+                                            {{ form.password.errors }}
+                                        </div>
+                                    {% endif %}
+                                    {{ form.password|add_class:"form-control" }}
+                                    <div class="form-text">
+                                        <i class="fas fa-exclamation-triangle me-1 text-warning"></i>
+                                        {{ form.password.help_text|default:"Оставьте пустым, если не хотите менять пароль" }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <div class="card border-success">
+                                    <div class="card-body text-center">
+                                        <div class="form-check form-switch d-flex justify-content-center mb-2">
+                                            {{ form.is_active|add_class:"form-check-input" }}
+                                        </div>
+                                        <label for="{{ form.is_active.id_for_label }}" class="form-check-label">
+                                            <strong>Активен</strong>
+                                        </label>
+                                        <div class="text-muted small mt-1">
+                                            Может входить в систему
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card border-info">
+                                    <div class="card-body text-center">
+                                        <div class="form-check form-switch d-flex justify-content-center mb-2">
+                                            {{ form.is_staff|add_class:"form-check-input" }}
+                                        </div>
+                                        <label for="{{ form.is_staff.id_for_label }}" class="form-check-label">
+                                            <strong>Персонал</strong>
+                                        </label>
+                                        <div class="text-muted small mt-1">
+                                            Ограниченные права
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card border-primary">
+                                    <div class="card-body text-center">
+                                        <div class="form-check form-switch d-flex justify-content-center mb-2">
+                                            {{ form.is_superuser|add_class:"form-check-input" }}
+                                        </div>
+                                        <label for="{{ form.is_superuser.id_for_label }}" class="form-check-label">
+                                            <strong>Суперпользователь</strong>
+                                        </label>
+                                        <div class="text-muted small mt-1">
+                                            Полный доступ
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Кнопки действий -->
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-save me-2"></i>Сохранить изменения
+                            </button>
+                            <a href="{% url 'admin_panel:user_detail' object.pk %}" class="btn btn-outline-info ms-2">
+                                <i class="fas fa-eye me-2"></i>Просмотр
+                            </a>
+                        </div>
+                        <div>
+                            <a href="{% url 'admin_panel:users' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-2"></i>Отмена
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Справочная информация -->
+    <div class="col-md-4">
+        <div class="card border-info">
+            <div class="card-header bg-info text-white">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-question-circle me-2"></i>Справка по правам
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <div class="d-flex align-items-center mb-2">
+                        <span class="badge bg-success me-2">Активен</span>
+                        <strong>Обычное состояние</strong>
+                    </div>
+                    <small class="text-muted">
+                        Пользователь может войти в систему и использовать все функции. 
+                        Отключите, если нужно временно заблокировать доступ.
+                    </small>
                 </div>
-                <div class="col-md-6">
-                    <div class="mb-3">
-                        <label for="{{ form.email.id_for_label }}" class="form-label">Email</label>
-                        {{ form.email.errors }}
-                        {{ form.email|add_class:"form-control" }}
+                
+                <div class="mb-3">
+                    <div class="d-flex align-items-center mb-2">
+                        <span class="badge bg-info me-2">Персонал</span>
+                        <strong>Базовые права</strong>
                     </div>
+                    <small class="text-muted">
+                        Доступ к некоторым административным функциям. 
+                        Подходит для менеджеров и руководителей отделов.
+                    </small>
+                </div>
+                
+                <div class="mb-3">
+                    <div class="d-flex align-items-center mb-2">
+                        <span class="badge bg-primary me-2">Суперпользователь</span>
+                        <strong>Полные права</strong>
+                    </div>
+                    <small class="text-muted">
+                        Полный доступ ко всем функциям админ-панели. 
+                        Назначайте только доверенным лицам!
+                    </small>
                 </div>
             </div>
-            
-            <div class="row mb-3">
-                <div class="col-md-6">
-                    <div class="mb-3">
-                        <label for="{{ form.first_name.id_for_label }}" class="form-label">Имя</label>
-                        {{ form.first_name.errors }}
-                        {{ form.first_name|add_class:"form-control" }}
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="mb-3">
-                        <label for="{{ form.last_name.id_for_label }}" class="form-label">Фамилия</label>
-                        {{ form.last_name.errors }}
-                        {{ form.last_name|add_class:"form-control" }}
-                    </div>
-                </div>
+        </div>
+        
+        <div class="card border-warning mt-3">
+            <div class="card-header bg-warning text-dark">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-exclamation-triangle me-2"></i>Предупреждения
+                </h6>
             </div>
-            
-            <div class="row mb-3">
-                <div class="col-md-12">
-                    <div class="mb-3">
-                        <label for="{{ form.password.id_for_label }}" class="form-label">Новый пароль</label>
-                        {{ form.password.errors }}
-                        {{ form.password|add_class:"form-control" }}
-                        <div class="form-text">{{ form.password.help_text }}</div>
-                    </div>
-                </div>
+            <div class="card-body">
+                <ul class="list-unstyled mb-0 small">
+                    <li class="mb-2">
+                        <i class="fas fa-shield-alt text-primary me-2"></i>
+                        <strong>Суперпользователь</strong> может изменить любые настройки системы
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-ban text-danger me-2"></i>
+                        <strong>Отключение</strong> немедленно блокирует доступ пользователя
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-key text-warning me-2"></i>
+                        <strong>Смена пароля</strong> потребует повторного входа
+                    </li>
+                    <li>
+                        <i class="fas fa-envelope text-info me-2"></i>
+                        <strong>Email</strong> нужен для восстановления доступа
+                    </li>
+                </ul>
             </div>
-            
-            <div class="row mb-3">
-                <div class="col-md-4">
-                    <div class="form-check mb-3">
-                        {{ form.is_active|add_class:"form-check-input" }}
-                        <label for="{{ form.is_active.id_for_label }}" class="form-check-label">Активен</label>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="form-check mb-3">
-                        {{ form.is_staff|add_class:"form-check-input" }}
-                        <label for="{{ form.is_staff.id_for_label }}" class="form-check-label">Персонал</label>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="form-check mb-3">
-                        {{ form.is_superuser|add_class:"form-check-input" }}
-                        <label for="{{ form.is_superuser.id_for_label }}" class="form-check-label">Суперпользователь</label>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="mb-3">
-                <button type="submit" class="btn btn-primary">Сохранить</button>
-                <a href="{% url 'admin_panel:users' %}" class="btn btn-secondary">Отмена</a>
-            </div>
-        </form>
+        </div>
     </div>
 </div>
+
+<style>
+.form-check-input {
+    transform: scale(1.3);
+}
+.card .form-check-input:checked {
+    background-color: var(--bs-primary);
+    border-color: var(--bs-primary);
+}
+</style>
 {% endblock %} 

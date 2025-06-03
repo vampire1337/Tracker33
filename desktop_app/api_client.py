@@ -54,6 +54,7 @@ class APIClient:
 
     def load_token(self):
         """Загрузка сохраненного токена"""
+        # Сначала пытаемся загрузить из файла токена
         if self.token_file.exists():
             try:
                 with open(self.token_file, 'r') as f:
@@ -80,6 +81,33 @@ class APIClient:
                 self.token = None
                 self.refresh_token = None
                 self.token_expires = None
+        
+        # Если токен не найден в файле, пытаемся загрузить из конфигурации
+        if not self.token:
+            try:
+                import configparser
+                config_path = os.path.join(os.path.dirname(__file__), 'config.ini')
+                if os.path.exists(config_path):
+                    config = configparser.ConfigParser()
+                    config.read(config_path, encoding='utf-8')
+                    
+                    # Проверяем токен в разных секциях
+                    if config.has_section('Credentials') and config.has_option('Credentials', 'auth_token'):
+                        token = config.get('Credentials', 'auth_token').strip()
+                        if token:
+                            self.token = token
+                            self.token_expires = datetime.now() + timedelta(days=365)
+                            self.refresh_token = None
+                            logger.info("Токен найден в конфигурации")
+                    elif config.has_section('API') and config.has_option('API', 'token'):
+                        token = config.get('API', 'token').strip()
+                        if token:
+                            self.token = token
+                            self.token_expires = datetime.now() + timedelta(days=365)
+                            self.refresh_token = None
+                            logger.info("Токен найден в секции API конфигурации")
+            except Exception as e:
+                logger.error(f"Ошибка загрузки токена из конфигурации: {e}")
 
     def save_token(self):
         """Сохранение токена"""
@@ -120,25 +148,21 @@ class APIClient:
             
             if response.status_code == 200:
                 data = response.json()
-                self.token = data.get('access')
-                self.refresh_token = data.get('refresh')
-                # Декодируем токен для получения времени истечения
-                try:
-                    token_data = jwt.decode(self.token, options={"verify_signature": False})
-                    exp_timestamp = token_data.get('exp')
-                    if exp_timestamp:
-                        self.token_expires = datetime.fromtimestamp(exp_timestamp)
-                    else:
-                        self.token_expires = datetime.now() + timedelta(minutes=60)  # Ставим больше время на всякий случай
-                except Exception as e:
-                    logger.warning(f"Не удалось декодировать токен: {e}")
-                    self.token_expires = datetime.now() + timedelta(minutes=60)
+                # Django REST Framework возвращает простой токен в поле "token"
+                self.token = data.get('token')
+                if not self.token:
+                    logger.error("Сервер не вернул токен в ответе")
+                    return False
                 
-                logger.info(f"Токен после логина: {self.token[:20]}... действителен до {self.token_expires}")
+                # Для простых токенов Django устанавливаем долгий срок действия
+                self.token_expires = datetime.now() + timedelta(days=365)  # Токены Django не истекают автоматически
+                self.refresh_token = None  # Простые токены не используют refresh
+                
+                logger.info(f"Токен получен: {self.token[:20]}...")
                 self.save_token()
                 
-                # Обновляем заголовки сессии
-                self.session.headers.update({'Authorization': f'Bearer {self.token}'})
+                # Обновляем заголовки сессии для Django Token Auth
+                self.session.headers.update({'Authorization': f'Token {self.token}'})
                 
                 return True
             else:
@@ -249,16 +273,15 @@ class APIClient:
     def get_headers(self) -> Dict[str, str]:
         """Получение заголовков для запросов"""
         if not self.is_token_valid():
-            logger.info("Попытка обновления токена через refresh")
-            if not self.refresh_auth_token():
-                logger.warning("Не удалось обновить токен. Требуется повторная авторизация.")
-                return {}
-        # Используем формат Bearer для JWT токенов
+            logger.warning("Токен недействителен. Требуется повторная авторизация.")
+            # Для простых токенов Django refresh не поддерживается
+            return {}
+        
+        # Используем формат Token для Django REST Framework
         headers = {
-            'Authorization': f'Bearer {self.token}',
+            'Authorization': f'Token {self.token}',
             'Content-Type': 'application/json',
             'Accept': 'application/json',
-            'Origin': 'http://localhost:8000',
             'User-Agent': 'TimeTrackerDesktopClient/1.0'
         }
         return headers
@@ -585,7 +608,7 @@ class APIClient:
             # Пробуем подключиться с авторизацией, если есть токен
             headers = {}
             if self.token:
-                headers['Authorization'] = f'Bearer {self.token}'
+                headers['Authorization'] = f'Token {self.token}'  # Используем Token вместо Bearer
                 
             response = self.session.get(
                 api_url,
@@ -593,11 +616,13 @@ class APIClient:
                 timeout=(10, 15)
             )
             
-            if response.status_code in [200, 201, 401]:  # 401 - неавторизован, но сервер доступен
-                logger.info("Успешное подключение к серверу. Загружено {0} приложений.".format(
-                    len(response.json()) if response.status_code == 200 else 0
-                ))
+            if response.status_code in [200, 201]:
+                apps_count = len(response.json()) if response.status_code == 200 else 0
+                logger.info(f"Успешное подключение к серверу. Загружено {apps_count} приложений.")
                 return True, "Соединение установлено успешно"
+            elif response.status_code == 401:
+                logger.warning("Сервер доступен, но требуется авторизация")
+                return False, "Требуется авторизация"
             else:
                 logger.warning(f"Сервер доступен, но вернул неожиданный код: {response.status_code}")
                 return False, f"Сервер вернул код: {response.status_code}"

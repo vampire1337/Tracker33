@@ -1,54 +1,483 @@
 {% extends "base.html" %}
 
-{% block title %}Регистрация{% endblock %}
+{% block title %}Регистрация - Time Tracker{% endblock %}
+
+{% block extra_css %}
+<style>
+    .signup-container {
+        min-height: 100vh;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+    }
+
+    .signup-card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border-radius: 20px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        padding: 40px;
+        width: 100%;
+        max-width: 500px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .signup-header {
+        text-align: center;
+        margin-bottom: 30px;
+    }
+
+    .signup-header h1 {
+        color: #2d3748;
+        font-weight: 700;
+        margin-bottom: 8px;
+        font-size: 2rem;
+    }
+
+    .signup-header p {
+        color: #718096;
+        margin-bottom: 0;
+        font-size: 1rem;
+    }
+
+    .form-floating {
+        margin-bottom: 20px;
+    }
+
+    .form-floating .form-control {
+        height: 58px;
+        border: 2px solid #e2e8f0;
+        border-radius: 12px;
+        font-size: 16px;
+        transition: all 0.3s ease;
+        background-color: #f8fafc;
+    }
+
+    .form-floating .form-control:focus {
+        border-color: #667eea;
+        background-color: #fff;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .form-floating label {
+        color: #718096;
+        font-weight: 500;
+    }
+
+    .password-strength {
+        margin-top: 8px;
+        font-size: 12px;
+    }
+
+    .strength-bar {
+        height: 4px;
+        border-radius: 2px;
+        transition: all 0.3s ease;
+        margin-top: 4px;
+    }
+
+    .strength-weak { background-color: #f56565; width: 25%; }
+    .strength-fair { background-color: #ed8936; width: 50%; }
+    .strength-good { background-color: #38a169; width: 75%; }
+    .strength-strong { background-color: #00d4aa; width: 100%; }
+
+    .btn-signup {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        border-radius: 12px;
+        color: white;
+        font-weight: 600;
+        font-size: 16px;
+        height: 58px;
+        width: 100%;
+        transition: all 0.3s ease;
+        margin-top: 10px;
+    }
+
+    .btn-signup:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        color: white;
+    }
+
+    .btn-signup:disabled {
+        opacity: 0.6;
+        transform: none;
+        box-shadow: none;
+    }
+
+    .login-link {
+        text-align: center;
+        margin-top: 25px;
+        padding-top: 25px;
+        border-top: 1px solid #e2e8f0;
+    }
+
+    .login-link a {
+        color: #667eea;
+        text-decoration: none;
+        font-weight: 500;
+        transition: color 0.3s ease;
+    }
+
+    .login-link a:hover {
+        color: #764ba2;
+    }
+
+    .error-message {
+        background-color: #fed7d7;
+        border: 1px solid #feb2b2;
+        color: #c53030;
+        padding: 12px 16px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        font-size: 14px;
+    }
+
+    .input-group-icon {
+        position: relative;
+    }
+
+    .input-group-icon i {
+        position: absolute;
+        left: 16px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #a0aec0;
+        z-index: 10;
+    }
+
+    .input-group-icon .form-control {
+        padding-left: 45px;
+    }
+
+    .department-position-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+    }
+
+    @media (max-width: 576px) {
+        .signup-card {
+            padding: 30px 20px;
+            margin: 10px;
+        }
+        
+        .department-position-row {
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+    }
+
+    .loading-spinner {
+        display: none;
+        width: 20px;
+        height: 20px;
+        border: 2px solid #ffffff33;
+        border-top: 2px solid #ffffff;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin-right: 8px;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="auth-container">
-    <div class="card">
-        <h2>Регистрация</h2>
-        <form method="post" action="{% url 'signup' %}">
-            {% csrf_token %}
-            {% if form.errors %}
-                <div class="alert alert-danger">
+<div class="signup-container">
+    <div class="signup-card">
+        <div class="signup-header">
+            <h1>
+                <i class="fas fa-user-plus text-primary me-2"></i>
+                Создать аккаунт
+            </h1>
+            <p>Присоединяйтесь к системе учёта рабочего времени</p>
+        </div>
+
+        {% if form.errors %}
+            <div class="error-message">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                <strong>Пожалуйста, исправьте ошибки:</strong>
+                <ul class="mb-0 mt-2">
                     {% for field, errors in form.errors.items %}
                         {% for error in errors %}
-                            {{ error }}<br>
+                            <li>{{ error }}</li>
                         {% endfor %}
                     {% endfor %}
-                </div>
-            {% endif %}
-            <div class="form-group">
+                </ul>
+            </div>
+        {% endif %}
+
+        <form method="post" action="{% url 'signup' %}" id="signupForm" novalidate>
+            {% csrf_token %}
+            
+            <!-- Имя пользователя -->
+            <div class="form-floating input-group-icon">
+                <i class="fas fa-user"></i>
+                <input type="text" 
+                       name="username" 
+                       id="id_username" 
+                       class="form-control" 
+                       placeholder="Имя пользователя"
+                       required
+                       minlength="3"
+                       maxlength="150">
                 <label for="id_username">Имя пользователя</label>
-                <input type="text" name="username" id="id_username" class="form-control" required>
+                <div class="invalid-feedback"></div>
             </div>
-            <div class="form-group">
-                <label for="id_email">Email</label>
-                <input type="email" name="email" id="id_email" class="form-control" required>
+
+            <!-- Email -->
+            <div class="form-floating input-group-icon">
+                <i class="fas fa-envelope"></i>
+                <input type="email" 
+                       name="email" 
+                       id="id_email" 
+                       class="form-control" 
+                       placeholder="Email адрес"
+                       required>
+                <label for="id_email">Email адрес</label>
+                <div class="invalid-feedback"></div>
             </div>
-            <div class="form-group">
+
+            <!-- Пароль -->
+            <div class="form-floating input-group-icon">
+                <i class="fas fa-lock"></i>
+                <input type="password" 
+                       name="password1" 
+                       id="id_password1" 
+                       class="form-control" 
+                       placeholder="Пароль"
+                       required
+                       minlength="8">
                 <label for="id_password1">Пароль</label>
-                <input type="password" name="password1" id="id_password1" class="form-control" required>
+                <div class="password-strength">
+                    <div class="strength-bar" id="strengthBar"></div>
+                    <div class="strength-text mt-1" id="strengthText"></div>
+                </div>
+                <div class="invalid-feedback"></div>
             </div>
-            <div class="form-group">
+
+            <!-- Подтверждение пароля -->
+            <div class="form-floating input-group-icon">
+                <i class="fas fa-lock"></i>
+                <input type="password" 
+                       name="password2" 
+                       id="id_password2" 
+                       class="form-control" 
+                       placeholder="Подтверждение пароля"
+                       required>
                 <label for="id_password2">Подтверждение пароля</label>
-                <input type="password" name="password2" id="id_password2" class="form-control" required>
+                <div class="invalid-feedback"></div>
             </div>
-            <div class="form-group">
-                <label for="id_department">Отдел</label>
-                <input type="text" name="department" id="id_department" class="form-control" required>
+
+            <!-- Отдел и Должность в одном ряду -->
+            <div class="department-position-row">
+                <div class="form-floating input-group-icon">
+                    <i class="fas fa-building"></i>
+                    <input type="text" 
+                           name="department" 
+                           id="id_department" 
+                           class="form-control" 
+                           placeholder="Отдел"
+                           required>
+                    <label for="id_department">Отдел</label>
+                    <div class="invalid-feedback"></div>
+                </div>
+
+                <div class="form-floating input-group-icon">
+                    <i class="fas fa-briefcase"></i>
+                    <input type="text" 
+                           name="position" 
+                           id="id_position" 
+                           class="form-control" 
+                           placeholder="Должность"
+                           required>
+                    <label for="id_position">Должность</label>
+                    <div class="invalid-feedback"></div>
+                </div>
             </div>
-            <div class="form-group">
-                <label for="id_position">Должность</label>
-                <input type="text" name="position" id="id_position" class="form-control" required>
-            </div>
+
             {% if redirect_field_value %}
-                <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
+                <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}">
             {% endif %}
-            <button type="submit" class="btn btn-primary">Зарегистрироваться</button>
+
+            <button type="submit" class="btn btn-signup" id="submitBtn">
+                <span class="loading-spinner" id="loadingSpinner"></span>
+                <i class="fas fa-user-plus me-2"></i>
+                Создать аккаунт
+            </button>
         </form>
-        <div style="margin-top: 1rem;">
-            <a href="{% url 'login' %}" class="btn">Уже есть аккаунт? Войти</a>
+
+        <div class="login-link">
+            <a href="{% url 'login' %}">
+                <i class="fas fa-sign-in-alt me-1"></i>
+                Уже есть аккаунт? Войти
+            </a>
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('signupForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const loadingSpinner = document.getElementById('loadingSpinner');
+    const password1 = document.getElementById('id_password1');
+    const password2 = document.getElementById('id_password2');
+    const strengthBar = document.getElementById('strengthBar');
+    const strengthText = document.getElementById('strengthText');
+
+    // Проверка силы пароля
+    password1.addEventListener('input', function() {
+        const password = this.value;
+        const strength = checkPasswordStrength(password);
+        updatePasswordStrength(strength);
+    });
+
+    // Проверка совпадения паролей
+    password2.addEventListener('input', function() {
+        validatePasswordMatch();
+    });
+
+    // Валидация формы в реальном времени
+    const inputs = form.querySelectorAll('input[required]');
+    inputs.forEach(input => {
+        input.addEventListener('blur', function() {
+            validateField(this);
+        });
+        
+        input.addEventListener('input', function() {
+            if (this.classList.contains('is-invalid')) {
+                validateField(this);
+            }
+        });
+    });
+
+    // Отправка формы
+    form.addEventListener('submit', function(e) {
+        let isValid = true;
+        
+        inputs.forEach(input => {
+            if (!validateField(input)) {
+                isValid = false;
+            }
+        });
+
+        if (!validatePasswordMatch()) {
+            isValid = false;
+        }
+
+        if (!isValid) {
+            e.preventDefault();
+            return;
+        }
+
+        // Показываем загрузку
+        submitBtn.disabled = true;
+        loadingSpinner.style.display = 'inline-block';
+    });
+
+    function checkPasswordStrength(password) {
+        let score = 0;
+        if (password.length >= 8) score++;
+        if (/[a-z]/.test(password)) score++;
+        if (/[A-Z]/.test(password)) score++;
+        if (/[0-9]/.test(password)) score++;
+        if (/[^A-Za-z0-9]/.test(password)) score++;
+        
+        return score;
+    }
+
+    function updatePasswordStrength(strength) {
+        strengthBar.className = 'strength-bar';
+        
+        switch(strength) {
+            case 0:
+            case 1:
+                strengthBar.classList.add('strength-weak');
+                strengthText.innerHTML = '<span class="text-danger">Слабый пароль</span>';
+                break;
+            case 2:
+            case 3:
+                strengthBar.classList.add('strength-fair');
+                strengthText.innerHTML = '<span class="text-warning">Средний пароль</span>';
+                break;
+            case 4:
+                strengthBar.classList.add('strength-good');
+                strengthText.innerHTML = '<span class="text-success">Хороший пароль</span>';
+                break;
+            case 5:
+                strengthBar.classList.add('strength-strong');
+                strengthText.innerHTML = '<span class="text-success">Отличный пароль!</span>';
+                break;
+        }
+    }
+
+    function validatePasswordMatch() {
+        const isMatch = password1.value === password2.value;
+        
+        if (password2.value && !isMatch) {
+            password2.classList.add('is-invalid');
+            password2.nextElementSibling.textContent = 'Пароли не совпадают';
+            return false;
+        } else {
+            password2.classList.remove('is-invalid');
+            return true;
+        }
+    }
+
+    function validateField(field) {
+        const value = field.value.trim();
+        let isValid = true;
+        let message = '';
+
+        // Общая проверка на заполненность
+        if (!value) {
+            isValid = false;
+            message = 'Это поле обязательно для заполнения';
+        } else {
+            // Специфичные проверки
+            switch(field.type) {
+                case 'email':
+                    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                    if (!emailRegex.test(value)) {
+                        isValid = false;
+                        message = 'Введите корректный email адрес';
+                    }
+                    break;
+                case 'password':
+                    if (field.id === 'id_password1' && value.length < 8) {
+                        isValid = false;
+                        message = 'Пароль должен содержать минимум 8 символов';
+                    }
+                    break;
+                case 'text':
+                    if (field.id === 'id_username' && value.length < 3) {
+                        isValid = false;
+                        message = 'Имя пользователя должно содержать минимум 3 символа';
+                    }
+                    break;
+            }
+        }
+
+        // Применяем результат валидации
+        if (isValid) {
+            field.classList.remove('is-invalid');
+            field.classList.add('is-valid');
+        } else {
+            field.classList.remove('is-valid');
+            field.classList.add('is-invalid');
+            field.nextElementSibling.textContent = message;
+        }
+
+        return isValid;
+    }
+});
+</script>
 {% endblock %} 

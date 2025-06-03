@@ -1,65 +1,230 @@
 {% extends 'admin_panel/base_admin.html' %}
 
 {% block admin_content %}
-<h1 class="admin-title">Пользователи</h1>
+<h1 class="admin-title">
+    <i class="fas fa-users me-3"></i>Управление пользователями
+</h1>
+
+<!-- Объяснение раздела -->
+<div class="section-description">
+    <h6><i class="fas fa-info-circle me-2"></i>Что здесь можно делать?</h6>
+    <p>
+        Здесь ты управляешь всеми пользователями системы. Можешь посмотреть, кто зарегистрирован, 
+        кто активен, сколько у каждого записей активности. Если нужно отключить пользователя или 
+        изменить его права — тоже здесь. <strong>Количество активности</strong> показывает, сколько 
+        раз пользователь переключался между программами (чем больше — тем активнее работает).
+    </p>
+</div>
 
 <div class="card">
+    <div class="card-header bg-light d-flex justify-content-between align-items-center">
+        <div>
+            <h5 class="mb-0">
+                <i class="fas fa-list me-2"></i>Все пользователи системы
+            </h5>
+            <small class="text-muted">
+                Отсортированы по дате регистрации (новые сверху)
+            </small>
+        </div>
+        <div class="d-flex align-items-center">
+            <span class="badge bg-primary me-2">
+                <i class="fas fa-users me-1"></i>{{ users|length }} пользователей
+            </span>
+            <i class="fas fa-question-circle text-muted" 
+               data-bs-toggle="tooltip" 
+               title="Список всех зарегистрированных пользователей с возможностью редактирования"></i>
+        </div>
+    </div>
     <div class="card-body">
+        {% if users %}
         <div class="table-responsive">
-            <table class="table table-striped">
-                <thead>
+            <table class="table table-hover">
+                <thead class="table-light">
                     <tr>
-                        <th>ID</th>
-                        <th>Имя пользователя</th>
-                        <th>Email</th>
-                        <th>Имя</th>
-                        <th>Активен</th>
-                        <th>Суперпользователь</th>
-                        <th>Дата регистрации</th>
-                        <th>Активность</th>
-                        <th>Действия</th>
+                        <th>
+                            <i class="fas fa-hashtag me-1"></i>ID
+                            <i class="fas fa-info-circle text-muted ms-1" 
+                               data-bs-toggle="tooltip" 
+                               title="Уникальный номер пользователя в системе"></i>
+                        </th>
+                        <th>
+                            <i class="fas fa-user me-1"></i>Пользователь
+                            <i class="fas fa-info-circle text-muted ms-1" 
+                               data-bs-toggle="tooltip" 
+                               title="Логин и полное имя пользователя"></i>
+                        </th>
+                        <th>
+                            <i class="fas fa-envelope me-1"></i>Email
+                        </th>
+                        <th>
+                            <i class="fas fa-shield-alt me-1"></i>Статус
+                            <i class="fas fa-info-circle text-muted ms-1" 
+                               data-bs-toggle="tooltip" 
+                               title="Активен = может входить в систему, Неактивен = заблокирован"></i>
+                        </th>
+                        <th>
+                            <i class="fas fa-crown me-1"></i>Права
+                            <i class="fas fa-info-circle text-muted ms-1" 
+                               data-bs-toggle="tooltip" 
+                               title="Суперпользователь = полный доступ к админке"></i>
+                        </th>
+                        <th>
+                            <i class="fas fa-calendar me-1"></i>Зарегистрирован
+                        </th>
+                        <th>
+                            <i class="fas fa-chart-bar me-1"></i>Активность
+                            <i class="fas fa-info-circle text-muted ms-1" 
+                               data-bs-toggle="tooltip" 
+                               title="Количество сессий работы — переключений между программами"></i>
+                        </th>
+                        <th>
+                            <i class="fas fa-tools me-1"></i>Действия
+                        </th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for user in users %}
                     <tr>
-                        <td>{{ user.id }}</td>
-                        <td>{{ user.username }}</td>
-                        <td>{{ user.email }}</td>
-                        <td>{{ user.get_full_name }}</td>
+                        <td>
+                            <span class="badge bg-secondary">{{ user.id }}</span>
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="avatar-sm me-2 bg-primary text-white rounded-circle d-flex align-items-center justify-content-center">
+                                    {{ user.username|first|upper }}
+                                </div>
+                                <div>
+                                    <strong>{{ user.username }}</strong>
+                                    {% if user.get_full_name %}
+                                    <br><small class="text-muted">{{ user.get_full_name }}</small>
+                                    {% else %}
+                                    <br><small class="text-muted">Имя не указано</small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            {% if user.email %}
+                                <a href="mailto:{{ user.email }}" class="text-decoration-none">
+                                    {{ user.email }}
+                                </a>
+                            {% else %}
+                                <span class="text-muted">Не указан</span>
+                            {% endif %}
+                        </td>
                         <td>
                             {% if user.is_active %}
-                                <span class="badge bg-success">Активен</span>
+                                <span class="badge bg-success">
+                                    <i class="fas fa-check me-1"></i>Активен
+                                </span>
                             {% else %}
-                                <span class="badge bg-danger">Неактивен</span>
+                                <span class="badge bg-danger">
+                                    <i class="fas fa-ban me-1"></i>Заблокирован
+                                </span>
                             {% endif %}
                         </td>
                         <td>
                             {% if user.is_superuser %}
-                                <span class="badge bg-primary">Да</span>
+                                <span class="badge bg-primary">
+                                    <i class="fas fa-crown me-1"></i>Суперпользователь
+                                </span>
+                            {% elif user.is_staff %}
+                                <span class="badge bg-info">
+                                    <i class="fas fa-user-tie me-1"></i>Персонал
+                                </span>
                             {% else %}
-                                <span class="badge bg-secondary">Нет</span>
+                                <span class="badge bg-secondary">
+                                    <i class="fas fa-user me-1"></i>Обычный
+                                </span>
                             {% endif %}
                         </td>
-                        <td>{{ user.date_joined|date:"d.m.Y H:i" }}</td>
-                        <td>{{ user.activity_count }}</td>
                         <td>
-                            <a href="{% url 'admin_panel:user_detail' user.pk %}" class="btn btn-sm btn-info">
-                                <i class="fas fa-eye"></i>
-                            </a>
-                            <a href="{% url 'admin_panel:user_edit' user.pk %}" class="btn btn-sm btn-primary">
-                                <i class="fas fa-edit"></i>
-                            </a>
+                            <div>
+                                <strong>{{ user.date_joined|date:"d.m.Y" }}</strong>
+                                <br><small class="text-muted">{{ user.date_joined|date:"H:i" }}</small>
+                            </div>
                         </td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="9" class="text-center">Нет пользователей</td>
+                        <td>
+                            {% if user.activity_count > 0 %}
+                                <span class="badge bg-success fs-6">
+                                    {{ user.activity_count }}
+                                </span>
+                                <br><small class="text-muted">сессий</small>
+                            {% else %}
+                                <span class="badge bg-warning">
+                                    <i class="fas fa-exclamation-triangle me-1"></i>0
+                                </span>
+                                <br><small class="text-muted">не работал</small>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="btn-group" role="group">
+                                <a href="{% url 'admin_panel:user_detail' user.pk %}" 
+                                   class="btn btn-sm btn-outline-info"
+                                   data-bs-toggle="tooltip" 
+                                   title="Подробная информация о пользователе">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <a href="{% url 'admin_panel:user_edit' user.pk %}" 
+                                   class="btn btn-sm btn-outline-primary"
+                                   data-bs-toggle="tooltip" 
+                                   title="Редактировать пользователя">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                            </div>
+                        </td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
+        
+        <!-- Дополнительная информация -->
+        <div class="mt-4 row">
+            <div class="col-md-6">
+                <div class="alert alert-info">
+                    <h6 class="alert-heading">
+                        <i class="fas fa-lightbulb me-2"></i>Полезные советы
+                    </h6>
+                    <ul class="mb-0">
+                        <li><strong>0 активности</strong> — пользователь не установил клиент или есть проблемы</li>
+                        <li><strong>Много активности</strong> — пользователь активно работает</li>
+                        <li><strong>Заблокированный</strong> — не может войти в систему</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="alert alert-warning">
+                    <h6 class="alert-heading">
+                        <i class="fas fa-exclamation-triangle me-2"></i>Что означают права
+                    </h6>
+                    <ul class="mb-0">
+                        <li><strong>Суперпользователь</strong> — доступ к админке</li>
+                        <li><strong>Персонал</strong> — ограниченные права</li>
+                        <li><strong>Обычный</strong> — только просмотр своей статистики</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-users fa-4x text-muted mb-3"></i>
+            <h4 class="text-muted">Пользователей пока нет</h4>
+            <p class="text-muted">
+                Пользователи появятся здесь после регистрации в системе
+            </p>
+        </div>
+        {% endif %}
     </div>
 </div>
+
+<style>
+.avatar-sm {
+    width: 32px;
+    height: 32px;
+    font-size: 14px;
+    font-weight: 600;
+}
+</style>
 {% endblock %} 

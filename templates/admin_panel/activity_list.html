@@ -1,61 +1,224 @@
 {% extends 'admin_panel/base_admin.html' %}
 
 {% block admin_content %}
-<h1 class="admin-title">Активность пользователей</h1>
+<h1 class="admin-title">
+    <i class="fas fa-chart-line me-3"></i>История активности пользователей
+</h1>
+
+<!-- Объяснение что такое активность -->
+<div class="section-description">
+    <h6><i class="fas fa-info-circle me-2"></i>Что такое "активность"?</h6>
+    <p>
+        Каждая запись — это сессия работы пользователя в одной программе. Когда человек переключается 
+        с одного приложения на другое, создается новая запись. <strong>Нажатия клавиш</strong> показывают, 
+        насколько активно он работал (много нажатий = активная работа, мало = возможно, отвлекался). 
+        Это помогает понять реальную вовлеченность в работу.
+    </p>
+</div>
+
+<!-- Статистика -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body text-center">
+                <i class="fas fa-database fa-2x mb-2"></i>
+                <h4>{{ activities|length }}</h4>
+                <small>Записей на странице</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body text-center">
+                <i class="fas fa-users fa-2x mb-2"></i>
+                <h4>
+                    {% regroup activities by user as user_groups %}
+                    {{ user_groups|length }}
+                </h4>
+                <small>Активных пользователей</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body text-center">
+                <i class="fas fa-laptop fa-2x mb-2"></i>
+                <h4>
+                    {% regroup activities by application as app_groups %}
+                    {{ app_groups|length }}
+                </h4>
+                <small>Разных программ</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body text-center">
+                <i class="fas fa-keyboard fa-2x mb-2"></i>
+                <h4>
+                    {% for activity in activities %}{{ activity.keyboard_presses|add:0 }}{% endfor %}
+                </h4>
+                <small>Всего нажатий</small>
+            </div>
+        </div>
+    </div>
+</div>
 
 <div class="card">
+    <div class="card-header bg-light">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h5 class="mb-0">
+                    <i class="fas fa-history me-2"></i>Журнал активности
+                </h5>
+                <small class="text-muted">
+                    Показаны последние записи (самые свежие сверху)
+                </small>
+            </div>
+            <div>
+                {% if is_paginated %}
+                <span class="badge bg-info">
+                    Страница {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}
+                </span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
     <div class="card-body">
+        {% if activities %}
         <div class="table-responsive">
-            <table class="table table-striped">
-                <thead>
+            <table class="table table-hover">
+                <thead class="table-light">
                     <tr>
-                        <th>ID</th>
-                        <th>Пользователь</th>
-                        <th>Приложение</th>
-                        <th>Начало</th>
-                        <th>Окончание</th>
-                        <th>Длительность</th>
-                        <th>Нажатия клавиш</th>
+                        <th style="width: 60px;">
+                            <i class="fas fa-hashtag me-1"></i>ID
+                        </th>
+                        <th>
+                            <i class="fas fa-user me-1"></i>Пользователь
+                            <i class="fas fa-info-circle text-muted ms-1" 
+                               data-bs-toggle="tooltip" 
+                               title="Кто работал в программе"></i>
+                        </th>
+                        <th>
+                            <i class="fas fa-laptop me-1"></i>Программа
+                            <i class="fas fa-info-circle text-muted ms-1" 
+                               data-bs-toggle="tooltip" 
+                               title="В какой программе происходила работа"></i>
+                        </th>
+                        <th>
+                            <i class="fas fa-clock me-1"></i>Период работы
+                            <i class="fas fa-info-circle text-muted ms-1" 
+                               data-bs-toggle="tooltip" 
+                               title="Когда началась и закончилась работа в программе"></i>
+                        </th>
+                        <th>
+                            <i class="fas fa-stopwatch me-1"></i>Длительность
+                            <i class="fas fa-info-circle text-muted ms-1" 
+                               data-bs-toggle="tooltip" 
+                               title="Сколько времени провел в программе"></i>
+                        </th>
+                        <th>
+                            <i class="fas fa-keyboard me-1"></i>Активность
+                            <i class="fas fa-info-circle text-muted ms-1" 
+                               data-bs-toggle="tooltip" 
+                               title="Количество нажатий клавиш — показатель вовлеченности"></i>
+                        </th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for activity in activities %}
-                    <tr>
-                        <td>{{ activity.id }}</td>
+                    <tr class="{% if activity.application.is_productive %}table-success{% else %}table-warning{% endif %}">
                         <td>
-                            <a href="{% url 'admin_panel:user_detail' activity.user.id %}">
-                                {{ activity.user.username }}
-                            </a>
+                            <span class="badge bg-secondary">{{ activity.id }}</span>
                         </td>
-                        <td>{{ activity.application.name }}</td>
-                        <td>{{ activity.start_time|date:"d.m.Y H:i:s" }}</td>
-                        <td>{{ activity.end_time|date:"d.m.Y H:i:s" }}</td>
-                        <td>{{ activity.duration }}</td>
-                        <td>{{ activity.keyboard_presses }}</td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="7" class="text-center">Нет активности</td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="avatar-sm me-2 bg-primary text-white rounded-circle d-flex align-items-center justify-content-center">
+                                    {{ activity.user.username|first|upper }}
+                                </div>
+                                <div>
+                                    <a href="{% url 'admin_panel:user_detail' activity.user.id %}" class="text-decoration-none">
+                                        <strong>{{ activity.user.username }}</strong>
+                                    </a>
+                                    {% if activity.user.get_full_name %}
+                                    <br><small class="text-muted">{{ activity.user.get_full_name }}</small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="me-2">
+                                    {% if activity.application.is_productive %}
+                                        <i class="fas fa-briefcase text-success" title="Продуктивная программа"></i>
+                                    {% else %}
+                                        <i class="fas fa-gamepad text-warning" title="Непродуктивная программа"></i>
+                                    {% endif %}
+                                </div>
+                                <div>
+                                    <strong>{{ activity.application.name }}</strong>
+                                    <br><small class="text-muted font-monospace">{{ activity.application.process_name }}</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div>
+                                <strong>{{ activity.start_time|date:"d.m.Y" }}</strong>
+                                <br>
+                                <span class="text-success">{{ activity.start_time|date:"H:i:s" }}</span>
+                                →
+                                <span class="text-danger">{{ activity.end_time|date:"H:i:s" }}</span>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="text-center">
+                                <div class="badge bg-info fs-6 mb-1">{{ activity.duration }}</div>
+                                {% comment %} Можно добавить цветовую индикацию по длительности {% endcomment %}
+                            </div>
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="me-2">
+                                    {% if activity.keyboard_presses > 100 %}
+                                        <i class="fas fa-fire text-danger" title="Очень активная работа"></i>
+                                    {% elif activity.keyboard_presses > 50 %}
+                                        <i class="fas fa-check text-success" title="Активная работа"></i>
+                                    {% elif activity.keyboard_presses > 10 %}
+                                        <i class="fas fa-minus text-warning" title="Умеренная активность"></i>
+                                    {% else %}
+                                        <i class="fas fa-sleep text-muted" title="Низкая активность"></i>
+                                    {% endif %}
+                                </div>
+                                <div>
+                                    <strong>{{ activity.keyboard_presses }}</strong>
+                                    <br><small class="text-muted">нажатий</small>
+                                </div>
+                            </div>
+                        </td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
         
-        <!-- Pagination -->
+        <!-- Пагинация -->
         {% if is_paginated %}
-        <div class="pagination justify-content-center mt-4">
-            <ul class="pagination">
+        <nav aria-label="Пагинация">
+            <ul class="pagination justify-content-center mt-4">
                 {% if page_obj.has_previous %}
                     <li class="page-item">
-                        <a class="page-link" href="?page=1">&laquo; Первая</a>
+                        <a class="page-link" href="?page=1">
+                            <i class="fas fa-angle-double-left me-1"></i>Первая
+                        </a>
                     </li>
                     <li class="page-item">
-                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Предыдущая</a>
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}">
+                            <i class="fas fa-angle-left me-1"></i>Предыдущая
+                        </a>
                     </li>
                 {% endif %}
                 
-                {% for num in paginator.page_range %}
+                {% for num in page_obj.paginator.page_range %}
                     {% if page_obj.number == num %}
                         <li class="page-item active">
                             <span class="page-link">{{ num }}</span>
@@ -69,15 +232,68 @@
                 
                 {% if page_obj.has_next %}
                     <li class="page-item">
-                        <a class="page-link" href="?page={{ page_obj.next_page_number }}">Следующая</a>
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}">
+                            Следующая<i class="fas fa-angle-right ms-1"></i>
+                        </a>
                     </li>
                     <li class="page-item">
-                        <a class="page-link" href="?page={{ paginator.num_pages }}">Последняя &raquo;</a>
+                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">
+                            Последняя<i class="fas fa-angle-double-right ms-1"></i>
+                        </a>
                     </li>
                 {% endif %}
             </ul>
+        </nav>
+        {% endif %}
+        
+        <!-- Объяснение цветов -->
+        <div class="mt-4">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="alert alert-info">
+                        <h6 class="alert-heading">
+                            <i class="fas fa-palette me-2"></i>Значение цветов строк
+                        </h6>
+                        <ul class="mb-0 small">
+                            <li><span class="badge bg-success me-1"></span> Зелёный — работа в продуктивной программе</li>
+                            <li><span class="badge bg-warning me-1"></span> Жёлтый — работа в непродуктивной программе</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="alert alert-warning">
+                        <h6 class="alert-heading">
+                            <i class="fas fa-keyboard me-2"></i>Активность по нажатиям
+                        </h6>
+                        <ul class="mb-0 small">
+                            <li><i class="fas fa-fire text-danger me-1"></i> Красный огонь — более 100 нажатий (очень активно)</li>
+                            <li><i class="fas fa-check text-success me-1"></i> Зелёная галочка — 50-100 нажатий (активно)</li>
+                            <li><i class="fas fa-minus text-warning me-1"></i> Жёлтый минус — 10-50 нажатий (умеренно)</li>
+                            <li><i class="fas fa-sleep text-muted me-1"></i> Серый сон — менее 10 нажатий (пассивно)</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-chart-line fa-4x text-muted mb-3"></i>
+            <h4 class="text-muted">Активность пока не зафиксирована</h4>
+            <p class="text-muted">
+                Записи появятся здесь, когда пользователи начнут работать с установленными клиентами
+            </p>
         </div>
         {% endif %}
     </div>
 </div>
+
+<style>
+.avatar-sm {
+    width: 32px;
+    height: 32px;
+    font-size: 14px;
+    font-weight: 600;
+}
+</style>
 {% endblock %} 
