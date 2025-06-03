@@ -947,6 +947,48 @@ class TimeTrackerApp(QMainWindow):
         except Exception as e:
             logger.error(f"Ошибка при настройке слушателей активности: {e}", exc_info=True)
             
+    def update_tracking(self):
+        """Обновляет отслеживание активности по таймеру."""
+        try:
+            # Проверяем состояние простоя
+            self.check_idle_state()
+            
+            # Если мы не в режиме простоя и не на паузе, проверяем активное окно
+            if not self.is_idle and not self.tracking_paused:
+                active_window_info = self.get_active_window_info()
+                
+                if active_window_info:
+                    app_name = active_window_info.get('app_name', '')
+                    window_title = active_window_info.get('window_title', '')
+                    
+                    # Пропускаем пустые имена и системные процессы
+                    if not app_name or app_name.lower() in ['system', 'system idle process'] or app_name.isdigit():
+                        return
+                    
+                    # Проверяем, входит ли процесс в список игнорируемых
+                    if app_name and hasattr(self, 'ignored_processes') and self.ignored_processes:
+                        app_name_lower = app_name.lower()
+                        for ignored_proc in self.ignored_processes:
+                            if ignored_proc.lower() == app_name_lower:
+                                return
+                    
+                    # Если у нас уже есть активная сессия
+                    if self.current_activity_data:
+                        # Если приложение или заголовок изменились, завершаем текущую сессию
+                        if (self.current_activity_data['app_name'] != app_name or 
+                            self.current_activity_data['window_title'] != window_title):
+                            logger.debug(f"Изменилось активное окно: {app_name} ({window_title})")
+                            self.end_current_activity_session(event_type="switch")
+                            # Начинаем новую сессию
+                            is_useful = self.is_app_useful(app_name)
+                            self.start_new_activity_session(app_name, window_title, is_useful)
+                    else:
+                        # Если нет активной сессии, начинаем новую
+                        is_useful = self.is_app_useful(app_name)
+                        self.start_new_activity_session(app_name, window_title, is_useful)
+        except Exception as e:
+            logger.error(f"Ошибка в функции update_tracking: {e}", exc_info=True)
+            
     def on_keyboard_press(self, key):
         """Обработчик нажатия клавиши"""
         try:
@@ -1030,30 +1072,43 @@ class TimeTrackerApp(QMainWindow):
             # Проверяем, превышено ли время простоя
             if idle_time > self.idle_threshold_seconds and not self.is_idle:
                 # Пользователь перешел в состояние простоя
-                self.is_idle = True
-                logger.info(f"Пользователь перешел в состояние простоя (неактивен {int(idle_time)} секунд)")
-                
-                # Обновляем UI, если он доступен
-                if hasattr(self, 'status_bar'):
-                    self.status_bar.showMessage(f"Простой (неактивен {int(idle_time)} секунд)")
-                
-                # Приостанавливаем текущую сессию активности, если она есть
-                if self.current_activity:
-                    self.end_current_activity()
+                self.handle_idle_state_change(False)
             
             # Проверяем, вернулся ли пользователь из состояния простоя
             elif idle_time <= self.idle_threshold_seconds and self.is_idle:
                 # Пользователь вернулся из состояния простоя
-                self.is_idle = False
-                logger.info("Пользователь вернулся из состояния простоя")
-                
-                # Обновляем UI, если он доступен
-                if hasattr(self, 'status_bar'):
-                    self.status_bar.showMessage("Активен")
+                self.handle_idle_state_change(True)
         
         except Exception as e:
             logger.error(f"Ошибка при проверке состояния простоя: {e}", exc_info=True)
     
+    def handle_idle_state_change(self, is_active):
+        """Обрабатывает изменение состояния активности пользователя."""
+        try:
+            if is_active and self.is_idle:
+                # Пользователь вернулся из состояния простоя
+                self.is_idle = False
+                logger.info("Пользователь вернулся из состояния простоя")
+                # Обновляем UI, если он доступен
+                if hasattr(self, 'status_bar'):
+                    self.status_bar.showMessage("Активен")
+                if hasattr(self, 'tray_icon') and self.tray_icon:
+                    self.tray_icon.setToolTip("Активен")
+            elif not is_active and not self.is_idle:
+                # Пользователь перешел в состояние простоя
+                self.is_idle = True
+                logger.info(f"Пользователь перешел в состояние простоя (неактивен {int(time.time() - self.last_activity_time)} секунд)")
+                # Приостанавливаем текущую сессию активности, если она есть
+                if self.current_activity_data:
+                    self.end_current_activity_session(event_type="idle")
+                # Обновляем UI, если он доступен
+                if hasattr(self, 'status_bar'):
+                    self.status_bar.showMessage(f"Простой (неактивен {int(time.time() - self.last_activity_time)} секунд)")
+                if hasattr(self, 'tray_icon') and self.tray_icon:
+                    self.tray_icon.setToolTip(f"Пользователь неактивен. В очереди: {self.activity_queue.qsize()}")
+        except Exception as e:
+            logger.error(f"Ошибка при обработке изменения состояния простоя: {e}", exc_info=True)
+
     def track_activity(self):
         """Основной метод отслеживания активности в отдельном потоке."""
         logger.info("Запущен поток отслеживания активности")
@@ -2056,9 +2111,8 @@ class TimeTrackerApp(QMainWindow):
                     "explorer.exe", "system", "system idle process", 
                     "dwm.exe", "taskhost.exe", "taskhostw.exe", "svchost.exe",
                     "runtimebroker.exe", "searchui.exe", "shellexperiencehost.exe",
-                    "winlogon.exe", "wininit.exe", "ctfmon.exe", "sihost.exe",
-                    "applicationframehost.exe", "windowsinternal.composableshell.experiences",
-                    "lockapp.exe", "python.exe", "pythonw.exe", "cmd.exe", "powershell.exe"
+                    "winlogon.exe", "wininit.exe", "csrss.exe", "services.exe",
+                    "lsass.exe", "fontdrvhost.exe", "smss.exe"
                 ]
             
             logger.info("Поиск запущенных приложений...")
@@ -2188,396 +2242,418 @@ class TimeTrackerApp(QMainWindow):
 
     def send_activity_data(self):
         """Отправляет накопленные данные активности на сервер."""
-        if self.activity_queue.empty():
-            logger.debug("Очередь активностей пуста, нечего отправлять.")
-            return
-        
-        # Добавляем подробное логирование размера очереди
-        queue_size = self.activity_queue.qsize()
-        logger.info(f"Начинаем отправку данных. В очереди {queue_size} записей активности.")
-        
-        # Проверяем, включен ли демо-режим
-        demo_mode = self.config.getboolean('Settings', 'demo_mode', fallback=False)
-        
-        if demo_mode:
-            # В демо-режиме просто очищаем очередь и логируем данные
-            max_batch_size = self.config.getint('Settings', 'max_send_batch_size', fallback=20)
-            activities_to_send = []
-            
-            # Собираем до max_batch_size активностей из очереди
-            for _ in range(min(max_batch_size, self.activity_queue.qsize())):
-                if not self.activity_queue.empty():
-                    activity = self.activity_queue.get()
-                    activities_to_send.append(activity)
-            
-            logger.info(f"Демо-режим: Обработано {len(activities_to_send)} записей активности. Данные не отправляются на сервер.")
-            return
-        
-        # Получаем данные пользователя и токен из конфигурации
-        auth_token = None
-        user_id = None
-        
-        # Проверяем токен в секции Credentials
-        if self.config.has_section('Credentials'):
-            if self.config.has_option('Credentials', 'auth_token'):
-                auth_token = self.config.get('Credentials', 'auth_token')
-                # Добавляем диагностику токена
-                if auth_token:
-                    logger.info(f"Найден токен авторизации длиной {len(auth_token)} символов.")
-                else:
-                    logger.warning("Токен авторизации пустой в секции Credentials.")
-            if self.config.has_option('Credentials', 'user_id'):
-                user_id = self.config.get('Credentials', 'user_id')
-                logger.info(f"Используется user_id: {user_id}")
-        
-        # Если не нашли в Credentials, проверяем другие секции
-        if not auth_token:
-            logger.warning("Токен не найден в секции Credentials, проверяем другие секции...")
-            # Проверяем в секции Server
-            if self.config.has_section('Server') and self.config.has_option('Server', 'token'):
-                auth_token = self.config.get('Server', 'token')
-                logger.info("Токен найден в секции Server")
-            # Проверяем в секции API
-            elif self.config.has_section('API') and self.config.has_option('API', 'token'):
-                auth_token = self.config.get('API', 'token')
-                logger.info("Токен найден в секции API")
-            # Проверяем в корне файла
-            elif self.config.has_option('DEFAULT', 'token'):
-                auth_token = self.config.get('DEFAULT', 'token')
-                logger.info("Токен найден в секции DEFAULT")
-        
-        # Если не нашли user_id в Credentials, пытаемся получить из токена
-        if not user_id and auth_token:
-            try:
-                token_data = jwt.decode(auth_token, options={"verify_signature": False})
-                if "user_id" in token_data:
-                    user_id = str(token_data["user_id"])
-                    logger.info(f"Извлечен user_id из токена: {user_id}")
-                    # Сохраняем в конфигурацию для последующего использования
-                    if self.config.has_section('Credentials'):
-                        self.config.set('Credentials', 'user_id', user_id)
-                        self._save_config(self.config)
-                else:
-                    logger.warning("В токене отсутствует поле user_id")
-            except Exception as e:
-                logger.error(f"Ошибка при извлечении user_id из токена: {e}")
-        
-        # Если все еще нет user_id, используем значение по умолчанию
-        if not user_id:
-            user_id = "1"
-            logger.warning(f"Не удалось получить user_id, используется значение по умолчанию: {user_id}")
-        
-        # Получаем URL API
-        api_url = None
-        if self.config.has_section('Credentials') and self.config.has_option('Credentials', 'api_base_url'):
-            api_url = self.config.get('Credentials', 'api_base_url')
-            logger.info(f"URL API из секции Credentials: {api_url}")
-        elif self.config.has_section('Server') and self.config.has_option('Server', 'base_url'):
-            api_url = self.config.get('Server', 'base_url')
-            logger.info(f"URL API из секции Server: {api_url}")
-        elif self.config.has_section('API') and self.config.has_option('API', 'base_url'):
-            api_url = self.config.get('API', 'base_url')
-            logger.info(f"URL API из секции API: {api_url}")
-        elif self.config.has_option('DEFAULT', 'base_url'):
-            api_url = self.config.get('DEFAULT', 'base_url')
-            logger.info(f"URL API из секции DEFAULT: {api_url}")
-        else:
-            api_url = 'http://localhost:8000'
-            logger.warning(f"URL API не найден в конфигурации, используется значение по умолчанию: {api_url}")
-        
-        # Исправляем потенциально некорректный URL API
-        if '/api/api' in api_url:
-            old_url = api_url
-            api_url = api_url.replace('/api/api', '/api')
-            logger.info(f"Исправлен дублированный путь API в URL: {old_url} -> {api_url}")
-        
-        # Убедимся, что URL заканчивается на /api/
-        if not api_url.endswith('/api/'):
-            old_url = api_url
-            if api_url.endswith('/api'):
-                api_url += '/'
-            elif not '/api' in api_url:
-                api_url = api_url.rstrip('/') + '/api/'
-            logger.info(f"Нормализован URL API: {old_url} -> {api_url}")
-        
-        activities_url = f"{api_url}activities/"
-        
-        # Логируем URL для отладки
-        logger.info(f"URL для отправки активностей: {activities_url}")
-        
-        if not auth_token:
-            logger.warning("Отсутствует токен авторизации. Переключение в демо-режим.")
-            # Включаем демо-режим
-            if not self.config.has_section('Settings'):
-                self.config.add_section('Settings')
-            self.config.set('Settings', 'demo_mode', 'True')
-            self._save_config(self.config)
-            return
-        
-        # Заголовки для запроса
-        headers = {
-            'Content-Type': 'application/json',
-            'Authorization': f'Bearer {auth_token}'
-        }
-        logger.debug(f"Заголовки запроса: {headers}")
-        
-        # Обновляем заголовки сессии
-        self.session.headers.update({'Authorization': f'Bearer {auth_token}'})
-        
-        # Собираем пакет данных для отправки
-        max_batch_size = self.config.getint('Settings', 'max_send_batch_size', fallback=20)
-        activities_to_send = []
-        activities_to_send_payload = []
-        
         try:
-            # Собираем до max_batch_size активностей из очереди
-            for _ in range(min(max_batch_size, self.activity_queue.qsize())):
-                if self.activity_queue.empty():
-                    break
-                activity_dict = self.activity_queue.get_nowait()
-                activities_to_send.append(activity_dict)
-                
-                # Детальное логирование активности
-                logger.debug(f"Готовится к отправке активность: {activity_dict}")
-                
-                # Формируем данные для API
-                # Убедимся, что все обязательные поля заполнены
-                start_time = activity_dict.get('start_time_iso_utc', '')
-                end_time = activity_dict.get('end_time_iso_utc', '')
-                
-                # Если поля не заполнены, сгенерируем текущие значения
-                if not start_time:
-                    start_time = self.get_utc_now_iso()
-                    logger.warning(f"Отсутствует start_time_iso_utc, сгенерировано: {start_time}")
-                if not end_time:
-                    end_time = self.get_utc_now_iso()
-                    logger.warning(f"Отсутствует end_time_iso_utc, сгенерировано: {end_time}")
-                
-                # Сервер ожидает определенный формат данных
-                # Добавляем все обязательные поля
-                duration_seconds = activity_dict.get('duration_seconds', 0)
-                if duration_seconds is None or duration_seconds == 0:
-                    duration_seconds = 1  # Минимальная длительность
-                
-                # Вычисляем длительность на основе start_time и end_time
-                try:
-                    start_dt = datetime.fromisoformat(start_time.replace('Z', '+00:00'))
-                    end_dt = datetime.fromisoformat(end_time.replace('Z', '+00:00'))
-                    # Вычисляем разницу во времени
-                    time_diff = end_dt - start_dt
-                    calculated_seconds = time_diff.total_seconds()
-                    
-                    if calculated_seconds <= 0:
-                        calculated_seconds = duration_seconds if duration_seconds > 0 else 1
-                        # Создаем объект timedelta для поля duration
-                        duration_obj = timedelta(seconds=calculated_seconds)
-                    else:
-                        # Используем реальную разницу во времени
-                        duration_obj = time_diff
-                except Exception as e:
-                    logger.error(f"Ошибка при вычислении длительности: {e}")
-                    calculated_seconds = duration_seconds if duration_seconds > 0 else 1
-                    duration_obj = timedelta(seconds=calculated_seconds)
-                    
-                # Добавляем отладочную информацию
-                logger.info(f"Вычисленная длительность: {calculated_seconds} секунд")
-                
-                # Определяем ID приложения на основе имени процесса
-                app_name = activity_dict.get('app_name', '')
-                
-                # Проверяем, есть ли уже такое приложение в кэше
-                app_id = None
-                
-                # Для предотвращения возможных ошибок с неинициализированным кэшем
-                if not hasattr(self, 'app_cache'):
-                    self.app_cache = {}
-                
-                if app_name.lower() in self.app_cache:
-                    app_id = self.app_cache[app_name.lower()]
-                    logger.debug(f"Найден ID в кэше для {app_name}: {app_id}")
-                else:
-                    # Если нет в кэше, создаем новое приложение на сервере
-                    try:
-                        # Создаем новое приложение
-                        app_data = {
-                            'name': app_name,
-                            'process_name': app_name,
-                            'is_productive': False  # По умолчанию не продуктивное
-                        }
-                        
-                        # Отправляем запрос на создание приложения
-                        app_url = f"{api_url}applications/"
-                        
-                        logger.info(f"Отправляем запрос на создание приложения: {app_url}")
-                        app_response = self.session.post(app_url, json=app_data)
-                        
-                        if app_response.status_code == 201:  # Создано успешно
-                            app_data = app_response.json()
-                            app_id = app_data.get('id')
-                            # Сохраняем в кэш
-                            self.app_cache[app_name.lower()] = app_id
-                            logger.info(f"Создано новое приложение: {app_name} с ID={app_id}")
-                        else:
-                            # Если не удалось создать, используем ID=1 по умолчанию
-                            app_id = 1
-                            logger.warning(f"Не удалось создать приложение {app_name}, используем ID по умолчанию. Код ответа: {app_response.status_code}")
-                    except Exception as e:
-                        # В случае ошибки используем ID=1
-                        app_id = 1
-                        logger.error(f"Ошибка при создании приложения {app_name}: {e}")
-                
-                # Если все равно не получили ID, используем значение по умолчанию
-                if app_id is None:
-                    app_id = 1
-                    
-                # Для отладки выводим информацию о выбранном ID
-                logger.info(f"Для приложения {app_name} выбран ID={app_id}")
-                
-                # Добавляем количество нажатий клавиш в пайлоад
-                keyboard_presses = activity_dict.get('keyboard_presses', 0)
-                if keyboard_presses == 0 and self.keyboard_press_count > 0:
-                    keyboard_presses = self.keyboard_press_count
-                    # Сбрасываем счетчик после отправки
-                    logger.info(f"Отправляем клавиатурную активность: {self.keyboard_press_count} нажатий")
-                    self.keyboard_press_count = 0
-                    
-                api_payload = {
-                    'application': app_id,  # Используем правильный ID приложения
-                    'title': activity_dict.get('window_title', ''),
-                    'start_time': start_time,
-                    'end_time': end_time,
-                    # Не отправляем duration, так как сервер вычислит его автоматически
-                    'is_productive': activity_dict.get('is_useful', False),
-                    'app_name': app_name,
-                    'keyboard_presses': keyboard_presses  # Добавляем количество нажатий клавиш
-                    # Удаляем поле user, так как пользователь определяется по токену на сервере
-                }
-                
-                # Добавляем отладочную информацию
-                logger.info(f"Отправка активности: start_time={start_time}, end_time={end_time}, длительность={calculated_seconds} секунд")
-                activities_to_send_payload.append(api_payload)
-
-            if not activities_to_send_payload:
-                logger.debug("Нет данных для отправки после фильтрации.")
+            if self.activity_queue.empty():
+                logger.debug("Очередь активностей пуста, нечего отправлять.")
                 return
+            
+            # Добавляем подробное логирование размера очереди
+            queue_size = self.activity_queue.qsize()
+            logger.info(f"Начинаем отправку данных. В очереди {queue_size} записей активности.")
+            
+            # Проверяем, включен ли демо-режим
+            demo_mode = self.config.getboolean('Settings', 'demo_mode', fallback=False)
+            
+            if demo_mode:
+                # В демо-режиме просто очищаем очередь и логируем данные
+                max_batch_size = self.config.getint('Settings', 'max_send_batch_size', fallback=20)
+                activities_to_send = []
                 
-            # Отправляем данные на сервер
-            logger.info(f"Отправка {len(activities_to_send_payload)} записей активности на сервер.")
+                # Собираем до max_batch_size активностей из очереди
+                for _ in range(min(max_batch_size, self.activity_queue.qsize())):
+                    if not self.activity_queue.empty():
+                        activity = self.activity_queue.get()
+                        activities_to_send.append(activity)
+                
+                logger.info(f"Демо-режим: Обработано {len(activities_to_send)} записей активности. Данные не отправляются на сервер.")
+                return
+
+            # Переменная для хранения всех активностей, которые не удалось отправить
+            failed_activities = []
             
-            # Сервер ожидает отдельные записи, а не массив
-            # Отправляем каждую запись по отдельности
-            success_count = 0
-            for payload in activities_to_send_payload:
-                try:
-                    # Добавляем отладочную информацию о пайлоаде
-                    logger.info(f"Отправляем пайлоад: {payload}")
-                    response = self.session.post(activities_url, json=payload, headers=headers, timeout=30)
-                    
-                    # Добавляем полное логирование ответа
-                    logger.info(f"Ответ сервера: код={response.status_code}, тело={response.text}")
-                    
-                    if response.status_code in [200, 201]:
-                        success_count += 1
-                        logger.info(f"Успешно отправлено: {response.status_code} - {response.text}")
-                        
-                        # Проверяем формат ответа и логируем для отладки
-                        try:
-                            response_data = response.json()
-                            logger.info(f"Ответ сервера в JSON: {response_data}")
-                        except Exception as json_e:
-                            logger.warning(f"Ответ сервера не является JSON: {json_e}")
-                        
-                    elif response.status_code == 401:
-                        # Ошибка авторизации - токен недействителен
-                        logger.error(f"Ошибка авторизации: {response.status_code} - {response.text}")
-                        
-                        # Удаляем недействительный токен из конфигурации
-                        if self.config.has_section('Credentials') and self.config.has_option('Credentials', 'auth_token'):
-                            self.config.set('Credentials', 'auth_token', '')
-                        if self.config.has_section('Server') and self.config.has_option('Server', 'token'):
-                            self.config.set('Server', 'token', '')
-                        if self.config.has_section('API') and self.config.has_option('API', 'token'):
-                            self.config.set('API', 'token', '')
-                        if self.config.has_option('DEFAULT', 'token'):
-                            self.config.set('DEFAULT', 'token', '')
-                            
-                        # Сохраняем обновленную конфигурацию
-                        self._save_config(self.config)
-                        
-                        # Запрашиваем повторную авторизацию
-                        logger.info("Требуется повторная авторизация. Запрашиваем новый токен...")
-                        
-                        # Сигнал для показа диалога авторизации
-                        self.login_required_signal.emit()
-                        
-                        # Возвращаем все активности обратно в очередь для повторной отправки
-                        for activity in activities_to_send:
-                            self.activity_queue.put(activity)
-                        
-                        # Прерываем отправку
-                        return
+            # Получаем данные пользователя и токен из конфигурации
+            auth_token = None
+            user_id = None
+            
+            # Проверяем токен в секции Credentials - приоритетный источник
+            if self.config.has_section('Credentials'):
+                if self.config.has_option('Credentials', 'auth_token'):
+                    auth_token = self.config.get('Credentials', 'auth_token')
+                    # Добавляем диагностику токена
+                    if auth_token:
+                        logger.info(f"Найден токен авторизации длиной {len(auth_token)} символов.")
                     else:
-                        logger.error(f"Ошибка при отправке записи: {response.status_code} - {response.text}")
-                        # Возвращаем активность обратно в очередь
-                        for i, activity in enumerate(activities_to_send):
-                            if activity.get('app_name') == payload.get('app_name') and activity.get('start_time_iso_utc') == payload.get('start_time'):
-                                self.activity_queue.put(activity)
-                                logger.info(f"Активность возвращена в очередь для повторной отправки")
-                                break
-                except Exception as e:
-                    logger.error(f"Ошибка при отправке записи: {e}", exc_info=True)
-                    # Возвращаем активность в очередь
-                    # (добавим конкретную активность, которая вызвала ошибку)
-                    logger.info(f"Активность возвращена в очередь из-за ошибки: {e}")
-                    self.activity_queue.put(activities_to_send[activities_to_send_payload.index(payload)])
+                        logger.warning("Токен авторизации пустой в секции Credentials.")
+                if self.config.has_option('Credentials', 'user_id'):
+                    user_id = self.config.get('Credentials', 'user_id')
+                    logger.info(f"Используется user_id: {user_id}")
             
-            # Создаем фиктивный ответ для обработки в основном коде
-            class DummyResponse:
-                def __init__(self, status_code):
-                    self.status_code = status_code
-                    self.text = f"Успешно отправлено {success_count} из {len(activities_to_send_payload)} записей"
-            
-            response = DummyResponse(200 if success_count > 0 else 400)
-            
-            if response.status_code == 200 or response.status_code == 201:
-                logger.info(f"Успешно отправлено {success_count} из {len(activities_to_send_payload)} записей активности.")
-                self.status_bar.showMessage(f"Отправлено {success_count} из {len(activities_to_send_payload)} записей активности.")
-            elif response.status_code == 401:
-                logger.warning("Токен недействителен, требуется повторная авторизация.")
-                # Удаляем устаревший токен из секций Credentials, Server, API и DEFAULT
-                if self.config.has_section('Credentials') and self.config.has_option('Credentials', 'auth_token'):
-                    self.config.remove_option('Credentials', 'auth_token')
+            # Если не нашли в Credentials, проверяем другие секции
+            if not auth_token:
+                logger.warning("Токен не найден в секции Credentials, проверяем другие секции...")
+                # Проверяем в секции Server
                 if self.config.has_section('Server') and self.config.has_option('Server', 'token'):
-                    self.config.remove_option('Server', 'token')
-                if self.config.has_section('API') and self.config.has_option('API', 'token'):
-                    self.config.remove_option('API', 'token')
-                if self.config.has_option(self.config.default_section, 'token'):
-                    self.config.remove_option(self.config.default_section, 'token')
-                # Включаем демо-режим до повторной авторизации
+                    auth_token = self.config.get('Server', 'token')
+                    logger.info("Токен найден в секции Server")
+                # Проверяем в секции API
+                elif self.config.has_section('API') and self.config.has_option('API', 'token'):
+                    auth_token = self.config.get('API', 'token')
+                    logger.info("Токен найден в секции API")
+                # Проверяем в корне файла
+                elif self.config.has_option('DEFAULT', 'token'):
+                    auth_token = self.config.get('DEFAULT', 'token')
+                    logger.info("Токен найден в секции DEFAULT")
+
+            # Если не нашли user_id в Credentials, пытаемся получить из токена
+            if not user_id and auth_token:
+                try:
+                    token_data = jwt.decode(auth_token, options={"verify_signature": False})
+                    if "user_id" in token_data:
+                        user_id = str(token_data["user_id"])
+                        logger.info(f"Извлечен user_id из токена: {user_id}")
+                        # Сохраняем в конфигурацию для последующего использования
+                        if self.config.has_section('Credentials'):
+                            self.config.set('Credentials', 'user_id', user_id)
+                            self._save_config(self.config)
+                    else:
+                        logger.warning("В токене отсутствует поле user_id")
+                except Exception as e:
+                    logger.error(f"Ошибка при извлечении user_id из токена: {e}")
+            
+            # Если все еще нет user_id, используем значение по умолчанию
+            if not user_id:
+                user_id = "1"
+                logger.warning(f"Не удалось получить user_id, используется значение по умолчанию: {user_id}")
+            
+            # Получаем URL API
+            api_url = None
+            if self.config.has_section('Credentials') and self.config.has_option('Credentials', 'api_base_url'):
+                api_url = self.config.get('Credentials', 'api_base_url')
+                logger.info(f"URL API из секции Credentials: {api_url}")
+            elif self.config.has_section('Server') and self.config.has_option('Server', 'base_url'):
+                api_url = self.config.get('Server', 'base_url')
+                logger.info(f"URL API из секции Server: {api_url}")
+            elif self.config.has_section('API') and self.config.has_option('API', 'base_url'):
+                api_url = self.config.get('API', 'base_url')
+                logger.info(f"URL API из секции API: {api_url}")
+            elif self.config.has_option('DEFAULT', 'base_url'):
+                api_url = self.config.get('DEFAULT', 'base_url')
+                logger.info(f"URL API из секции DEFAULT: {api_url}")
+            else:
+                api_url = 'http://localhost:8000'
+                logger.warning(f"URL API не найден в конфигурации, используется значение по умолчанию: {api_url}")
+            
+            # Исправляем потенциально некорректный URL API
+            if '/api/api' in api_url:
+                old_url = api_url
+                api_url = api_url.replace('/api/api', '/api')
+                logger.info(f"Исправлен дублированный путь API в URL: {old_url} -> {api_url}")
+                
+                # Сохраняем исправленный URL в конфигурацию
+                if self.config.has_section('Credentials'):
+                    self.config.set('Credentials', 'api_base_url', api_url)
+                    self._save_config()
+                    logger.info("Исправленный URL сохранен в конфигурации")
+            
+            # Убедимся, что URL заканчивается на /api/
+            if not api_url.endswith('/api/'):
+                old_url = api_url
+                if api_url.endswith('/api'):
+                    api_url += '/'
+                elif not '/api' in api_url:
+                    api_url = api_url.rstrip('/') + '/api/'
+                logger.info(f"Нормализован URL API: {old_url} -> {api_url}")
+                
+                # Сохраняем нормализованный URL в конфигурацию
+                if self.config.has_section('Credentials'):
+                    self.config.set('Credentials', 'api_base_url', api_url)
+                    self._save_config()
+                    logger.info("Нормализованный URL сохранен в конфигурации")
+            
+            activities_url = f"{api_url}activities/"
+            
+            # Логируем URL для отладки
+            logger.info(f"URL для отправки активностей: {activities_url}")
+            
+            if not auth_token:
+                logger.warning("Отсутствует токен авторизации. Переключение в демо-режим.")
+                # Включаем демо-режим
                 if not self.config.has_section('Settings'):
                     self.config.add_section('Settings')
                 self.config.set('Settings', 'demo_mode', 'True')
-                # Сохраняем конфигурацию и очищаем заголовок авторизации
                 self._save_config(self.config)
-                self.session.headers.pop('Authorization', None)
-                # Запрашиваем повторную авторизацию
-                QTimer.singleShot(0, self.show_login_dialog_if_needed)
-                # Возвращаем активности обратно в очередь
-                for activity in activities_to_send:
-                    self.activity_queue.put(activity)
                 return
-            else:
-                logger.error(f"Ошибка при отправке данных: {response.status_code} - {response.text}")
-                self.status_bar.showMessage(f"Ошибка отправки данных: {response.status_code}")
+            
+            # Заголовки для запроса
+            headers = {
+                'Content-Type': 'application/json',
+                'Authorization': f'Bearer {auth_token}'
+            }
+            logger.debug(f"Заголовки запроса: {headers}")
+            
+            # Обновляем заголовки сессии
+            self.session.headers.update({'Authorization': f'Bearer {auth_token}'})
+            
+            # Собираем пакет данных для отправки
+            max_batch_size = self.config.getint('Settings', 'max_send_batch_size', fallback=20)
+            activities_to_send = []
+            activities_to_send_payload = []
+            
+            try:
+                # Собираем до max_batch_size активностей из очереди
+                for _ in range(min(max_batch_size, self.activity_queue.qsize())):
+                    if self.activity_queue.empty():
+                        break
+                    activity_dict = self.activity_queue.get_nowait()
+                    activities_to_send.append(activity_dict)
+                    
+                    # Детальное логирование активности
+                    logger.debug(f"Готовится к отправке активность: {activity_dict}")
+                    
+                    # Формируем данные для API
+                    # Убедимся, что все обязательные поля заполнены
+                    start_time = activity_dict.get('start_time_iso_utc', '')
+                    end_time = activity_dict.get('end_time_iso_utc', '')
+                    
+                    # Если поля не заполнены, сгенерируем текущие значения
+                    if not start_time:
+                        start_time = self.get_utc_now_iso()
+                        logger.warning(f"Отсутствует start_time_iso_utc, сгенерировано: {start_time}")
+                    if not end_time:
+                        end_time = self.get_utc_now_iso()
+                        logger.warning(f"Отсутствует end_time_iso_utc, сгенерировано: {end_time}")
+                    
+                    # Сервер ожидает определенный формат данных
+                    # Добавляем все обязательные поля
+                    duration_seconds = activity_dict.get('duration_seconds', 0)
+                    if duration_seconds is None or duration_seconds == 0:
+                        duration_seconds = 1  # Минимальная длительность
+                    
+                    # Вычисляем длительность на основе start_time и end_time
+                    try:
+                        start_dt = datetime.fromisoformat(start_time.replace('Z', '+00:00'))
+                        end_dt = datetime.fromisoformat(end_time.replace('Z', '+00:00'))
+                        # Вычисляем разницу во времени
+                        time_diff = end_dt - start_dt
+                        calculated_seconds = time_diff.total_seconds()
+                        
+                        if calculated_seconds <= 0:
+                            calculated_seconds = duration_seconds if duration_seconds > 0 else 1
+                            # Создаем объект timedelta для поля duration
+                            duration_obj = timedelta(seconds=calculated_seconds)
+                        else:
+                            # Используем реальную разницу во времени
+                            duration_obj = time_diff
+                    except Exception as e:
+                        logger.error(f"Ошибка при вычислении длительности: {e}")
+                        calculated_seconds = duration_seconds if duration_seconds > 0 else 1
+                        duration_obj = timedelta(seconds=calculated_seconds)
+                        
+                    # Добавляем отладочную информацию
+                    logger.info(f"Вычисленная длительность: {calculated_seconds} секунд")
+                    
+                    # Определяем ID приложения на основе имени процесса
+                    app_name = activity_dict.get('app_name', '')
+                    
+                    # Проверяем, есть ли уже такое приложение в кэше
+                    app_id = None
+                    
+                    # Для предотвращения возможных ошибок с неинициализированным кэшем
+                    if not hasattr(self, 'app_cache'):
+                        self.app_cache = {}
+                    
+                    if app_name.lower() in self.app_cache:
+                        app_id = self.app_cache[app_name.lower()]
+                        logger.debug(f"Найден ID в кэше для {app_name}: {app_id}")
+                    else:
+                        # Если нет в кэше, создаем новое приложение на сервере
+                        try:
+                            # Создаем новое приложение
+                            app_data = {
+                                'name': app_name,
+                                'process_name': app_name,
+                                'is_productive': False  # По умолчанию не продуктивное
+                            }
+                            
+                            # Отправляем запрос на создание приложения
+                            app_url = f"{api_url}applications/"
+                            
+                            logger.info(f"Отправляем запрос на создание приложения: {app_url}")
+                            app_response = self.session.post(app_url, json=app_data)
+                            
+                            if app_response.status_code == 201:  # Создано успешно
+                                app_data = app_response.json()
+                                app_id = app_data.get('id')
+                                # Сохраняем в кэш
+                                self.app_cache[app_name.lower()] = app_id
+                                logger.info(f"Создано новое приложение: {app_name} с ID={app_id}")
+                            else:
+                                # Если не удалось создать, используем ID=1 по умолчанию
+                                app_id = 1
+                                logger.warning(f"Не удалось создать приложение {app_name}, используем ID по умолчанию. Код ответа: {app_response.status_code}")
+                        except Exception as e:
+                            # В случае ошибки используем ID=1
+                            app_id = 1
+                            logger.error(f"Ошибка при создании приложения {app_name}: {e}")
+                    
+                    # Если все равно не получили ID, используем значение по умолчанию
+                    if app_id is None:
+                        app_id = 1
+                        
+                    # Для отладки выводим информацию о выбранном ID
+                    logger.info(f"Для приложения {app_name} выбран ID={app_id}")
+                    
+                    # Добавляем количество нажатий клавиш в пайлоад
+                    keyboard_presses = activity_dict.get('keyboard_presses', 0)
+                    if keyboard_presses == 0 and self.keyboard_press_count > 0:
+                        keyboard_presses = self.keyboard_press_count
+                        # Сбрасываем счетчик после отправки
+                        logger.info(f"Отправляем клавиатурную активность: {self.keyboard_press_count} нажатий")
+                        self.keyboard_press_count = 0
+                        
+                    api_payload = {
+                        'application': app_id,  # Используем правильный ID приложения
+                        'title': activity_dict.get('window_title', ''),
+                        'start_time': start_time,
+                        'end_time': end_time,
+                        # Не отправляем duration, так как сервер вычислит его автоматически
+                        'is_productive': activity_dict.get('is_useful', False),
+                        'app_name': app_name,
+                        'keyboard_presses': keyboard_presses  # Добавляем количество нажатий клавиш
+                        # Удаляем поле user, так как пользователь определяется по токену на сервере
+                    }
+                    
+                    # Добавляем отладочную информацию
+                    logger.info(f"Отправка активности: start_time={start_time}, end_time={end_time}, длительность={calculated_seconds} секунд")
+                    activities_to_send_payload.append(api_payload)
+
+                if not activities_to_send_payload:
+                    logger.debug("Нет данных для отправки после фильтрации.")
+                    return
+                    
+                # Отправляем данные на сервер
+                logger.info(f"Отправка {len(activities_to_send_payload)} записей активности на сервер.")
+                
+                # Сервер ожидает отдельные записи, а не массив
+                # Отправляем каждую запись по отдельности
+                success_count = 0
+                for payload in activities_to_send_payload:
+                    try:
+                        # Добавляем отладочную информацию о пайлоаде
+                        logger.info(f"Отправляем пайлоад: {payload}")
+                        response = self.session.post(activities_url, json=payload, headers=headers, timeout=30)
+                        
+                        # Добавляем полное логирование ответа
+                        logger.info(f"Ответ сервера: код={response.status_code}, тело={response.text}")
+                        
+                        if response.status_code in [200, 201]:
+                            success_count += 1
+                            logger.info(f"Успешно отправлено: {response.status_code} - {response.text}")
+                            
+                            # Проверяем формат ответа и логируем для отладки
+                            try:
+                                response_data = response.json()
+                                logger.info(f"Ответ сервера в JSON: {response_data}")
+                            except Exception as json_e:
+                                logger.warning(f"Ответ сервера не является JSON: {json_e}")
+                            
+                        elif response.status_code == 401:
+                            # Ошибка авторизации - токен недействителен
+                            logger.error(f"Ошибка авторизации: {response.status_code} - {response.text}")
+                            
+                            # Удаляем недействительный токен из конфигурации
+                            if self.config.has_section('Credentials') and self.config.has_option('Credentials', 'auth_token'):
+                                self.config.set('Credentials', 'auth_token', '')
+                            if self.config.has_section('Server') and self.config.has_option('Server', 'token'):
+                                self.config.set('Server', 'token', '')
+                            if self.config.has_section('API') and self.config.has_option('API', 'token'):
+                                self.config.set('API', 'token', '')
+                            if self.config.has_option('DEFAULT', 'token'):
+                                self.config.set('DEFAULT', 'token', '')
+                                
+                            # Сохраняем обновленную конфигурацию
+                            self._save_config(self.config)
+                            
+                            # Запрашиваем повторную авторизацию
+                            logger.info("Требуется повторная авторизация. Запрашиваем новый токен...")
+                            
+                            # Сигнал для показа диалога авторизации
+                            self.login_required_signal.emit()
+                            
+                            # Возвращаем все активности обратно в очередь для повторной отправки
+                            for activity in activities_to_send:
+                                self.activity_queue.put(activity)
+                            
+                            # Прерываем отправку
+                            return
+                        else:
+                            logger.error(f"Ошибка при отправке записи: {response.status_code} - {response.text}")
+                            # Возвращаем активность обратно в очередь
+                            for i, activity in enumerate(activities_to_send):
+                                if activity.get('app_name') == payload.get('app_name') and activity.get('start_time_iso_utc') == payload.get('start_time'):
+                                    self.activity_queue.put(activity)
+                                    logger.info(f"Активность возвращена в очередь для повторной отправки")
+                                    break
+                    except Exception as e:
+                        logger.error(f"Ошибка при отправке записи: {e}", exc_info=True)
+                        # Возвращаем активность в очередь
+                        # (добавим конкретную активность, которая вызвала ошибку)
+                        logger.info(f"Активность возвращена в очередь из-за ошибки: {e}")
+                        self.activity_queue.put(activities_to_send[activities_to_send_payload.index(payload)])
+                
+                # Создаем фиктивный ответ для обработки в основном коде
+                class DummyResponse:
+                    def __init__(self, status_code):
+                        self.status_code = status_code
+                        self.text = f"Успешно отправлено {success_count} из {len(activities_to_send_payload)} записей"
+                
+                response = DummyResponse(200 if success_count > 0 else 400)
+                
+                if response.status_code == 200 or response.status_code == 201:
+                    logger.info(f"Успешно отправлено {success_count} из {len(activities_to_send_payload)} записей активности.")
+                    self.status_bar.showMessage(f"Отправлено {success_count} из {len(activities_to_send_payload)} записей активности.")
+                elif response.status_code == 401:
+                    logger.warning("Токен недействителен, требуется повторная авторизация.")
+                    # Удаляем устаревший токен из секций Credentials, Server, API и DEFAULT
+                    if self.config.has_section('Credentials') and self.config.has_option('Credentials', 'auth_token'):
+                        self.config.remove_option('Credentials', 'auth_token')
+                    if self.config.has_section('Server') and self.config.has_option('Server', 'token'):
+                        self.config.remove_option('Server', 'token')
+                    if self.config.has_section('API') and self.config.has_option('API', 'token'):
+                        self.config.remove_option('API', 'token')
+                    if self.config.has_option(self.config.default_section, 'token'):
+                        self.config.remove_option(self.config.default_section, 'token')
+                    # Включаем демо-режим до повторной авторизации
+                    if not self.config.has_section('Settings'):
+                        self.config.add_section('Settings')
+                    self.config.set('Settings', 'demo_mode', 'True')
+                    # Сохраняем конфигурацию и очищаем заголовок авторизации
+                    self._save_config(self.config)
+                    self.session.headers.pop('Authorization', None)
+                    # Запрашиваем повторную авторизацию
+                    QTimer.singleShot(0, self.show_login_dialog_if_needed)
+                    # Возвращаем активности обратно в очередь
+                    for activity in activities_to_send:
+                        self.activity_queue.put(activity)
+                    return
+                else:
+                    logger.error(f"Ошибка при отправке данных: {response.status_code} - {response.text}")
+                    self.status_bar.showMessage(f"Ошибка отправки данных: {response.status_code}")
+                    # Возвращаем активности обратно в очередь
+                    for activity in activities_to_send:
+                        self.activity_queue.put(activity)
+            except requests.RequestException as e:
+                logger.error(f"Ошибка сети при отправке данных: {e}", exc_info=True)
+                self.status_bar.showMessage(f"Ошибка сети: {str(e)[:50]}...")
                 # Возвращаем активности обратно в очередь
                 for activity in activities_to_send:
                     self.activity_queue.put(activity)
-        except requests.RequestException as e:
-            logger.error(f"Ошибка сети при отправке данных: {e}", exc_info=True)
-            self.status_bar.showMessage(f"Ошибка сети: {str(e)[:50]}...")
-            # Возвращаем активности обратно в очередь
-            for activity in activities_to_send:
-                self.activity_queue.put(activity)
+            except Exception as e:
+                logger.error(f"Непредвиденная ошибка при отправке данных: {e}", exc_info=True)
+                self.status_bar.showMessage(f"Ошибка: {str(e)[:50]}...")
+                # Возвращаем активности обратно в очередь
+                for activity in activities_to_send:
+                    self.activity_queue.put(activity)
         except Exception as e:
             logger.error(f"Непредвиденная ошибка при отправке данных: {e}", exc_info=True)
             self.status_bar.showMessage(f"Ошибка: {str(e)[:50]}...")
@@ -3050,6 +3126,201 @@ class TimeTrackerApp(QMainWindow):
             logger.error(f"Ошибка при получении UTC времени: {e}")
             # В случае ошибки возвращаем текущее время без UTC
             return datetime.now().isoformat() + 'Z'
+
+    def _send_with_retry(self, url, data, headers, max_retries=3, base_delay=2):
+        """
+        Отправляет данные на сервер с механизмом повторных попыток.
+        
+        Args:
+            url: URL для отправки данных
+            data: Данные для отправки (будут сериализованы в JSON)
+            headers: Заголовки запроса
+            max_retries: Максимальное количество попыток
+            base_delay: Базовая задержка между попытками (в секундах)
+            
+        Returns:
+            tuple: (success, response, error_message)
+                success - булево значение успешности операции
+                response - объект ответа requests.Response или None
+                error_message - строка с сообщением об ошибке или None
+        """
+        for attempt in range(1, max_retries + 1):
+            try:
+                if attempt > 1:
+                    logger.info(f"Повторная попытка {attempt}/{max_retries} отправки данных")
+                
+                # Отправляем запрос
+                response = self.session.post(url, json=data, headers=headers, timeout=(5, 30))
+                
+                # Проверяем код ответа
+                if response.status_code in [200, 201]:
+                    # Успешный ответ
+                    return True, response, None
+                elif response.status_code == 401:
+                    # Ошибка авторизации, требуется новый токен
+                    return False, response, "Требуется авторизация"
+                elif response.status_code in [429, 500, 502, 503, 504]:
+                    # Временные ошибки сервера, можно повторить
+                    logger.warning(f"Временная ошибка сервера: {response.status_code}. Попытка {attempt}/{max_retries}")
+                    
+                    if attempt < max_retries:
+                        # Увеличиваем задержку с каждой попыткой (экспоненциальная задержка)
+                        current_delay = base_delay * (2 ** (attempt - 1))
+                        logger.info(f"Ожидание {current_delay} секунд перед следующей попыткой...")
+                        time.sleep(current_delay)
+                    else:
+                        # Достигнуто максимальное количество попыток
+                        return False, response, f"Ошибка сервера после {max_retries} попыток: {response.status_code}"
+                else:
+                    # Другие ошибки
+                    return False, response, f"Ошибка сервера: {response.status_code} - {response.text[:100]}"
+                    
+            except requests.exceptions.ConnectionError as e:
+                logger.warning(f"Ошибка соединения при попытке {attempt}/{max_retries}: {e}")
+                if attempt < max_retries:
+                    current_delay = base_delay * (2 ** (attempt - 1))
+                    logger.info(f"Ожидание {current_delay} секунд перед следующей попыткой...")
+                    time.sleep(current_delay)
+                else:
+                    return False, None, f"Ошибка соединения после {max_retries} попыток: {str(e)}"
+                    
+            except requests.exceptions.Timeout as e:
+                logger.warning(f"Таймаут при попытке {attempt}/{max_retries}: {e}")
+                if attempt < max_retries:
+                    current_delay = base_delay * (2 ** (attempt - 1))
+                    logger.info(f"Ожидание {current_delay} секунд перед следующей попыткой...")
+                    time.sleep(current_delay)
+                else:
+                    return False, None, f"Таймаут после {max_retries} попыток: {str(e)}"
+                    
+            except Exception as e:
+                logger.error(f"Непредвиденная ошибка при отправке данных: {e}", exc_info=True)
+                return False, None, f"Непредвиденная ошибка: {str(e)}"
+        
+        # Если мы дошли до этой точки, значит все попытки исчерпаны
+        return False, None, f"Все {max_retries} попытки отправки исчерпаны"
+        
+    def check_connection(self):
+        """Проверяет соединение с сервером"""
+        # Если включен демо-режим, пропускаем проверку
+        if self.config.getboolean('Settings', 'demo_mode', fallback=False):
+            self.connection_status.setText("Статус подключения: Оффлайн-режим")
+            self.connection_status.setStyleSheet("QLabel { color: orange; }")
+            logger.info("Проверка соединения пропущена - приложение в демо-режиме")
+            return
+            
+        # Если нет токена, вызываем диалог авторизации
+        auth_token = None
+        if self.config.has_section('Credentials') and self.config.has_option('Credentials', 'auth_token'):
+            auth_token = self.config.get('Credentials', 'auth_token')
+        
+        if not auth_token:
+            logger.warning("Проверка соединения: отсутствует токен авторизации")
+            self.connection_status.setText("Статус подключения: Требуется авторизация")
+            self.connection_status.setStyleSheet("QLabel { color: red; }")
+            self.login_required_signal.emit()
+            return
+            
+        # Получаем URL API
+        api_url = None
+        if self.config.has_section('Credentials') and self.config.has_option('Credentials', 'api_base_url'):
+            api_url = self.config.get('Credentials', 'api_base_url').rstrip('/')
+        else:
+            api_url = 'http://localhost:8000/api'
+            
+        # Проверяем на дублирование /api в URL
+        if api_url.endswith('/api/api'):
+            api_url = api_url.replace('/api/api', '/api')
+            # Сохраняем исправленный URL в конфигурацию
+            if self.config.has_section('Credentials'):
+                self.config.set('Credentials', 'api_base_url', api_url + '/')
+                self._save_config()
+        
+        logger.info(f"Проверка соединения с сервером: {api_url}")
+                
+        try:
+            # Проверяем соединение напрямую через запрос
+            headers = {'Authorization': f'Bearer {auth_token}'} if auth_token else {}
+            logger.debug(f"Заголовки запроса проверки соединения: {headers}")
+            
+            # Пробуем сначала обратиться к корневому URL API для проверки базового соединения
+            response = requests.get(f"{api_url}/", headers=headers, timeout=(3, 5))
+            
+            if response.status_code == 200:
+                self.connection_status.setText(f"Статус подключения: Подключено ({api_url})")
+                self.connection_status.setStyleSheet("QLabel { color: green; }")
+                logger.info(f"Проверка соединения: успешно, сервер доступен и отвечает")
+                
+                # Дополнительно проверяем активности для текущего пользователя
+                try:
+                    # Получаем user_id
+                    user_id = None
+                    if self.config.has_section('Credentials') and self.config.has_option('Credentials', 'user_id'):
+                        user_id = self.config.get('Credentials', 'user_id')
+                    
+                    if user_id:
+                        # Проверяем активности пользователя
+                        activities_url = f"{api_url}/activities/?user={user_id}&limit=1"
+                        logger.info(f"Запрос активностей пользователя: {activities_url}")
+                        activities_response = requests.get(activities_url, headers=headers, timeout=(3, 5))
+                        
+                        if activities_response.status_code == 200:
+                            try:
+                                activities_data = activities_response.json()
+                                logger.info(f"Ответ API активностей: {activities_data}")
+                                
+                                if activities_data and isinstance(activities_data, list) and len(activities_data) > 0:
+                                    # Получаем последнюю активность
+                                    last_activity = activities_data[0]
+                                    last_time = last_activity.get('end_time', '')
+                                    logger.info(f"Последняя активность пользователя на сервере: {last_time}")
+                                    self.status_bar.showMessage(f"Последняя синхронизированная активность: {last_time}")
+                                else:
+                                    logger.warning("Нет активностей для пользователя на сервере")
+                                    self.status_bar.showMessage("Нет записанных активностей на сервере")
+                            except Exception as e:
+                                logger.error(f"Ошибка при обработке ответа активностей: {e}")
+                        else:
+                            logger.warning(f"Не удалось получить активности: {activities_response.status_code} - {activities_response.text}")
+                except Exception as e:
+                    logger.error(f"Ошибка при проверке активностей: {e}")
+            elif response.status_code == 401:
+                self.connection_status.setText("Статус подключения: Ошибка авторизации")
+                self.connection_status.setStyleSheet("QLabel { color: red; }")
+                logger.warning(f"Ошибка проверки соединения: Недействительный токен (401)")
+                
+                # Показываем детали ответа для отладки
+                logger.debug(f"Детали ответа 401: {response.text}")
+                
+                # Планируем показ диалога авторизации с задержкой
+                QTimer.singleShot(1000, self.login_required_signal.emit)
+            else:
+                self.connection_status.setText(f"Статус подключения: Ошибка {response.status_code}")
+                self.connection_status.setStyleSheet("QLabel { color: red; }")
+                logger.warning(f"Ошибка проверки соединения: {response.status_code} - {response.text}")
+                
+                # Дополнительная отладочная информация
+                self.status_bar.showMessage(f"Ошибка сервера: {response.status_code} - {response.text[:50]}")
+        except requests.exceptions.ConnectionError as e:
+            self.connection_status.setText("Статус подключения: Сервер недоступен")
+            self.connection_status.setStyleSheet("QLabel { color: red; }")
+            logger.error(f"Ошибка соединения с сервером: {e}")
+            self.status_bar.showMessage(f"Сервер недоступен: проверьте подключение к сети")
+        except requests.exceptions.Timeout as e:
+            self.connection_status.setText("Статус подключения: Таймаут")
+            self.connection_status.setStyleSheet("QLabel { color: red; }")
+            logger.error(f"Таймаут при подключении к серверу: {e}")
+            self.status_bar.showMessage(f"Сервер не отвечает: превышено время ожидания")
+        except Exception as e:
+            self.connection_status.setText("Статус подключения: Ошибка")
+            self.connection_status.setStyleSheet("QLabel { color: red; }")
+            logger.error(f"Ошибка при проверке соединения: {e}", exc_info=True)
+            
+            # Отображаем информацию об ошибке
+            self.status_bar.showMessage(f"Ошибка соединения: {str(e)[:100]}")
+            
+            # Планируем показ диалога авторизации с задержкой
+            QTimer.singleShot(1000, self.login_required_signal.emit)
 
 
 class SettingsDialog(QDialog):

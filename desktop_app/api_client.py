@@ -27,12 +27,10 @@ logger = logging.getLogger("TimeTracker")
 
 class APIClient:
     def __init__(self, base_url: str):
-        # Заменяем localhost на удаленный сервер, если он передан в конфиге
-        if "127.0.0.1" in base_url or "localhost" in base_url:
-            base_url = "http://46.173.26.149:8000"
-            logger.info(f"URL изменен на удаленный сервер: {base_url}")
-            
+        # Используем URL из конфигурации напрямую, без замены localhost
         self.base_url = base_url.rstrip('/')
+        logger.info(f"Используем URL сервера из конфигурации: {self.base_url}")
+        
         self.token = None
         self.token_expires = None
         self.refresh_token = None
