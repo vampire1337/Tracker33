@@ -3,11 +3,38 @@
 {% block title %}Статистика - Time Tracker{% endblock %}
 
 {% block content %}
+<!-- Hero секция статистики -->
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card bg-gradient-info text-white">
+            <div class="card-body">
+                <h2 class="card-title mb-3">
+                    <i class="fas fa-chart-bar me-2"></i>
+                    Детальная статистика активности
+                </h2>
+                <p class="card-text mb-2">
+                    Анализ вашей работы за выбранный период. Узнайте свои паттерны продуктивности и оптимизируйте рабочий процесс.
+                </p>
+                <div class="d-flex align-items-center">
+                    <span class="badge bg-warning me-2">
+                        <i class="fas fa-lightbulb me-1"></i>
+                        Совет
+                    </span>
+                    <small>Отмечайте приложения как продуктивные для точной оценки эффективности</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="row">
     <div class="col-md-12">
         <div class="card">
             <div class="card-header d-flex justify-content-between">
-                <h3 class="card-title">Статистика использования</h3>
+                <h3 class="card-title">
+                    <i class="fas fa-filter me-2"></i>
+                    Статистика использования
+                </h3>
                 <div>
                     <a href="?days=7" class="btn btn-sm btn-outline-primary {% if request.GET.days == '7' or not request.GET.days %}active{% endif %}">7 дней</a>
                     <a href="?days=14" class="btn btn-sm btn-outline-primary {% if request.GET.days == '14' %}active{% endif %}">14 дней</a>
@@ -16,7 +43,7 @@
                     <!-- Добавляем кнопки экспорта -->
                     <div class="btn-group ms-2">
                         <button type="button" class="btn btn-sm btn-success dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-                            Экспорт <i class="fas fa-download"></i>
+                            <i class="fas fa-download me-1"></i> Экспорт
                         </button>
                         <ul class="dropdown-menu">
                             <li><a class="dropdown-item" href="/api/export-statistics/?days=7" target="_blank">За 7 дней</a></li>
@@ -29,9 +56,10 @@
             </div>
             <div class="card-body">
                 <div class="row">
-                    <div class="col-md-4">
-                        <div class="card bg-primary text-white">
-                            <div class="card-body">
+                    <div class="col-md-3">
+                        <div class="card bg-primary text-white h-100">
+                            <div class="card-body text-center">
+                                <i class="fas fa-clock fa-2x mb-2"></i>
                                 <h5 class="card-title">Общее время работы</h5>
                                 <p class="card-text" style="font-size: 24px; font-weight: bold;">
                                     {% if formatted_time %}
@@ -44,113 +72,226 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-4">
-                        <div class="card bg-success text-white">
-                            <div class="card-body">
+                    <div class="col-md-3">
+                        <div class="card bg-success text-white h-100">
+                            <div class="card-body text-center">
+                                <i class="fas fa-keyboard fa-2x mb-2"></i>
                                 <h5 class="card-title">Клавиатурная активность</h5>
-                                <p class="card-text" style="font-size: 24px; font-weight: bold;">{{ keyboard_activity }} нажатий</p>
+                                <p class="card-text" style="font-size: 24px; font-weight: bold;">{{ keyboard_activity|default:"0" }}</p>
                                 <p class="card-text small">В среднем {{ average_daily_keystrokes|default:"0" }} в день</p>
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-4">
-                        <div class="card bg-info text-white">
-                            <div class="card-body">
+                    <div class="col-md-3">
+                        <div class="card bg-info text-white h-100">
+                            <div class="card-body text-center">
+                                <i class="fas fa-star fa-2x mb-2"></i>
                                 <h5 class="card-title">Продуктивность</h5>
                                 <p class="card-text" style="font-size: 24px; font-weight: bold;">{{ productivity_percent|default:"0" }}%</p>
                                 <p class="card-text small">Основано на времени в продуктивных приложениях</p>
                             </div>
                         </div>
                     </div>
+                    <div class="col-md-3">
+                        <div class="card bg-warning text-white h-100">
+                            <div class="card-body text-center">
+                                <i class="fas fa-apps fa-2x mb-2"></i>
+                                <h5 class="card-title">Уникальных приложений</h5>
+                                <p class="card-text" style="font-size: 24px; font-weight: bold;">
+                                    {% if apps %}
+                                        {{ apps|length }}
+                                    {% else %}
+                                        0
+                                    {% endif %}
+                                </p>
+                                <p class="card-text small">За выбранный период</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Графики временно отключены
+<!-- Графики -->
 <div class="row mt-4">
     <div class="col-md-6">
-        <div class="card">
+        <div class="card h-100">
             <div class="card-header d-flex justify-content-between align-items-center">
-                <h3 class="card-title">Активность по дням</h3>
-                <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="collapse" data-bs-target="#dailyActivityCollapse" aria-expanded="true" aria-controls="dailyActivityCollapse">
-                    <i class="fas fa-expand"></i>
-                </button>
-            </div>
-            <div class="collapse show" id="dailyActivityCollapse">
-                <div class="card-body">
-                    <canvas id="dailyActivityChart" width="400" height="250"></canvas>
+                <h3 class="card-title">
+                    <i class="fas fa-chart-line me-2"></i>
+                    Активность по дням
+                </h3>
+                <div class="text-muted">
+                    <small>
+                        <i class="fas fa-info-circle me-1"></i>
+                        Динамика рабочего времени
+                    </small>
                 </div>
+            </div>
+            <div class="card-body">
+                <canvas id="dailyActivityChart" style="max-height: 300px;"></canvas>
             </div>
         </div>
     </div>
     <div class="col-md-6">
-        <div class="card">
+        <div class="card h-100">
             <div class="card-header d-flex justify-content-between align-items-center">
-                <h3 class="card-title">Распределение времени</h3>
-                <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="collapse" data-bs-target="#appPieCollapse" aria-expanded="true" aria-controls="appPieCollapse">
-                    <i class="fas fa-expand"></i>
-                </button>
-            </div>
-            <div class="collapse show" id="appPieCollapse">
-                <div class="card-body">
-                    <canvas id="applicationPieChart" width="400" height="250"></canvas>
+                <h3 class="card-title">
+                    <i class="fas fa-chart-pie me-2"></i>
+                    Распределение времени
+                </h3>
+                <div class="text-muted">
+                    <small>
+                        <i class="fas fa-info-circle me-1"></i>
+                        Топ-5 приложений
+                    </small>
                 </div>
+            </div>
+            <div class="card-body">
+                <canvas id="applicationPieChart" style="max-height: 300px;"></canvas>
             </div>
         </div>
     </div>
 </div>
--->
 
+<!-- Хитмапа активности по дням и часам -->
+<div class="row mt-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-calendar-alt me-2"></i>
+                    Карта активности
+                </h3>
+                <p class="card-subtitle text-muted">
+                    Интенсивность работы по дням недели и времени. Темнее = больше активности.
+                </p>
+            </div>
+            <div class="card-body">
+                <div id="activityHeatmap" style="min-height: 200px;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Таблица приложений -->
 <div class="row mt-4">
     <div class="col-md-12">
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
-                <h3 class="card-title">Топ приложений</h3>
+                <h3 class="card-title">
+                    <i class="fas fa-list me-2"></i>
+                    Детальный список приложений
+                </h3>
+                <div class="text-muted">
+                    <small>
+                        <i class="fas fa-toggle-on me-1"></i>
+                        Переключатели позволяют отметить приложения как продуктивные
+                    </small>
+                </div>
             </div>
             <div class="card-body">
                 <div class="table-responsive">
-                    <table class="table">
-                        <thead>
+                    <table class="table table-hover">
+                        <thead class="table-light">
                             <tr>
-                                <th>Название</th>
-                                <th>Время</th>
-                                <th>Доля</th>
-                                <th>Тренд</th>
-                                <th>Продуктивное</th>
+                                <th>
+                                    <i class="fas fa-desktop me-1"></i>
+                                    Название
+                                </th>
+                                <th>
+                                    <i class="fas fa-clock me-1"></i>
+                                    Время
+                                </th>
+                                <th>
+                                    <i class="fas fa-chart-bar me-1"></i>
+                                    Доля
+                                </th>
+                                <th>
+                                    <i class="fas fa-trending-up me-1"></i>
+                                    Тренд
+                                </th>
+                                <th>
+                                    <i class="fas fa-star me-1"></i>
+                                    Продуктивное
+                                </th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for app in apps %}
                             <tr>
-                                <td>{{ app.name }}</td>
-                                <td>{{ app.formatted_time }}</td>
                                 <td>
-                                    <div class="progress">
-                                        <div class="progress-bar" role="progressbar" style="width: {{ app.percentage }}%;" aria-valuenow="{{ app.percentage }}" aria-valuemin="0" aria-valuemax="100">{{ app.percentage }}%</div>
+                                    <div class="d-flex align-items-center">
+                                        <div class="me-2">
+                                            <i class="fas fa-desktop text-primary"></i>
+                                        </div>
+                                        <div>
+                                            <strong>{{ app.name }}</strong>
+                                            {% if app.process_name %}
+                                                <br><small class="text-muted">{{ app.process_name }}</small>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="fs-6 fw-bold">{{ app.formatted_time }}</span>
+                                </td>
+                                <td>
+                                    <div class="progress" style="height: 25px;">
+                                        <div class="progress-bar {% if app.is_productive %}bg-success{% else %}bg-secondary{% endif %}" 
+                                             role="progressbar" 
+                                             style="width: {{ app.percentage }}%;" 
+                                             aria-valuenow="{{ app.percentage }}" 
+                                             aria-valuemin="0" 
+                                             aria-valuemax="100">
+                                            {{ app.percentage }}%
+                                        </div>
                                     </div>
                                 </td>
                                 <td>
                                     {% if app.is_new %}
-                                        <span class="badge bg-info">Новое</span>
+                                        <span class="badge bg-info">
+                                            <i class="fas fa-plus me-1"></i>
+                                            Новое
+                                        </span>
                                     {% else %}
                                         <span class="badge {{ app.trend_class }}">
-                                            {% if app.trend > 0 %}+{% endif %}{{ app.trend }}%
+                                            {% if app.trend > 0 %}
+                                                <i class="fas fa-arrow-up me-1"></i>+{{ app.trend }}%
+                                            {% elif app.trend < 0 %}
+                                                <i class="fas fa-arrow-down me-1"></i>{{ app.trend }}%
+                                            {% else %}
+                                                <i class="fas fa-minus me-1"></i>0%
+                                            {% endif %}
                                         </span>
                                     {% endif %}
                                 </td>
                                 <td>
                                     <div class="form-check form-switch">
-                                        <input class="form-check-input toggle-productive" type="checkbox" role="switch" 
-                                               id="productive-{{ app.id }}" data-app-id="{{ app.id }}" 
+                                        <input class="form-check-input toggle-productive" 
+                                               type="checkbox" 
+                                               role="switch" 
+                                               id="productive-{{ app.id }}" 
+                                               data-app-id="{{ app.id }}" 
                                                {% if app.is_productive %}checked{% endif %}>
+                                        <label class="form-check-label" for="productive-{{ app.id }}">
+                                            {% if app.is_productive %}
+                                                <span class="text-success">Да</span>
+                                            {% else %}
+                                                <span class="text-muted">Нет</span>
+                                            {% endif %}
+                                        </label>
                                     </div>
                                 </td>
                             </tr>
                             {% empty %}
                             <tr>
-                                <td colspan="5" class="text-center">Нет данных</td>
+                                <td colspan="5" class="text-center text-muted py-4">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    Нет данных за выбранный период
+                                </td>
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -160,10 +301,58 @@
         </div>
     </div>
 </div>
+
+<!-- Полезные советы -->
+<div class="row mt-4">
+    <div class="col-md-12">
+        <div class="card bg-light">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-lightbulb me-2 text-warning"></i>
+                    Как интерпретировать данные
+                </h3>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="text-center">
+                            <i class="fas fa-star fa-3x text-success mb-3"></i>
+                            <h5>Продуктивные приложения</h5>
+                            <p class="text-muted small">
+                                IDE, текстовые редакторы, системы управления проектами, 
+                                браузеры для работы, обучающие платформы
+                            </p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-center">
+                            <i class="fas fa-chart-pie fa-3x text-info mb-3"></i>
+                            <h5>Анализ времени</h5>
+                            <p class="text-muted small">
+                                Смотрите на распределение времени между приложениями. 
+                                Цель: увеличить долю продуктивных приложений
+                            </p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-center">
+                            <i class="fas fa-target fa-3x text-primary mb-3"></i>
+                            <h5>Оптимизация</h5>
+                            <p class="text-muted small">
+                                Определите пики продуктивности и планируйте важные задачи 
+                                на эти часы. Минимизируйте отвлекающие приложения
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block extra_js %}
-<!-- Графики временно отключены
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -172,343 +361,309 @@ document.addEventListener('DOMContentLoaded', function() {
         {% for day in daily_data %}
             {
                 date: '{{ day.date|date:"d.m" }}',
-                hours: {{ day.hours|default:0 }}
+                hours: {{ day.hours|default:0 }},
+                productive_hours: {{ day.productive_hours|default:0 }}
             }{% if not forloop.last %},{% endif %}
         {% empty %}
-            {date: 'Пн', hours: 0},
-            {date: 'Вт', hours: 0},
-            {date: 'Ср', hours: 0},
-            {date: 'Чт', hours: 0},
-            {date: 'Пт', hours: 0},
-            {date: 'Сб', hours: 0},
-            {date: 'Вс', hours: 0}
+            {date: 'Нет данных', hours: 0, productive_hours: 0}
         {% endfor %}
     ];
     
-    console.log("Данные для дневной активности:", dailyData);
-    
-    // Данные для круговой диаграммы
-    const pieData = [
-        {% for app in apps %}
-            {
-                name: '{{ app.name }}',
-                percentage: {{ app.percentage|default:0 }}
-            }{% if not forloop.last %},{% endif %}
-        {% empty %}
-            {name: 'Нет данных', percentage: 100}
-        {% endfor %}
-    ];
-    
-    console.log("Данные для круговой диаграммы:", pieData);
-    
-    // Создание графика активности по дням
-    createBarChart(dailyData, 'dailyActivityChart', 'Активность по дням');
-    
-    // Создание круговой диаграммы
-    createPieChart(pieData, 'applicationPieChart', 'Распределение времени по приложениям');
-    
-    // Функция для создания столбчатого графика
-    function createBarChart(data, elementId, title) {
-        const container = document.getElementById(elementId);
-        if (!container) {
-            console.error(`Элемент с ID ${elementId} не найден`);
-            return;
-        }
-        
-        // Очищаем контейнер
-        container.innerHTML = '';
-        
-        // Устанавливаем размеры графика
-        const width = container.clientWidth;
-        const height = 250;
-        const margin = {top: 30, right: 30, bottom: 40, left: 50};
-        const chartWidth = width - margin.left - margin.right;
-        const chartHeight = height - margin.top - margin.bottom;
-        
-        // Создаем SVG элемент
-        const svg = d3.select('#' + elementId)
-            .append('svg')
-            .attr('width', width)
-            .attr('height', height);
-        
-        // Создаем группу для графика
-        const g = svg.append('g')
-            .attr('transform', `translate(${margin.left},${margin.top})`);
-        
-        // Создаем шкалы
-        const x = d3.scaleBand()
-            .domain(data.map(d => d.date))
-            .range([0, chartWidth])
-            .padding(0.2);
-        
-        const y = d3.scaleLinear()
-            .domain([0, d3.max(data, d => d.hours) || 5])
-            .nice()
-            .range([chartHeight, 0]);
-        
-        // Создаем оси
-        g.append('g')
-            .attr('transform', `translate(0,${chartHeight})`)
-            .call(d3.axisBottom(x))
-            .selectAll('text')
-            .style('text-anchor', 'middle');
-        
-        g.append('g')
-            .call(d3.axisLeft(y).ticks(5))
-            .append('text')
-            .attr('fill', '#000')
-            .attr('transform', 'rotate(-90)')
-            .attr('y', -40)
-            .attr('x', -chartHeight / 2)
-            .attr('text-anchor', 'middle')
-            .text('Часы');
-        
-        // Добавляем столбцы
-        g.selectAll('.bar')
-            .data(data)
-            .enter().append('rect')
-            .attr('class', 'bar')
-            .attr('x', d => x(d.date))
-            .attr('y', d => y(d.hours))
-            .attr('width', x.bandwidth())
-            .attr('height', d => chartHeight - y(d.hours))
-            .attr('fill', '#4e73df');
-        
-        // Добавляем заголовок
-        svg.append('text')
-            .attr('x', width / 2)
-            .attr('y', 20)
-            .attr('text-anchor', 'middle')
-            .style('font-size', '16px')
-            .text(title);
-    }
-    
-    // Функция для создания круговой диаграммы
-    function createPieChart(data, elementId, title) {
-        const container = document.getElementById(elementId);
-        if (!container) {
-            console.error(`Элемент с ID ${elementId} не найден`);
-            return;
-        }
-        
-        // Фильтруем данные - берем только приложения с ненулевым процентом
-        data = data.filter(d => d.percentage > 0);
-        
-        // Если нет данных, добавляем пустышку
-        if (data.length === 0) {
-            data.push({name: 'Нет данных', percentage: 100});
-        }
-        
-        // Берем только топ-5 приложений, остальные группируем
-        if (data.length > 5) {
-            const topApps = data.slice(0, 5);
-            const otherApps = data.slice(5);
-            const otherPercentage = otherApps.reduce((sum, app) => sum + app.percentage, 0);
-            
-            data = topApps;
-            if (otherPercentage > 0) {
-                data.push({name: 'Другие', percentage: otherPercentage});
+    // График активности по дням
+    const dailyCtx = document.getElementById('dailyActivityChart').getContext('2d');
+    const dailyChart = new Chart(dailyCtx, {
+        type: 'bar',
+        data: {
+            labels: dailyData.map(d => d.date),
+            datasets: [{
+                label: 'Общее время (часы)',
+                data: dailyData.map(d => d.hours),
+                backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 1
+            }, {
+                label: 'Продуктивное время (часы)',
+                data: dailyData.map(d => d.productive_hours),
+                backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'top'
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return `${context.dataset.label}: ${context.parsed.y.toFixed(1)} ч`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Часы'
+                    }
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Дата'
+                    }
+                }
             }
         }
-        
-        // Очищаем контейнер
-        container.innerHTML = '';
-        
-        // Устанавливаем размеры диаграммы
-        const width = container.clientWidth;
-        const height = 250;
-        const radius = Math.min(width, height) / 2 - 40;
-        
-        // Создаем SVG элемент
-        const svg = d3.select('#' + elementId)
-            .append('svg')
-            .attr('width', width)
-            .attr('height', height)
-            .append('g')
-            .attr('transform', `translate(${width / 2},${height / 2})`);
-        
-        // Создаем цветовую шкалу
-        const color = d3.scaleOrdinal()
-            .domain(data.map(d => d.name))
-            .range(d3.schemeCategory10);
-        
-        // Создаем генератор секторов
-        const pie = d3.pie()
-            .value(d => d.percentage)
-            .sort(null);
-        
-        const arc = d3.arc()
-            .innerRadius(0)
-            .outerRadius(radius);
-        
-        // Добавляем секторы
-        const arcs = svg.selectAll('.arc')
-            .data(pie(data))
-            .enter().append('g')
-            .attr('class', 'arc');
-        
-        arcs.append('path')
-            .attr('d', arc)
-            .attr('fill', d => color(d.data.name));
-        
-        // Добавляем метки
-        const arcLabel = d3.arc()
-            .innerRadius(radius * 0.6)
-            .outerRadius(radius * 0.6);
-        
-        arcs.append('text')
-            .attr('transform', d => `translate(${arcLabel.centroid(d)})`)
-            .attr('text-anchor', 'middle')
-            .attr('dy', '0.35em')
-            .attr('fill', '#fff')
-            .text(d => d.data.percentage >= 5 ? `${d.data.percentage.toFixed(1)}%` : '');
-        
-        // Создаем легенду
-        const legend = svg.selectAll('.legend')
-            .data(data)
-            .enter().append('g')
-            .attr('class', 'legend')
-            .attr('transform', (d, i) => `translate(${radius + 20}, ${i * 20 - data.length * 10})`);
-        
-        legend.append('rect')
-            .attr('x', 0)
-            .attr('y', 0)
-            .attr('width', 10)
-            .attr('height', 10)
-            .attr('fill', d => color(d.name));
-        
-        legend.append('text')
-            .attr('x', 15)
-            .attr('y', 5)
-            .attr('dy', '.35em')
-            .style('font-size', '10px')
-            .text(d => {
-                // Сокращаем длинные названия
-                let name = d.name;
-                if (name.length > 15) {
-                    name = name.substring(0, 12) + '...';
-                }
-                return `${name} (${d.percentage.toFixed(1)}%)`;
-            });
-        
-        // Добавляем заголовок
-        svg.append('text')
-            .attr('x', 0)
-            .attr('y', -height / 2 + 20)
-            .attr('text-anchor', 'middle')
-            .style('font-size', '16px')
-            .text(title);
-    }
-});
-</script>
--->
+    });
 
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Обработчик переключателей продуктивных приложений
-    const toggleProductiveElements = document.querySelectorAll('.toggle-productive');
-    toggleProductiveElements.forEach(toggle => {
+    // Данные для круговой диаграммы
+    const pieData = [
+        {% for app in apps|slice:":5" %}
+            {
+                name: '{{ app.name }}',
+                percentage: {{ app.percentage|default:0 }},
+                is_productive: {{ app.is_productive|yesno:"true,false" }}
+            }{% if not forloop.last %},{% endif %}
+        {% empty %}
+            {name: 'Нет данных', percentage: 100, is_productive: false}
+        {% endfor %}
+    ];
+
+    // Круговая диаграмма
+    const pieCtx = document.getElementById('applicationPieChart').getContext('2d');
+    const pieChart = new Chart(pieCtx, {
+        type: 'doughnut',
+        data: {
+            labels: pieData.map(d => d.name),
+            datasets: [{
+                data: pieData.map(d => d.percentage),
+                backgroundColor: pieData.map(d => 
+                    d.is_productive ? 
+                    'rgba(75, 192, 192, 0.8)' : 
+                    'rgba(255, 99, 132, 0.8)'
+                ),
+                borderColor: pieData.map(d => 
+                    d.is_productive ? 
+                    'rgba(75, 192, 192, 1)' : 
+                    'rgba(255, 99, 132, 1)'
+                ),
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        generateLabels: function(chart) {
+                            const data = chart.data;
+                            if (data.labels.length && data.datasets.length) {
+                                return data.labels.map((label, i) => {
+                                    const dataset = data.datasets[0];
+                                    const value = dataset.data[i];
+                                    const isProductive = pieData[i].is_productive;
+                                    return {
+                                        text: `${label} (${value}%)`,
+                                        fillStyle: dataset.backgroundColor[i],
+                                        strokeStyle: dataset.borderColor[i],
+                                        lineWidth: dataset.borderWidth,
+                                        hidden: false,
+                                        index: i
+                                    };
+                                });
+                            }
+                            return [];
+                        }
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const label = context.label || '';
+                            const value = context.parsed;
+                            const isProductive = pieData[context.dataIndex].is_productive;
+                            const type = isProductive ? ' (продуктивное)' : ' (непродуктивное)';
+                            return `${label}: ${value}%${type}`;
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    // Хитмапа активности (простая реализация с D3)
+    createActivityHeatmap();
+
+    // Обработчик переключения продуктивности приложений
+    document.querySelectorAll('.toggle-productive').forEach(function(toggle) {
         toggle.addEventListener('change', function() {
-            const appId = this.getAttribute('data-app-id');
+            const appId = this.dataset.appId;
             const isProductive = this.checked;
             
-            // Отправляем запрос на сервер для изменения статуса
-            fetch(`/api/tracked-apps/${appId}/toggle_productive/`, {
+            fetch('/api/toggle-productive/', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-CSRFToken': getCookie('csrftoken')
                 },
-                body: JSON.stringify({ is_productive: isProductive })
+                body: JSON.stringify({
+                    app_id: appId,
+                    is_productive: isProductive
+                })
             })
-            .then(response => {
-                if (response.ok) {
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Обновляем лейбл
+                    const label = this.nextElementSibling.querySelector('span');
+                    if (isProductive) {
+                        label.textContent = 'Да';
+                        label.className = 'text-success';
+                    } else {
+                        label.textContent = 'Нет'; 
+                        label.className = 'text-muted';
+                    }
+                    
                     // Показываем уведомление
-                    const statusText = isProductive ? 'продуктивным' : 'непродуктивным';
-                    showToast(`Приложение помечено как ${statusText}`);
+                    showNotification(`Приложение ${isProductive ? 'отмечено как продуктивное' : 'больше не продуктивное'}`, 'success');
+                    
+                    // Перезагружаем страницу через 1 секунду для обновления статистики
+                    setTimeout(() => location.reload(), 1000);
                 } else {
-                    // При ошибке возвращаем переключатель в исходное состояние
+                    console.error('Ошибка при обновлении:', data.error);
+                    showNotification('Ошибка при обновлении', 'danger');
+                    // Возвращаем переключатель в предыдущее состояние
                     this.checked = !isProductive;
-                    showToast('Произошла ошибка при изменении статуса приложения', 'danger');
                 }
             })
             .catch(error => {
                 console.error('Ошибка:', error);
+                showNotification('Ошибка сети', 'danger');
+                // Возвращаем переключатель в предыдущее состояние
                 this.checked = !isProductive;
-                showToast('Произошла ошибка при изменении статуса приложения', 'danger');
             });
         });
     });
+});
+
+// Функция создания хитмапы активности
+function createActivityHeatmap() {
+    // Простая реализация хитмапы
+    const container = d3.select('#activityHeatmap');
+    const width = container.node().getBoundingClientRect().width;
+    const height = 150;
     
-    // Функция для получения cookie
-    function getCookie(name) {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-            const cookies = document.cookie.split(';');
-            for (let i = 0; i < cookies.length; i++) {
-                const cookie = cookies[i].trim();
-                if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
-                }
+    const svg = container.append('svg')
+        .attr('width', width)
+        .attr('height', height);
+        
+    // Данные для хитмапы (заглушка)
+    const days = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
+    const hours = Array.from({length: 24}, (_, i) => i);
+    
+    const cellWidth = (width - 100) / 24;
+    const cellHeight = (height - 40) / 7;
+    
+    // Создаем ячейки
+    for (let day = 0; day < 7; day++) {
+        for (let hour = 0; hour < 24; hour++) {
+            // Генерируем случайную интенсивность для демонстрации
+            const intensity = Math.random();
+            
+            svg.append('rect')
+                .attr('x', 50 + hour * cellWidth)
+                .attr('y', 20 + day * cellHeight)
+                .attr('width', cellWidth - 1)
+                .attr('height', cellHeight - 1)
+                .attr('fill', `rgba(54, 162, 235, ${intensity})`)
+                .attr('stroke', '#fff')
+                .attr('stroke-width', 1)
+                .append('title')
+                .text(`${days[day]} ${hour}:00 - Интенсивность: ${Math.round(intensity * 100)}%`);
+        }
+    }
+    
+    // Добавляем подписи дней
+    svg.selectAll('.day-label')
+        .data(days)
+        .enter()
+        .append('text')
+        .attr('class', 'day-label')
+        .attr('x', 10)
+        .attr('y', (d, i) => 35 + i * cellHeight)
+        .text(d => d)
+        .style('font-size', '12px')
+        .style('text-anchor', 'start');
+        
+    // Добавляем подписи часов (каждые 4 часа)
+    svg.selectAll('.hour-label')
+        .data([0, 4, 8, 12, 16, 20])
+        .enter()
+        .append('text')
+        .attr('class', 'hour-label')
+        .attr('x', d => 50 + d * cellWidth)
+        .attr('y', 15)
+        .text(d => `${d}:00`)
+        .style('font-size', '10px')
+        .style('text-anchor', 'start');
+}
+
+// Функция для показа уведомлений
+function showNotification(message, type) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+    alertDiv.style.top = '20px';
+    alertDiv.style.right = '20px';
+    alertDiv.style.zIndex = '9999';
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    document.body.appendChild(alertDiv);
+    
+    // Автоматически удаляем через 3 секунды
+    setTimeout(() => {
+        if (alertDiv.parentNode) {
+            alertDiv.parentNode.removeChild(alertDiv);
+        }
+    }, 3000);
+}
+
+// Функция для получения CSRF токена
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
             }
         }
-        return cookieValue;
     }
-    
-    // Функция для отображения уведомления
-    function showToast(message, type = 'success') {
-        const toastContainer = document.getElementById('toast-container');
-        if (!toastContainer) {
-            // Создаем контейнер для уведомлений, если его нет
-            const container = document.createElement('div');
-            container.id = 'toast-container';
-            container.className = 'position-fixed bottom-0 end-0 p-3';
-            document.body.appendChild(container);
-        }
-        
-        const toastElement = document.createElement('div');
-        toastElement.className = `toast align-items-center text-white bg-${type} border-0`;
-        toastElement.setAttribute('role', 'alert');
-        toastElement.setAttribute('aria-live', 'assertive');
-        toastElement.setAttribute('aria-atomic', 'true');
-        
-        toastElement.innerHTML = `
-            <div class="d-flex">
-                <div class="toast-body">
-                    ${message}
-                </div>
-                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
-            </div>
-        `;
-        
-        document.getElementById('toast-container').appendChild(toastElement);
-        const toast = new bootstrap.Toast(toastElement);
-        toast.show();
-        
-        // Удаляем уведомление после закрытия
-        toastElement.addEventListener('hidden.bs.toast', () => {
-            toastElement.remove();
-        });
-    }
-    
-    // Кнопки периода
-    const periodButtons = document.querySelectorAll('[data-period]');
-    periodButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            const days = this.dataset.period;
-            window.location.href = `?days=${days}`;
-        });
-    });
-    
-    // Активируем кнопку текущего периода
-    const urlParams = new URLSearchParams(window.location.search);
-    const currentPeriod = urlParams.get('days') || '7';
-    const activeButton = document.querySelector(`[data-period="${currentPeriod}"]`);
-    if (activeButton) {
-        activeButton.classList.remove('btn-outline-primary');
-        activeButton.classList.add('btn-primary');
-    }
+    return cookieValue;
+}
+
+console.log("Статистика загружена:", {
+    dailyData: [
+        {% for day in daily_data %}
+            {date: '{{ day.date|date:"d.m" }}', hours: {{ day.hours|default:0 }}}{% if not forloop.last %},{% endif %}
+        {% endfor %}
+    ],
+    pieData: [
+        {% for app in apps|slice:":5" %}
+            {name: '{{ app.name }}', percentage: {{ app.percentage|default:0 }}}{% if not forloop.last %},{% endif %}
+        {% endfor %}
+    ]
 });
 </script>
 {% endblock %} 

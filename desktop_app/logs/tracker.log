@@ -11703,3 +11703,1728 @@ TypeError: '_thread._ThreadHandle' object is not callable
 2025-06-03 08:55:48,472 - TimeTracker - INFO - Keyboard listener остановлен
 2025-06-03 08:55:48,472 - TimeTracker - INFO - Mouse listener остановлен
 2025-06-03 08:55:48,473 - TimeTracker - INFO - Приложение завершает работу корректно.
+2025-06-03 12:56:07,912 - TimeTracker - INFO - Директории приложения настроены: C:\Users\mihai\AppData\Roaming\TimeTracker
+2025-06-03 12:56:07,914 - TimeTracker - INFO - Конфигурация загружена из config.ini
+2025-06-03 12:56:07,915 - TimeTracker - ERROR - Ошибка при сохранении конфигурации: [WinError 3] Системе не удается найти указанный путь: ''
+2025-06-03 12:56:07,915 - TimeTracker - INFO - Конфигурация сохранена в резервное место: config.ini
+2025-06-03 12:56:07,916 - TimeTracker - INFO - Проверка и исправление конфигурации
+2025-06-03 12:56:07,916 - TimeTracker - ERROR - Ошибка при сохранении конфигурации: [WinError 3] Системе не удается найти указанный путь: ''
+2025-06-03 12:56:07,917 - TimeTracker - INFO - Конфигурация сохранена в резервное место: config.ini
+2025-06-03 12:56:07,917 - TimeTracker - INFO - Используем URL сервера из конфигурации: http://147.45.153.16:8000/api
+2025-06-03 12:56:07,924 - TimeTracker - WARNING - Загруженный токен истек, требуется повторная авторизация
+2025-06-03 12:56:07,925 - TimeTracker - ERROR - Ошибка загрузки токена: [WinError 32] Процесс не может получить доступ к файлу, так как этот файл занят другим процессом: 'C:\\Users\\mihai\\.timetracker\\token.json'
+2025-06-03 12:56:07,925 - TimeTracker - INFO - API клиент инициализирован с базовым URL: http://147.45.153.16:8000/api
+2025-06-03 12:56:07,926 - TimeTracker - INFO - Загружено 64 отслеживаемых приложений.
+2025-06-03 12:56:08,331 - TimeTracker - WARNING - Токен отсутствует или нет информации о сроке действия
+2025-06-03 12:56:08,332 - TimeTracker - INFO - Попытка обновления токена через refresh
+2025-06-03 12:56:08,332 - TimeTracker - WARNING - Нет refresh токена для обновления аутентификации
+2025-06-03 12:56:08,332 - TimeTracker - WARNING - Не удалось обновить токен. Требуется повторная авторизация.
+2025-06-03 12:56:08,333 - TimeTracker - WARNING - Нет действительного токена для получения списка приложений
+2025-06-03 12:56:08,333 - TimeTracker - WARNING - Не удалось получить список приложений с сервера
+2025-06-03 12:56:08,333 - TimeTracker - INFO - Поиск запущенных приложений...
+2025-06-03 12:56:09,267 - TimeTracker - INFO - Обнаружено 96 приложений из 457 процессов (отфильтровано 120)
+2025-06-03 12:56:09,268 - TimeTracker - INFO - Обнаружено запущенных приложений: 96
+2025-06-03 12:56:09,269 - TimeTracker - INFO - Обновлен список приложений: 96 запущенных процессов
+2025-06-03 12:56:09,298 - TimeTracker - INFO - Библиотеки pynput успешно импортированы
+2025-06-03 12:56:09,305 - TimeTracker - INFO - Слушатель клавиатуры создан успешно
+2025-06-03 12:56:09,306 - TimeTracker - INFO - Слушатель мыши создан успешно
+2025-06-03 12:56:09,306 - TimeTracker - INFO - Слушатель клавиатуры запущен успешно
+2025-06-03 12:56:09,307 - TimeTracker - INFO - Слушатель мыши запущен успешно
+2025-06-03 12:56:09,310 - TimeTracker - INFO - Настройка слушателей и таймеров завершена успешно. Интервал обновления: 5 сек, отправка данных: 10 сек.
+2025-06-03 12:56:09,310 - TimeTracker - INFO - Поиск запущенных приложений...
+2025-06-03 12:56:10,075 - TimeTracker - INFO - Обнаружено 96 приложений из 456 процессов (отфильтровано 120)
+2025-06-03 12:56:10,075 - TimeTracker - INFO - Обнаружено запущенных приложений: 96
+2025-06-03 12:56:10,076 - TimeTracker - INFO - Обновлен список приложений: 96 запущенных процессов
+2025-06-03 12:56:10,076 - TimeTracker - INFO - Приложение TimeTracker успешно инициализировано
+2025-06-03 12:56:11,076 - TimeTracker - INFO - Проверка соединения с сервером: http://147.45.153.16:8000/api
+2025-06-03 12:56:13,199 - TimeTracker - ERROR - Ошибка соединения с сервером: HTTPConnectionPool(host='147.45.153.16', port=8000): Max retries exceeded with url: /api/ (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x0000025D992082F0>: Failed to establish a new connection: [WinError 10061] Подключение не установлено, т.к. конечный компьютер отверг запрос на подключение'))
+2025-06-03 12:56:13,498 - pynput.mouse.Listener - ERROR - Unhandled exception in listener callback
+Traceback (most recent call last):
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\pynput\_util\win32.py", line 386, in _handler
+    converted = self._convert(code, msg, lpdata)
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\pynput\_util\win32.py", line 401, in _convert
+    raise NotImplementedError()
+NotImplementedError
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\pynput\_util\__init__.py", line 228, in inner
+    return f(self, *args, **kwargs)
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\pynput\_util\win32.py", line 390, in _handler
+    self._handle(code, msg, lpdata)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+TypeError: '_thread._ThreadHandle' object is not callable
+2025-06-03 12:56:15,262 - TimeTracker - WARNING - Загруженный токен истек, требуется повторная авторизация
+2025-06-03 12:56:15,263 - TimeTracker - INFO - Токен отсутствует или недействителен, вызывается диалог входа.
+2025-06-03 12:56:15,296 - TimeTracker - INFO - Начинаем новую сессию для python3.13.exe
+2025-06-03 12:56:15,298 - TimeTracker - INFO - Начата новая сессия активности: App='python3.13.exe', Title='Авторизация'
+2025-06-03 12:56:26,456 - TimeTracker - INFO - Используем URL сервера из конфигурации: http://147.45.153.16:8000/api
+2025-06-03 12:56:26,457 - TimeTracker - WARNING - Загруженный токен истек, требуется повторная авторизация
+2025-06-03 12:56:26,458 - TimeTracker - ERROR - Ошибка загрузки токена: [WinError 32] Процесс не может получить доступ к файлу, так как этот файл занят другим процессом: 'C:\\Users\\mihai\\.timetracker\\token.json'
+2025-06-03 12:56:26,459 - TimeTracker - INFO - Авторизация по URL: http://147.45.153.16:8000/api/token/
+2025-06-03 12:56:28,509 - TimeTracker - ERROR - Ошибка соединения при аутентификации: HTTPConnectionPool(host='147.45.153.16', port=8000): Max retries exceeded with url: /api/token/ (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x0000025D991FDBD0>: Failed to establish a new connection: [WinError 10061] Подключение не установлено, т.к. конечный компьютер отверг запрос на подключение'))
+2025-06-03 12:56:29,297 - TimeTracker - INFO - Изменилось активное окно: python3.13.exe -> python3.13.exe
+2025-06-03 12:56:29,298 - TimeTracker - INFO - Завершена сессия активности: App='python3.13.exe', Title='Авторизация, Duration=14s, Keyboard=24 нажатий. В очереди: 1
+2025-06-03 12:56:29,299 - TimeTracker - INFO - В очереди есть активности, запускаем немедленную отправку данных
+2025-06-03 12:56:29,300 - TimeTracker - INFO - Начата новая сессия активности: App='python3.13.exe', Title='Ошибка'
+2025-06-03 12:56:29,400 - TimeTracker - INFO - Начинаем отправку данных. В очереди 1 записей активности.
+2025-06-03 12:56:29,400 - TimeTracker - INFO - Найден токен авторизации длиной 228 символов.
+2025-06-03 12:56:29,400 - TimeTracker - INFO - Используется user_id: 3
+2025-06-03 12:56:29,401 - TimeTracker - INFO - URL API из секции Credentials: http://147.45.153.16:8000/api/
+2025-06-03 12:56:29,401 - TimeTracker - INFO - URL для отправки активностей: http://147.45.153.16:8000/api/activities/
+2025-06-03 12:56:29,401 - TimeTracker - INFO - Вычисленная длительность: 14.001046 секунд
+2025-06-03 12:56:29,402 - TimeTracker - INFO - Отправляем запрос на создание приложения: http://147.45.153.16:8000/api/applications/
+2025-06-03 12:56:31,462 - TimeTracker - ERROR - Ошибка при создании приложения python3.13.exe: HTTPConnectionPool(host='147.45.153.16', port=8000): Max retries exceeded with url: /api/applications/ (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x0000025D990E2D70>: Failed to establish a new connection: [WinError 10061] Подключение не установлено, т.к. конечный компьютер отверг запрос на подключение'))
+2025-06-03 12:56:31,463 - TimeTracker - INFO - Для приложения python3.13.exe выбран ID=1
+2025-06-03 12:56:31,463 - TimeTracker - INFO - Отправка активности: start_time=2025-06-03T09:56:15.297149Z, end_time=2025-06-03T09:56:29.298195Z, длительность=14.001046 секунд
+2025-06-03 12:56:31,463 - TimeTracker - INFO - Отправка 1 записей активности на сервер.
+2025-06-03 12:56:31,464 - TimeTracker - INFO - Отправляем пайлоад: {'application': 1, 'title': 'Авторизация', 'start_time': '2025-06-03T09:56:15.297149Z', 'end_time': '2025-06-03T09:56:29.298195Z', 'is_productive': True, 'app_name': 'python3.13.exe', 'keyboard_presses': 24}
+2025-06-03 12:56:33,535 - TimeTracker - ERROR - Ошибка при отправке записи: HTTPConnectionPool(host='147.45.153.16', port=8000): Max retries exceeded with url: /api/activities/ (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x0000025D990E3230>: Failed to establish a new connection: [WinError 10061] Подключение не установлено, т.к. конечный компьютер отверг запрос на подключение'))
+Traceback (most recent call last):
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\urllib3\connection.py", line 203, in _new_conn
+    sock = connection.create_connection(
+        (self._dns_host, self.port),
+    ...<2 lines>...
+        socket_options=self.socket_options,
+    )
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\urllib3\util\connection.py", line 85, in create_connection
+    raise err
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\urllib3\util\connection.py", line 73, in create_connection
+    sock.connect(sa)
+    ~~~~~~~~~~~~^^^^
+ConnectionRefusedError: [WinError 10061] Подключение не установлено, т.к. конечный компьютер отверг запрос на подключение
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\urllib3\connectionpool.py", line 791, in urlopen
+    response = self._make_request(
+        conn,
+    ...<10 lines>...
+        **response_kw,
+    )
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\urllib3\connectionpool.py", line 497, in _make_request
+    conn.request(
+    ~~~~~~~~~~~~^
+        method,
+        ^^^^^^^
+    ...<6 lines>...
+        enforce_content_length=enforce_content_length,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\urllib3\connection.py", line 395, in request
+    self.endheaders()
+    ~~~~~~~~~~~~~~~^^
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.13_3.13.1008.0_x64__qbz5n2kfra8p0\Lib\http\client.py", line 1333, in endheaders
+    self._send_output(message_body, encode_chunked=encode_chunked)
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.13_3.13.1008.0_x64__qbz5n2kfra8p0\Lib\http\client.py", line 1093, in _send_output
+    self.send(msg)
+    ~~~~~~~~~^^^^^
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.13_3.13.1008.0_x64__qbz5n2kfra8p0\Lib\http\client.py", line 1037, in send
+    self.connect()
+    ~~~~~~~~~~~~^^
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\urllib3\connection.py", line 243, in connect
+    self.sock = self._new_conn()
+                ~~~~~~~~~~~~~~^^
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\urllib3\connection.py", line 218, in _new_conn
+    raise NewConnectionError(
+        self, f"Failed to establish a new connection: {e}"
+    ) from e
+urllib3.exceptions.NewConnectionError: <urllib3.connection.HTTPConnection object at 0x0000025D990E3230>: Failed to establish a new connection: [WinError 10061] Подключение не установлено, т.к. конечный компьютер отверг запрос на подключение
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\requests\adapters.py", line 486, in send
+    resp = conn.urlopen(
+        method=request.method,
+    ...<9 lines>...
+        chunked=chunked,
+    )
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\urllib3\connectionpool.py", line 845, in urlopen
+    retries = retries.increment(
+        method, url, error=new_e, _pool=self, _stacktrace=sys.exc_info()[2]
+    )
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\urllib3\util\retry.py", line 515, in increment
+    raise MaxRetryError(_pool, url, reason) from reason  # type: ignore[arg-type]
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+urllib3.exceptions.MaxRetryError: HTTPConnectionPool(host='147.45.153.16', port=8000): Max retries exceeded with url: /api/activities/ (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x0000025D990E3230>: Failed to establish a new connection: [WinError 10061] Подключение не установлено, т.к. конечный компьютер отверг запрос на подключение'))
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\mihai\Heist_master_PC\Documents\GitHub\Tracker33\desktop_app\main.py", line 2572, in send_activity_data
+    response = self.session.post(activities_url, json=payload, headers=headers, timeout=30)
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\requests\sessions.py", line 637, in post
+    return self.request("POST", url, data=data, json=json, **kwargs)
+           ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\requests\sessions.py", line 589, in request
+    resp = self.send(prep, **send_kwargs)
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\requests\sessions.py", line 703, in send
+    r = adapter.send(request, **kwargs)
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\requests\adapters.py", line 519, in send
+    raise ConnectionError(e, request=request)
+requests.exceptions.ConnectionError: HTTPConnectionPool(host='147.45.153.16', port=8000): Max retries exceeded with url: /api/activities/ (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x0000025D990E3230>: Failed to establish a new connection: [WinError 10061] Подключение не установлено, т.к. конечный компьютер отверг запрос на подключение'))
+2025-06-03 12:56:33,544 - TimeTracker - INFO - Активность возвращена в очередь из-за ошибки: HTTPConnectionPool(host='147.45.153.16', port=8000): Max retries exceeded with url: /api/activities/ (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x0000025D990E3230>: Failed to establish a new connection: [WinError 10061] Подключение не установлено, т.к. конечный компьютер отверг запрос на подключение'))
+2025-06-03 12:56:33,545 - TimeTracker - ERROR - Ошибка при отправке данных: 400 - Успешно отправлено 0 из 1 записей
+2025-06-03 12:56:34,296 - TimeTracker - INFO - Изменилось активное окно: python3.13.exe -> python3.13.exe
+2025-06-03 12:56:34,296 - TimeTracker - INFO - Завершена сессия активности: App='python3.13.exe', Title='Ошибка, Duration=5s, Keyboard=0 нажатий. В очереди: 3
+2025-06-03 12:56:34,297 - TimeTracker - INFO - В очереди есть активности, запускаем немедленную отправку данных
+2025-06-03 12:56:34,299 - TimeTracker - INFO - Начата новая сессия активности: App='python3.13.exe', Title='Авторизация'
+2025-06-03 12:56:34,398 - TimeTracker - INFO - Начинаем отправку данных. В очереди 3 записей активности.
+2025-06-03 12:56:34,399 - TimeTracker - INFO - Найден токен авторизации длиной 228 символов.
+2025-06-03 12:56:34,399 - TimeTracker - INFO - Используется user_id: 3
+2025-06-03 12:56:34,400 - TimeTracker - INFO - URL API из секции Credentials: http://147.45.153.16:8000/api/
+2025-06-03 12:56:34,400 - TimeTracker - INFO - URL для отправки активностей: http://147.45.153.16:8000/api/activities/
+2025-06-03 12:56:34,400 - TimeTracker - INFO - Вычисленная длительность: 14.001046 секунд
+2025-06-03 12:56:34,401 - TimeTracker - INFO - Отправляем запрос на создание приложения: http://147.45.153.16:8000/api/applications/
+2025-06-03 12:56:36,447 - TimeTracker - ERROR - Ошибка при создании приложения python3.13.exe: HTTPConnectionPool(host='147.45.153.16', port=8000): Max retries exceeded with url: /api/applications/ (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x0000025D990C31D0>: Failed to establish a new connection: [WinError 10061] Подключение не установлено, т.к. конечный компьютер отверг запрос на подключение'))
+2025-06-03 12:56:36,447 - TimeTracker - INFO - Для приложения python3.13.exe выбран ID=1
+2025-06-03 12:56:36,447 - TimeTracker - INFO - Отправка активности: start_time=2025-06-03T09:56:15.297149Z, end_time=2025-06-03T09:56:29.298195Z, длительность=14.001046 секунд
+2025-06-03 12:56:36,448 - TimeTracker - INFO - Вычисленная длительность: 14.001046 секунд
+2025-06-03 12:56:36,448 - TimeTracker - INFO - Отправляем запрос на создание приложения: http://147.45.153.16:8000/api/applications/
+2025-06-03 12:56:38,508 - TimeTracker - ERROR - Ошибка при создании приложения python3.13.exe: HTTPConnectionPool(host='147.45.153.16', port=8000): Max retries exceeded with url: /api/applications/ (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x0000025D991E9D00>: Failed to establish a new connection: [WinError 10061] Подключение не установлено, т.к. конечный компьютер отверг запрос на подключение'))
+2025-06-03 12:56:38,508 - TimeTracker - INFO - Для приложения python3.13.exe выбран ID=1
+2025-06-03 12:56:38,508 - TimeTracker - INFO - Отправка активности: start_time=2025-06-03T09:56:15.297149Z, end_time=2025-06-03T09:56:29.298195Z, длительность=14.001046 секунд
+2025-06-03 12:56:38,509 - TimeTracker - INFO - Вычисленная длительность: 4.997536 секунд
+2025-06-03 12:56:38,509 - TimeTracker - INFO - Отправляем запрос на создание приложения: http://147.45.153.16:8000/api/applications/
+2025-06-03 12:56:40,569 - TimeTracker - ERROR - Ошибка при создании приложения python3.13.exe: HTTPConnectionPool(host='147.45.153.16', port=8000): Max retries exceeded with url: /api/applications/ (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x0000025D991EA030>: Failed to establish a new connection: [WinError 10061] Подключение не установлено, т.к. конечный компьютер отверг запрос на подключение'))
+2025-06-03 12:56:40,569 - TimeTracker - INFO - Для приложения python3.13.exe выбран ID=1
+2025-06-03 12:56:40,569 - TimeTracker - INFO - Отправка активности: start_time=2025-06-03T09:56:29.299428Z, end_time=2025-06-03T09:56:34.296964Z, длительность=4.997536 секунд
+2025-06-03 12:56:40,570 - TimeTracker - INFO - Отправка 3 записей активности на сервер.
+2025-06-03 12:56:40,570 - TimeTracker - INFO - Отправляем пайлоад: {'application': 1, 'title': 'Авторизация', 'start_time': '2025-06-03T09:56:15.297149Z', 'end_time': '2025-06-03T09:56:29.298195Z', 'is_productive': True, 'app_name': 'python3.13.exe', 'keyboard_presses': 24}
+2025-06-03 12:56:42,633 - TimeTracker - ERROR - Ошибка при отправке записи: HTTPConnectionPool(host='147.45.153.16', port=8000): Max retries exceeded with url: /api/activities/ (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x0000025D991E9590>: Failed to establish a new connection: [WinError 10061] Подключение не установлено, т.к. конечный компьютер отверг запрос на подключение'))
+Traceback (most recent call last):
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\urllib3\connection.py", line 203, in _new_conn
+    sock = connection.create_connection(
+        (self._dns_host, self.port),
+    ...<2 lines>...
+        socket_options=self.socket_options,
+    )
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\urllib3\util\connection.py", line 85, in create_connection
+    raise err
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\urllib3\util\connection.py", line 73, in create_connection
+    sock.connect(sa)
+    ~~~~~~~~~~~~^^^^
+ConnectionRefusedError: [WinError 10061] Подключение не установлено, т.к. конечный компьютер отверг запрос на подключение
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\urllib3\connectionpool.py", line 791, in urlopen
+    response = self._make_request(
+        conn,
+    ...<10 lines>...
+        **response_kw,
+    )
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\urllib3\connectionpool.py", line 497, in _make_request
+    conn.request(
+    ~~~~~~~~~~~~^
+        method,
+        ^^^^^^^
+    ...<6 lines>...
+        enforce_content_length=enforce_content_length,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\urllib3\connection.py", line 395, in request
+    self.endheaders()
+    ~~~~~~~~~~~~~~~^^
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.13_3.13.1008.0_x64__qbz5n2kfra8p0\Lib\http\client.py", line 1333, in endheaders
+    self._send_output(message_body, encode_chunked=encode_chunked)
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.13_3.13.1008.0_x64__qbz5n2kfra8p0\Lib\http\client.py", line 1093, in _send_output
+    self.send(msg)
+    ~~~~~~~~~^^^^^
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.13_3.13.1008.0_x64__qbz5n2kfra8p0\Lib\http\client.py", line 1037, in send
+    self.connect()
+    ~~~~~~~~~~~~^^
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\urllib3\connection.py", line 243, in connect
+    self.sock = self._new_conn()
+                ~~~~~~~~~~~~~~^^
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\urllib3\connection.py", line 218, in _new_conn
+    raise NewConnectionError(
+        self, f"Failed to establish a new connection: {e}"
+    ) from e
+urllib3.exceptions.NewConnectionError: <urllib3.connection.HTTPConnection object at 0x0000025D991E9590>: Failed to establish a new connection: [WinError 10061] Подключение не установлено, т.к. конечный компьютер отверг запрос на подключение
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\requests\adapters.py", line 486, in send
+    resp = conn.urlopen(
+        method=request.method,
+    ...<9 lines>...
+        chunked=chunked,
+    )
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\urllib3\connectionpool.py", line 845, in urlopen
+    retries = retries.increment(
+        method, url, error=new_e, _pool=self, _stacktrace=sys.exc_info()[2]
+    )
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\urllib3\util\retry.py", line 515, in increment
+    raise MaxRetryError(_pool, url, reason) from reason  # type: ignore[arg-type]
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+urllib3.exceptions.MaxRetryError: HTTPConnectionPool(host='147.45.153.16', port=8000): Max retries exceeded with url: /api/activities/ (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x0000025D991E9590>: Failed to establish a new connection: [WinError 10061] Подключение не установлено, т.к. конечный компьютер отверг запрос на подключение'))
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\mihai\Heist_master_PC\Documents\GitHub\Tracker33\desktop_app\main.py", line 2572, in send_activity_data
+    response = self.session.post(activities_url, json=payload, headers=headers, timeout=30)
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\requests\sessions.py", line 637, in post
+    return self.request("POST", url, data=data, json=json, **kwargs)
+           ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\requests\sessions.py", line 589, in request
+    resp = self.send(prep, **send_kwargs)
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\requests\sessions.py", line 703, in send
+    r = adapter.send(request, **kwargs)
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\requests\adapters.py", line 519, in send
+    raise ConnectionError(e, request=request)
+requests.exceptions.ConnectionError: HTTPConnectionPool(host='147.45.153.16', port=8000): Max retries exceeded with url: /api/activities/ (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x0000025D991E9590>: Failed to establish a new connection: [WinError 10061] Подключение не установлено, т.к. конечный компьютер отверг запрос на подключение'))
+2025-06-03 12:56:42,640 - TimeTracker - INFO - Активность возвращена в очередь из-за ошибки: HTTPConnectionPool(host='147.45.153.16', port=8000): Max retries exceeded with url: /api/activities/ (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x0000025D991E9590>: Failed to establish a new connection: [WinError 10061] Подключение не установлено, т.к. конечный компьютер отверг запрос на подключение'))
+2025-06-03 12:56:42,640 - TimeTracker - INFO - Отправляем пайлоад: {'application': 1, 'title': 'Авторизация', 'start_time': '2025-06-03T09:56:15.297149Z', 'end_time': '2025-06-03T09:56:29.298195Z', 'is_productive': True, 'app_name': 'python3.13.exe', 'keyboard_presses': 24}
+2025-06-03 12:56:44,707 - TimeTracker - ERROR - Ошибка при отправке записи: HTTPConnectionPool(host='147.45.153.16', port=8000): Max retries exceeded with url: /api/activities/ (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x0000025D991E8D10>: Failed to establish a new connection: [WinError 10061] Подключение не установлено, т.к. конечный компьютер отверг запрос на подключение'))
+Traceback (most recent call last):
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\urllib3\connection.py", line 203, in _new_conn
+    sock = connection.create_connection(
+        (self._dns_host, self.port),
+    ...<2 lines>...
+        socket_options=self.socket_options,
+    )
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\urllib3\util\connection.py", line 85, in create_connection
+    raise err
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\urllib3\util\connection.py", line 73, in create_connection
+    sock.connect(sa)
+    ~~~~~~~~~~~~^^^^
+ConnectionRefusedError: [WinError 10061] Подключение не установлено, т.к. конечный компьютер отверг запрос на подключение
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\urllib3\connectionpool.py", line 791, in urlopen
+    response = self._make_request(
+        conn,
+    ...<10 lines>...
+        **response_kw,
+    )
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\urllib3\connectionpool.py", line 497, in _make_request
+    conn.request(
+    ~~~~~~~~~~~~^
+        method,
+        ^^^^^^^
+    ...<6 lines>...
+        enforce_content_length=enforce_content_length,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\urllib3\connection.py", line 395, in request
+    self.endheaders()
+    ~~~~~~~~~~~~~~~^^
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.13_3.13.1008.0_x64__qbz5n2kfra8p0\Lib\http\client.py", line 1333, in endheaders
+    self._send_output(message_body, encode_chunked=encode_chunked)
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.13_3.13.1008.0_x64__qbz5n2kfra8p0\Lib\http\client.py", line 1093, in _send_output
+    self.send(msg)
+    ~~~~~~~~~^^^^^
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.13_3.13.1008.0_x64__qbz5n2kfra8p0\Lib\http\client.py", line 1037, in send
+    self.connect()
+    ~~~~~~~~~~~~^^
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\urllib3\connection.py", line 243, in connect
+    self.sock = self._new_conn()
+                ~~~~~~~~~~~~~~^^
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\urllib3\connection.py", line 218, in _new_conn
+    raise NewConnectionError(
+        self, f"Failed to establish a new connection: {e}"
+    ) from e
+urllib3.exceptions.NewConnectionError: <urllib3.connection.HTTPConnection object at 0x0000025D991E8D10>: Failed to establish a new connection: [WinError 10061] Подключение не установлено, т.к. конечный компьютер отверг запрос на подключение
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\requests\adapters.py", line 486, in send
+    resp = conn.urlopen(
+        method=request.method,
+    ...<9 lines>...
+        chunked=chunked,
+    )
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\urllib3\connectionpool.py", line 845, in urlopen
+    retries = retries.increment(
+        method, url, error=new_e, _pool=self, _stacktrace=sys.exc_info()[2]
+    )
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\urllib3\util\retry.py", line 515, in increment
+    raise MaxRetryError(_pool, url, reason) from reason  # type: ignore[arg-type]
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+urllib3.exceptions.MaxRetryError: HTTPConnectionPool(host='147.45.153.16', port=8000): Max retries exceeded with url: /api/activities/ (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x0000025D991E8D10>: Failed to establish a new connection: [WinError 10061] Подключение не установлено, т.к. конечный компьютер отверг запрос на подключение'))
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\mihai\Heist_master_PC\Documents\GitHub\Tracker33\desktop_app\main.py", line 2572, in send_activity_data
+    response = self.session.post(activities_url, json=payload, headers=headers, timeout=30)
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\requests\sessions.py", line 637, in post
+    return self.request("POST", url, data=data, json=json, **kwargs)
+           ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\requests\sessions.py", line 589, in request
+    resp = self.send(prep, **send_kwargs)
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\requests\sessions.py", line 703, in send
+    r = adapter.send(request, **kwargs)
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\requests\adapters.py", line 519, in send
+    raise ConnectionError(e, request=request)
+requests.exceptions.ConnectionError: HTTPConnectionPool(host='147.45.153.16', port=8000): Max retries exceeded with url: /api/activities/ (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x0000025D991E8D10>: Failed to establish a new connection: [WinError 10061] Подключение не установлено, т.к. конечный компьютер отверг запрос на подключение'))
+2025-06-03 12:56:44,712 - TimeTracker - INFO - Активность возвращена в очередь из-за ошибки: HTTPConnectionPool(host='147.45.153.16', port=8000): Max retries exceeded with url: /api/activities/ (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x0000025D991E8D10>: Failed to establish a new connection: [WinError 10061] Подключение не установлено, т.к. конечный компьютер отверг запрос на подключение'))
+2025-06-03 12:56:44,712 - TimeTracker - INFO - Отправляем пайлоад: {'application': 1, 'title': 'Ошибка', 'start_time': '2025-06-03T09:56:29.299428Z', 'end_time': '2025-06-03T09:56:34.296964Z', 'is_productive': True, 'app_name': 'python3.13.exe', 'keyboard_presses': 0}
+2025-06-03 12:56:46,769 - TimeTracker - ERROR - Ошибка при отправке записи: HTTPConnectionPool(host='147.45.153.16', port=8000): Max retries exceeded with url: /api/activities/ (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x0000025D991E9260>: Failed to establish a new connection: [WinError 10061] Подключение не установлено, т.к. конечный компьютер отверг запрос на подключение'))
+Traceback (most recent call last):
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\urllib3\connection.py", line 203, in _new_conn
+    sock = connection.create_connection(
+        (self._dns_host, self.port),
+    ...<2 lines>...
+        socket_options=self.socket_options,
+    )
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\urllib3\util\connection.py", line 85, in create_connection
+    raise err
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\urllib3\util\connection.py", line 73, in create_connection
+    sock.connect(sa)
+    ~~~~~~~~~~~~^^^^
+ConnectionRefusedError: [WinError 10061] Подключение не установлено, т.к. конечный компьютер отверг запрос на подключение
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\urllib3\connectionpool.py", line 791, in urlopen
+    response = self._make_request(
+        conn,
+    ...<10 lines>...
+        **response_kw,
+    )
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\urllib3\connectionpool.py", line 497, in _make_request
+    conn.request(
+    ~~~~~~~~~~~~^
+        method,
+        ^^^^^^^
+    ...<6 lines>...
+        enforce_content_length=enforce_content_length,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\urllib3\connection.py", line 395, in request
+    self.endheaders()
+    ~~~~~~~~~~~~~~~^^
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.13_3.13.1008.0_x64__qbz5n2kfra8p0\Lib\http\client.py", line 1333, in endheaders
+    self._send_output(message_body, encode_chunked=encode_chunked)
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.13_3.13.1008.0_x64__qbz5n2kfra8p0\Lib\http\client.py", line 1093, in _send_output
+    self.send(msg)
+    ~~~~~~~~~^^^^^
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.13_3.13.1008.0_x64__qbz5n2kfra8p0\Lib\http\client.py", line 1037, in send
+    self.connect()
+    ~~~~~~~~~~~~^^
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\urllib3\connection.py", line 243, in connect
+    self.sock = self._new_conn()
+                ~~~~~~~~~~~~~~^^
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\urllib3\connection.py", line 218, in _new_conn
+    raise NewConnectionError(
+        self, f"Failed to establish a new connection: {e}"
+    ) from e
+urllib3.exceptions.NewConnectionError: <urllib3.connection.HTTPConnection object at 0x0000025D991E9260>: Failed to establish a new connection: [WinError 10061] Подключение не установлено, т.к. конечный компьютер отверг запрос на подключение
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\requests\adapters.py", line 486, in send
+    resp = conn.urlopen(
+        method=request.method,
+    ...<9 lines>...
+        chunked=chunked,
+    )
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\urllib3\connectionpool.py", line 845, in urlopen
+    retries = retries.increment(
+        method, url, error=new_e, _pool=self, _stacktrace=sys.exc_info()[2]
+    )
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\urllib3\util\retry.py", line 515, in increment
+    raise MaxRetryError(_pool, url, reason) from reason  # type: ignore[arg-type]
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+urllib3.exceptions.MaxRetryError: HTTPConnectionPool(host='147.45.153.16', port=8000): Max retries exceeded with url: /api/activities/ (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x0000025D991E9260>: Failed to establish a new connection: [WinError 10061] Подключение не установлено, т.к. конечный компьютер отверг запрос на подключение'))
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\mihai\Heist_master_PC\Documents\GitHub\Tracker33\desktop_app\main.py", line 2572, in send_activity_data
+    response = self.session.post(activities_url, json=payload, headers=headers, timeout=30)
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\requests\sessions.py", line 637, in post
+    return self.request("POST", url, data=data, json=json, **kwargs)
+           ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\requests\sessions.py", line 589, in request
+    resp = self.send(prep, **send_kwargs)
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\requests\sessions.py", line 703, in send
+    r = adapter.send(request, **kwargs)
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\requests\adapters.py", line 519, in send
+    raise ConnectionError(e, request=request)
+requests.exceptions.ConnectionError: HTTPConnectionPool(host='147.45.153.16', port=8000): Max retries exceeded with url: /api/activities/ (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x0000025D991E9260>: Failed to establish a new connection: [WinError 10061] Подключение не установлено, т.к. конечный компьютер отверг запрос на подключение'))
+2025-06-03 12:56:46,776 - TimeTracker - INFO - Активность возвращена в очередь из-за ошибки: HTTPConnectionPool(host='147.45.153.16', port=8000): Max retries exceeded with url: /api/activities/ (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x0000025D991E9260>: Failed to establish a new connection: [WinError 10061] Подключение не установлено, т.к. конечный компьютер отверг запрос на подключение'))
+2025-06-03 12:56:46,776 - TimeTracker - ERROR - Ошибка при отправке данных: 400 - Успешно отправлено 0 из 3 записей
+2025-06-03 12:56:46,796 - TimeTracker - INFO - Начинаем отправку данных. В очереди 6 записей активности.
+2025-06-03 12:56:46,797 - TimeTracker - INFO - Найден токен авторизации длиной 228 символов.
+2025-06-03 12:56:46,797 - TimeTracker - INFO - Используется user_id: 3
+2025-06-03 12:56:46,798 - TimeTracker - INFO - URL API из секции Credentials: http://147.45.153.16:8000/api/
+2025-06-03 12:56:46,798 - TimeTracker - INFO - URL для отправки активностей: http://147.45.153.16:8000/api/activities/
+2025-06-03 12:56:46,798 - TimeTracker - INFO - Вычисленная длительность: 14.001046 секунд
+2025-06-03 12:56:46,799 - TimeTracker - INFO - Отправляем запрос на создание приложения: http://147.45.153.16:8000/api/applications/
+2025-06-03 12:56:48,869 - TimeTracker - ERROR - Ошибка при создании приложения python3.13.exe: HTTPConnectionPool(host='147.45.153.16', port=8000): Max retries exceeded with url: /api/applications/ (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x0000025D991E88D0>: Failed to establish a new connection: [WinError 10061] Подключение не установлено, т.к. конечный компьютер отверг запрос на подключение'))
+2025-06-03 12:56:48,870 - TimeTracker - INFO - Для приложения python3.13.exe выбран ID=1
+2025-06-03 12:56:48,870 - TimeTracker - INFO - Отправка активности: start_time=2025-06-03T09:56:15.297149Z, end_time=2025-06-03T09:56:29.298195Z, длительность=14.001046 секунд
+2025-06-03 12:56:48,870 - TimeTracker - INFO - Вычисленная длительность: 14.001046 секунд
+2025-06-03 12:56:48,871 - TimeTracker - INFO - Отправляем запрос на создание приложения: http://147.45.153.16:8000/api/applications/
+2025-06-03 12:56:50,934 - TimeTracker - ERROR - Ошибка при создании приложения python3.13.exe: HTTPConnectionPool(host='147.45.153.16', port=8000): Max retries exceeded with url: /api/applications/ (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x0000025D991E89E0>: Failed to establish a new connection: [WinError 10061] Подключение не установлено, т.к. конечный компьютер отверг запрос на подключение'))
+2025-06-03 12:56:50,935 - TimeTracker - INFO - Для приложения python3.13.exe выбран ID=1
+2025-06-03 12:56:50,935 - TimeTracker - INFO - Отправка активности: start_time=2025-06-03T09:56:15.297149Z, end_time=2025-06-03T09:56:29.298195Z, длительность=14.001046 секунд
+2025-06-03 12:56:50,936 - TimeTracker - INFO - Вычисленная длительность: 4.997536 секунд
+2025-06-03 12:56:50,936 - TimeTracker - INFO - Отправляем запрос на создание приложения: http://147.45.153.16:8000/api/applications/
+2025-06-03 12:56:52,995 - TimeTracker - ERROR - Ошибка при создании приложения python3.13.exe: HTTPConnectionPool(host='147.45.153.16', port=8000): Max retries exceeded with url: /api/applications/ (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x0000025D991E8160>: Failed to establish a new connection: [WinError 10061] Подключение не установлено, т.к. конечный компьютер отверг запрос на подключение'))
+2025-06-03 12:56:52,996 - TimeTracker - INFO - Для приложения python3.13.exe выбран ID=1
+2025-06-03 12:56:52,996 - TimeTracker - INFO - Отправка активности: start_time=2025-06-03T09:56:29.299428Z, end_time=2025-06-03T09:56:34.296964Z, длительность=4.997536 секунд
+2025-06-03 12:56:52,996 - TimeTracker - INFO - Вычисленная длительность: 14.001046 секунд
+2025-06-03 12:56:52,996 - TimeTracker - INFO - Отправляем запрос на создание приложения: http://147.45.153.16:8000/api/applications/
+2025-06-03 12:56:55,056 - TimeTracker - ERROR - Ошибка при создании приложения python3.13.exe: HTTPConnectionPool(host='147.45.153.16', port=8000): Max retries exceeded with url: /api/applications/ (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x0000025D991E8270>: Failed to establish a new connection: [WinError 10061] Подключение не установлено, т.к. конечный компьютер отверг запрос на подключение'))
+2025-06-03 12:56:55,056 - TimeTracker - INFO - Для приложения python3.13.exe выбран ID=1
+2025-06-03 12:56:55,057 - TimeTracker - INFO - Отправка активности: start_time=2025-06-03T09:56:15.297149Z, end_time=2025-06-03T09:56:29.298195Z, длительность=14.001046 секунд
+2025-06-03 12:56:55,057 - TimeTracker - INFO - Вычисленная длительность: 14.001046 секунд
+2025-06-03 12:56:55,057 - TimeTracker - INFO - Отправляем запрос на создание приложения: http://147.45.153.16:8000/api/applications/
+2025-06-03 12:56:57,118 - TimeTracker - ERROR - Ошибка при создании приложения python3.13.exe: HTTPConnectionPool(host='147.45.153.16', port=8000): Max retries exceeded with url: /api/applications/ (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x0000025D991E9E10>: Failed to establish a new connection: [WinError 10061] Подключение не установлено, т.к. конечный компьютер отверг запрос на подключение'))
+2025-06-03 12:56:57,118 - TimeTracker - INFO - Для приложения python3.13.exe выбран ID=1
+2025-06-03 12:56:57,119 - TimeTracker - INFO - Отправка активности: start_time=2025-06-03T09:56:15.297149Z, end_time=2025-06-03T09:56:29.298195Z, длительность=14.001046 секунд
+2025-06-03 12:56:57,119 - TimeTracker - INFO - Вычисленная длительность: 4.997536 секунд
+2025-06-03 12:56:57,119 - TimeTracker - INFO - Отправляем запрос на создание приложения: http://147.45.153.16:8000/api/applications/
+2025-06-03 12:56:59,177 - TimeTracker - ERROR - Ошибка при создании приложения python3.13.exe: HTTPConnectionPool(host='147.45.153.16', port=8000): Max retries exceeded with url: /api/applications/ (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x0000025D991EA140>: Failed to establish a new connection: [WinError 10061] Подключение не установлено, т.к. конечный компьютер отверг запрос на подключение'))
+2025-06-03 12:56:59,177 - TimeTracker - INFO - Для приложения python3.13.exe выбран ID=1
+2025-06-03 12:56:59,178 - TimeTracker - INFO - Отправляем клавиатурную активность: 2 нажатий
+2025-06-03 12:56:59,178 - TimeTracker - INFO - Отправка активности: start_time=2025-06-03T09:56:29.299428Z, end_time=2025-06-03T09:56:34.296964Z, длительность=4.997536 секунд
+2025-06-03 12:56:59,178 - TimeTracker - INFO - Отправка 6 записей активности на сервер.
+2025-06-03 12:56:59,179 - TimeTracker - INFO - Отправляем пайлоад: {'application': 1, 'title': 'Авторизация', 'start_time': '2025-06-03T09:56:15.297149Z', 'end_time': '2025-06-03T09:56:29.298195Z', 'is_productive': True, 'app_name': 'python3.13.exe', 'keyboard_presses': 24}
+2025-06-03 12:57:01,239 - TimeTracker - ERROR - Ошибка при отправке записи: HTTPConnectionPool(host='147.45.153.16', port=8000): Max retries exceeded with url: /api/activities/ (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x0000025D991EA360>: Failed to establish a new connection: [WinError 10061] Подключение не установлено, т.к. конечный компьютер отверг запрос на подключение'))
+Traceback (most recent call last):
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\urllib3\connection.py", line 203, in _new_conn
+    sock = connection.create_connection(
+        (self._dns_host, self.port),
+    ...<2 lines>...
+        socket_options=self.socket_options,
+    )
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\urllib3\util\connection.py", line 85, in create_connection
+    raise err
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\urllib3\util\connection.py", line 73, in create_connection
+    sock.connect(sa)
+    ~~~~~~~~~~~~^^^^
+ConnectionRefusedError: [WinError 10061] Подключение не установлено, т.к. конечный компьютер отверг запрос на подключение
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\urllib3\connectionpool.py", line 791, in urlopen
+    response = self._make_request(
+        conn,
+    ...<10 lines>...
+        **response_kw,
+    )
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\urllib3\connectionpool.py", line 497, in _make_request
+    conn.request(
+    ~~~~~~~~~~~~^
+        method,
+        ^^^^^^^
+    ...<6 lines>...
+        enforce_content_length=enforce_content_length,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\urllib3\connection.py", line 395, in request
+    self.endheaders()
+    ~~~~~~~~~~~~~~~^^
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.13_3.13.1008.0_x64__qbz5n2kfra8p0\Lib\http\client.py", line 1333, in endheaders
+    self._send_output(message_body, encode_chunked=encode_chunked)
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.13_3.13.1008.0_x64__qbz5n2kfra8p0\Lib\http\client.py", line 1093, in _send_output
+    self.send(msg)
+    ~~~~~~~~~^^^^^
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.13_3.13.1008.0_x64__qbz5n2kfra8p0\Lib\http\client.py", line 1037, in send
+    self.connect()
+    ~~~~~~~~~~~~^^
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\urllib3\connection.py", line 243, in connect
+    self.sock = self._new_conn()
+                ~~~~~~~~~~~~~~^^
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\urllib3\connection.py", line 218, in _new_conn
+    raise NewConnectionError(
+        self, f"Failed to establish a new connection: {e}"
+    ) from e
+urllib3.exceptions.NewConnectionError: <urllib3.connection.HTTPConnection object at 0x0000025D991EA360>: Failed to establish a new connection: [WinError 10061] Подключение не установлено, т.к. конечный компьютер отверг запрос на подключение
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\requests\adapters.py", line 486, in send
+    resp = conn.urlopen(
+        method=request.method,
+    ...<9 lines>...
+        chunked=chunked,
+    )
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\urllib3\connectionpool.py", line 845, in urlopen
+    retries = retries.increment(
+        method, url, error=new_e, _pool=self, _stacktrace=sys.exc_info()[2]
+    )
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\urllib3\util\retry.py", line 515, in increment
+    raise MaxRetryError(_pool, url, reason) from reason  # type: ignore[arg-type]
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+urllib3.exceptions.MaxRetryError: HTTPConnectionPool(host='147.45.153.16', port=8000): Max retries exceeded with url: /api/activities/ (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x0000025D991EA360>: Failed to establish a new connection: [WinError 10061] Подключение не установлено, т.к. конечный компьютер отверг запрос на подключение'))
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\mihai\Heist_master_PC\Documents\GitHub\Tracker33\desktop_app\main.py", line 2572, in send_activity_data
+    response = self.session.post(activities_url, json=payload, headers=headers, timeout=30)
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\requests\sessions.py", line 637, in post
+    return self.request("POST", url, data=data, json=json, **kwargs)
+           ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\requests\sessions.py", line 589, in request
+    resp = self.send(prep, **send_kwargs)
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\requests\sessions.py", line 703, in send
+    r = adapter.send(request, **kwargs)
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\requests\adapters.py", line 519, in send
+    raise ConnectionError(e, request=request)
+requests.exceptions.ConnectionError: HTTPConnectionPool(host='147.45.153.16', port=8000): Max retries exceeded with url: /api/activities/ (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x0000025D991EA360>: Failed to establish a new connection: [WinError 10061] Подключение не установлено, т.к. конечный компьютер отверг запрос на подключение'))
+2025-06-03 12:57:01,243 - TimeTracker - INFO - Активность возвращена в очередь из-за ошибки: HTTPConnectionPool(host='147.45.153.16', port=8000): Max retries exceeded with url: /api/activities/ (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x0000025D991EA360>: Failed to establish a new connection: [WinError 10061] Подключение не установлено, т.к. конечный компьютер отверг запрос на подключение'))
+2025-06-03 12:57:01,244 - TimeTracker - INFO - Отправляем пайлоад: {'application': 1, 'title': 'Авторизация', 'start_time': '2025-06-03T09:56:15.297149Z', 'end_time': '2025-06-03T09:56:29.298195Z', 'is_productive': True, 'app_name': 'python3.13.exe', 'keyboard_presses': 24}
+2025-06-03 12:57:03,319 - TimeTracker - ERROR - Ошибка при отправке записи: HTTPConnectionPool(host='147.45.153.16', port=8000): Max retries exceeded with url: /api/activities/ (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x0000025D991EA580>: Failed to establish a new connection: [WinError 10061] Подключение не установлено, т.к. конечный компьютер отверг запрос на подключение'))
+Traceback (most recent call last):
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\urllib3\connection.py", line 203, in _new_conn
+    sock = connection.create_connection(
+        (self._dns_host, self.port),
+    ...<2 lines>...
+        socket_options=self.socket_options,
+    )
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\urllib3\util\connection.py", line 85, in create_connection
+    raise err
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\urllib3\util\connection.py", line 73, in create_connection
+    sock.connect(sa)
+    ~~~~~~~~~~~~^^^^
+ConnectionRefusedError: [WinError 10061] Подключение не установлено, т.к. конечный компьютер отверг запрос на подключение
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\urllib3\connectionpool.py", line 791, in urlopen
+    response = self._make_request(
+        conn,
+    ...<10 lines>...
+        **response_kw,
+    )
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\urllib3\connectionpool.py", line 497, in _make_request
+    conn.request(
+    ~~~~~~~~~~~~^
+        method,
+        ^^^^^^^
+    ...<6 lines>...
+        enforce_content_length=enforce_content_length,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\urllib3\connection.py", line 395, in request
+    self.endheaders()
+    ~~~~~~~~~~~~~~~^^
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.13_3.13.1008.0_x64__qbz5n2kfra8p0\Lib\http\client.py", line 1333, in endheaders
+    self._send_output(message_body, encode_chunked=encode_chunked)
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.13_3.13.1008.0_x64__qbz5n2kfra8p0\Lib\http\client.py", line 1093, in _send_output
+    self.send(msg)
+    ~~~~~~~~~^^^^^
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.13_3.13.1008.0_x64__qbz5n2kfra8p0\Lib\http\client.py", line 1037, in send
+    self.connect()
+    ~~~~~~~~~~~~^^
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\urllib3\connection.py", line 243, in connect
+    self.sock = self._new_conn()
+                ~~~~~~~~~~~~~~^^
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\urllib3\connection.py", line 218, in _new_conn
+    raise NewConnectionError(
+        self, f"Failed to establish a new connection: {e}"
+    ) from e
+urllib3.exceptions.NewConnectionError: <urllib3.connection.HTTPConnection object at 0x0000025D991EA580>: Failed to establish a new connection: [WinError 10061] Подключение не установлено, т.к. конечный компьютер отверг запрос на подключение
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\requests\adapters.py", line 486, in send
+    resp = conn.urlopen(
+        method=request.method,
+    ...<9 lines>...
+        chunked=chunked,
+    )
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\urllib3\connectionpool.py", line 845, in urlopen
+    retries = retries.increment(
+        method, url, error=new_e, _pool=self, _stacktrace=sys.exc_info()[2]
+    )
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\urllib3\util\retry.py", line 515, in increment
+    raise MaxRetryError(_pool, url, reason) from reason  # type: ignore[arg-type]
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+urllib3.exceptions.MaxRetryError: HTTPConnectionPool(host='147.45.153.16', port=8000): Max retries exceeded with url: /api/activities/ (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x0000025D991EA580>: Failed to establish a new connection: [WinError 10061] Подключение не установлено, т.к. конечный компьютер отверг запрос на подключение'))
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\mihai\Heist_master_PC\Documents\GitHub\Tracker33\desktop_app\main.py", line 2572, in send_activity_data
+    response = self.session.post(activities_url, json=payload, headers=headers, timeout=30)
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\requests\sessions.py", line 637, in post
+    return self.request("POST", url, data=data, json=json, **kwargs)
+           ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\requests\sessions.py", line 589, in request
+    resp = self.send(prep, **send_kwargs)
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\requests\sessions.py", line 703, in send
+    r = adapter.send(request, **kwargs)
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\requests\adapters.py", line 519, in send
+    raise ConnectionError(e, request=request)
+requests.exceptions.ConnectionError: HTTPConnectionPool(host='147.45.153.16', port=8000): Max retries exceeded with url: /api/activities/ (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x0000025D991EA580>: Failed to establish a new connection: [WinError 10061] Подключение не установлено, т.к. конечный компьютер отверг запрос на подключение'))
+2025-06-03 12:57:03,327 - TimeTracker - INFO - Активность возвращена в очередь из-за ошибки: HTTPConnectionPool(host='147.45.153.16', port=8000): Max retries exceeded with url: /api/activities/ (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x0000025D991EA580>: Failed to establish a new connection: [WinError 10061] Подключение не установлено, т.к. конечный компьютер отверг запрос на подключение'))
+2025-06-03 12:57:03,327 - TimeTracker - INFO - Отправляем пайлоад: {'application': 1, 'title': 'Ошибка', 'start_time': '2025-06-03T09:56:29.299428Z', 'end_time': '2025-06-03T09:56:34.296964Z', 'is_productive': True, 'app_name': 'python3.13.exe', 'keyboard_presses': 0}
+2025-06-03 12:57:05,395 - TimeTracker - ERROR - Ошибка при отправке записи: HTTPConnectionPool(host='147.45.153.16', port=8000): Max retries exceeded with url: /api/activities/ (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x0000025D991EA7A0>: Failed to establish a new connection: [WinError 10061] Подключение не установлено, т.к. конечный компьютер отверг запрос на подключение'))
+Traceback (most recent call last):
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\urllib3\connection.py", line 203, in _new_conn
+    sock = connection.create_connection(
+        (self._dns_host, self.port),
+    ...<2 lines>...
+        socket_options=self.socket_options,
+    )
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\urllib3\util\connection.py", line 85, in create_connection
+    raise err
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\urllib3\util\connection.py", line 73, in create_connection
+    sock.connect(sa)
+    ~~~~~~~~~~~~^^^^
+ConnectionRefusedError: [WinError 10061] Подключение не установлено, т.к. конечный компьютер отверг запрос на подключение
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\urllib3\connectionpool.py", line 791, in urlopen
+    response = self._make_request(
+        conn,
+    ...<10 lines>...
+        **response_kw,
+    )
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\urllib3\connectionpool.py", line 497, in _make_request
+    conn.request(
+    ~~~~~~~~~~~~^
+        method,
+        ^^^^^^^
+    ...<6 lines>...
+        enforce_content_length=enforce_content_length,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\urllib3\connection.py", line 395, in request
+    self.endheaders()
+    ~~~~~~~~~~~~~~~^^
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.13_3.13.1008.0_x64__qbz5n2kfra8p0\Lib\http\client.py", line 1333, in endheaders
+    self._send_output(message_body, encode_chunked=encode_chunked)
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.13_3.13.1008.0_x64__qbz5n2kfra8p0\Lib\http\client.py", line 1093, in _send_output
+    self.send(msg)
+    ~~~~~~~~~^^^^^
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.13_3.13.1008.0_x64__qbz5n2kfra8p0\Lib\http\client.py", line 1037, in send
+    self.connect()
+    ~~~~~~~~~~~~^^
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\urllib3\connection.py", line 243, in connect
+    self.sock = self._new_conn()
+                ~~~~~~~~~~~~~~^^
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\urllib3\connection.py", line 218, in _new_conn
+    raise NewConnectionError(
+        self, f"Failed to establish a new connection: {e}"
+    ) from e
+urllib3.exceptions.NewConnectionError: <urllib3.connection.HTTPConnection object at 0x0000025D991EA7A0>: Failed to establish a new connection: [WinError 10061] Подключение не установлено, т.к. конечный компьютер отверг запрос на подключение
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\requests\adapters.py", line 486, in send
+    resp = conn.urlopen(
+        method=request.method,
+    ...<9 lines>...
+        chunked=chunked,
+    )
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\urllib3\connectionpool.py", line 845, in urlopen
+    retries = retries.increment(
+        method, url, error=new_e, _pool=self, _stacktrace=sys.exc_info()[2]
+    )
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\urllib3\util\retry.py", line 515, in increment
+    raise MaxRetryError(_pool, url, reason) from reason  # type: ignore[arg-type]
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+urllib3.exceptions.MaxRetryError: HTTPConnectionPool(host='147.45.153.16', port=8000): Max retries exceeded with url: /api/activities/ (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x0000025D991EA7A0>: Failed to establish a new connection: [WinError 10061] Подключение не установлено, т.к. конечный компьютер отверг запрос на подключение'))
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\mihai\Heist_master_PC\Documents\GitHub\Tracker33\desktop_app\main.py", line 2572, in send_activity_data
+    response = self.session.post(activities_url, json=payload, headers=headers, timeout=30)
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\requests\sessions.py", line 637, in post
+    return self.request("POST", url, data=data, json=json, **kwargs)
+           ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\requests\sessions.py", line 589, in request
+    resp = self.send(prep, **send_kwargs)
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\requests\sessions.py", line 703, in send
+    r = adapter.send(request, **kwargs)
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\requests\adapters.py", line 519, in send
+    raise ConnectionError(e, request=request)
+requests.exceptions.ConnectionError: HTTPConnectionPool(host='147.45.153.16', port=8000): Max retries exceeded with url: /api/activities/ (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x0000025D991EA7A0>: Failed to establish a new connection: [WinError 10061] Подключение не установлено, т.к. конечный компьютер отверг запрос на подключение'))
+2025-06-03 12:57:05,401 - TimeTracker - INFO - Активность возвращена в очередь из-за ошибки: HTTPConnectionPool(host='147.45.153.16', port=8000): Max retries exceeded with url: /api/activities/ (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x0000025D991EA7A0>: Failed to establish a new connection: [WinError 10061] Подключение не установлено, т.к. конечный компьютер отверг запрос на подключение'))
+2025-06-03 12:57:05,402 - TimeTracker - INFO - Отправляем пайлоад: {'application': 1, 'title': 'Авторизация', 'start_time': '2025-06-03T09:56:15.297149Z', 'end_time': '2025-06-03T09:56:29.298195Z', 'is_productive': True, 'app_name': 'python3.13.exe', 'keyboard_presses': 24}
+2025-06-03 12:57:07,468 - TimeTracker - ERROR - Ошибка при отправке записи: HTTPConnectionPool(host='147.45.153.16', port=8000): Max retries exceeded with url: /api/activities/ (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x0000025D991EABE0>: Failed to establish a new connection: [WinError 10061] Подключение не установлено, т.к. конечный компьютер отверг запрос на подключение'))
+Traceback (most recent call last):
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\urllib3\connection.py", line 203, in _new_conn
+    sock = connection.create_connection(
+        (self._dns_host, self.port),
+    ...<2 lines>...
+        socket_options=self.socket_options,
+    )
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\urllib3\util\connection.py", line 85, in create_connection
+    raise err
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\urllib3\util\connection.py", line 73, in create_connection
+    sock.connect(sa)
+    ~~~~~~~~~~~~^^^^
+ConnectionRefusedError: [WinError 10061] Подключение не установлено, т.к. конечный компьютер отверг запрос на подключение
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\urllib3\connectionpool.py", line 791, in urlopen
+    response = self._make_request(
+        conn,
+    ...<10 lines>...
+        **response_kw,
+    )
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\urllib3\connectionpool.py", line 497, in _make_request
+    conn.request(
+    ~~~~~~~~~~~~^
+        method,
+        ^^^^^^^
+    ...<6 lines>...
+        enforce_content_length=enforce_content_length,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\urllib3\connection.py", line 395, in request
+    self.endheaders()
+    ~~~~~~~~~~~~~~~^^
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.13_3.13.1008.0_x64__qbz5n2kfra8p0\Lib\http\client.py", line 1333, in endheaders
+    self._send_output(message_body, encode_chunked=encode_chunked)
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.13_3.13.1008.0_x64__qbz5n2kfra8p0\Lib\http\client.py", line 1093, in _send_output
+    self.send(msg)
+    ~~~~~~~~~^^^^^
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.13_3.13.1008.0_x64__qbz5n2kfra8p0\Lib\http\client.py", line 1037, in send
+    self.connect()
+    ~~~~~~~~~~~~^^
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\urllib3\connection.py", line 243, in connect
+    self.sock = self._new_conn()
+                ~~~~~~~~~~~~~~^^
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\urllib3\connection.py", line 218, in _new_conn
+    raise NewConnectionError(
+        self, f"Failed to establish a new connection: {e}"
+    ) from e
+urllib3.exceptions.NewConnectionError: <urllib3.connection.HTTPConnection object at 0x0000025D991EABE0>: Failed to establish a new connection: [WinError 10061] Подключение не установлено, т.к. конечный компьютер отверг запрос на подключение
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\requests\adapters.py", line 486, in send
+    resp = conn.urlopen(
+        method=request.method,
+    ...<9 lines>...
+        chunked=chunked,
+    )
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\urllib3\connectionpool.py", line 845, in urlopen
+    retries = retries.increment(
+        method, url, error=new_e, _pool=self, _stacktrace=sys.exc_info()[2]
+    )
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\urllib3\util\retry.py", line 515, in increment
+    raise MaxRetryError(_pool, url, reason) from reason  # type: ignore[arg-type]
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+urllib3.exceptions.MaxRetryError: HTTPConnectionPool(host='147.45.153.16', port=8000): Max retries exceeded with url: /api/activities/ (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x0000025D991EABE0>: Failed to establish a new connection: [WinError 10061] Подключение не установлено, т.к. конечный компьютер отверг запрос на подключение'))
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\mihai\Heist_master_PC\Documents\GitHub\Tracker33\desktop_app\main.py", line 2572, in send_activity_data
+    response = self.session.post(activities_url, json=payload, headers=headers, timeout=30)
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\requests\sessions.py", line 637, in post
+    return self.request("POST", url, data=data, json=json, **kwargs)
+           ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\requests\sessions.py", line 589, in request
+    resp = self.send(prep, **send_kwargs)
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\requests\sessions.py", line 703, in send
+    r = adapter.send(request, **kwargs)
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\requests\adapters.py", line 519, in send
+    raise ConnectionError(e, request=request)
+requests.exceptions.ConnectionError: HTTPConnectionPool(host='147.45.153.16', port=8000): Max retries exceeded with url: /api/activities/ (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x0000025D991EABE0>: Failed to establish a new connection: [WinError 10061] Подключение не установлено, т.к. конечный компьютер отверг запрос на подключение'))
+2025-06-03 12:57:07,473 - TimeTracker - INFO - Активность возвращена в очередь из-за ошибки: HTTPConnectionPool(host='147.45.153.16', port=8000): Max retries exceeded with url: /api/activities/ (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x0000025D991EABE0>: Failed to establish a new connection: [WinError 10061] Подключение не установлено, т.к. конечный компьютер отверг запрос на подключение'))
+2025-06-03 12:57:07,473 - TimeTracker - INFO - Отправляем пайлоад: {'application': 1, 'title': 'Авторизация', 'start_time': '2025-06-03T09:56:15.297149Z', 'end_time': '2025-06-03T09:56:29.298195Z', 'is_productive': True, 'app_name': 'python3.13.exe', 'keyboard_presses': 24}
+2025-06-03 12:57:09,522 - TimeTracker - ERROR - Ошибка при отправке записи: HTTPConnectionPool(host='147.45.153.16', port=8000): Max retries exceeded with url: /api/activities/ (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x0000025D991EACF0>: Failed to establish a new connection: [WinError 10061] Подключение не установлено, т.к. конечный компьютер отверг запрос на подключение'))
+Traceback (most recent call last):
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\urllib3\connection.py", line 203, in _new_conn
+    sock = connection.create_connection(
+        (self._dns_host, self.port),
+    ...<2 lines>...
+        socket_options=self.socket_options,
+    )
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\urllib3\util\connection.py", line 85, in create_connection
+    raise err
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\urllib3\util\connection.py", line 73, in create_connection
+    sock.connect(sa)
+    ~~~~~~~~~~~~^^^^
+ConnectionRefusedError: [WinError 10061] Подключение не установлено, т.к. конечный компьютер отверг запрос на подключение
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\urllib3\connectionpool.py", line 791, in urlopen
+    response = self._make_request(
+        conn,
+    ...<10 lines>...
+        **response_kw,
+    )
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\urllib3\connectionpool.py", line 497, in _make_request
+    conn.request(
+    ~~~~~~~~~~~~^
+        method,
+        ^^^^^^^
+    ...<6 lines>...
+        enforce_content_length=enforce_content_length,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\urllib3\connection.py", line 395, in request
+    self.endheaders()
+    ~~~~~~~~~~~~~~~^^
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.13_3.13.1008.0_x64__qbz5n2kfra8p0\Lib\http\client.py", line 1333, in endheaders
+    self._send_output(message_body, encode_chunked=encode_chunked)
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.13_3.13.1008.0_x64__qbz5n2kfra8p0\Lib\http\client.py", line 1093, in _send_output
+    self.send(msg)
+    ~~~~~~~~~^^^^^
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.13_3.13.1008.0_x64__qbz5n2kfra8p0\Lib\http\client.py", line 1037, in send
+    self.connect()
+    ~~~~~~~~~~~~^^
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\urllib3\connection.py", line 243, in connect
+    self.sock = self._new_conn()
+                ~~~~~~~~~~~~~~^^
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\urllib3\connection.py", line 218, in _new_conn
+    raise NewConnectionError(
+        self, f"Failed to establish a new connection: {e}"
+    ) from e
+urllib3.exceptions.NewConnectionError: <urllib3.connection.HTTPConnection object at 0x0000025D991EACF0>: Failed to establish a new connection: [WinError 10061] Подключение не установлено, т.к. конечный компьютер отверг запрос на подключение
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\requests\adapters.py", line 486, in send
+    resp = conn.urlopen(
+        method=request.method,
+    ...<9 lines>...
+        chunked=chunked,
+    )
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\urllib3\connectionpool.py", line 845, in urlopen
+    retries = retries.increment(
+        method, url, error=new_e, _pool=self, _stacktrace=sys.exc_info()[2]
+    )
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\urllib3\util\retry.py", line 515, in increment
+    raise MaxRetryError(_pool, url, reason) from reason  # type: ignore[arg-type]
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+urllib3.exceptions.MaxRetryError: HTTPConnectionPool(host='147.45.153.16', port=8000): Max retries exceeded with url: /api/activities/ (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x0000025D991EACF0>: Failed to establish a new connection: [WinError 10061] Подключение не установлено, т.к. конечный компьютер отверг запрос на подключение'))
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\mihai\Heist_master_PC\Documents\GitHub\Tracker33\desktop_app\main.py", line 2572, in send_activity_data
+    response = self.session.post(activities_url, json=payload, headers=headers, timeout=30)
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\requests\sessions.py", line 637, in post
+    return self.request("POST", url, data=data, json=json, **kwargs)
+           ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\requests\sessions.py", line 589, in request
+    resp = self.send(prep, **send_kwargs)
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\requests\sessions.py", line 703, in send
+    r = adapter.send(request, **kwargs)
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\requests\adapters.py", line 519, in send
+    raise ConnectionError(e, request=request)
+requests.exceptions.ConnectionError: HTTPConnectionPool(host='147.45.153.16', port=8000): Max retries exceeded with url: /api/activities/ (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x0000025D991EACF0>: Failed to establish a new connection: [WinError 10061] Подключение не установлено, т.к. конечный компьютер отверг запрос на подключение'))
+2025-06-03 12:57:09,527 - TimeTracker - INFO - Активность возвращена в очередь из-за ошибки: HTTPConnectionPool(host='147.45.153.16', port=8000): Max retries exceeded with url: /api/activities/ (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x0000025D991EACF0>: Failed to establish a new connection: [WinError 10061] Подключение не установлено, т.к. конечный компьютер отверг запрос на подключение'))
+2025-06-03 12:57:09,528 - TimeTracker - INFO - Отправляем пайлоад: {'application': 1, 'title': 'Ошибка', 'start_time': '2025-06-03T09:56:29.299428Z', 'end_time': '2025-06-03T09:56:34.296964Z', 'is_productive': True, 'app_name': 'python3.13.exe', 'keyboard_presses': 2}
+2025-06-03 12:57:11,572 - TimeTracker - ERROR - Ошибка при отправке записи: HTTPConnectionPool(host='147.45.153.16', port=8000): Max retries exceeded with url: /api/activities/ (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x0000025D991EB020>: Failed to establish a new connection: [WinError 10061] Подключение не установлено, т.к. конечный компьютер отверг запрос на подключение'))
+Traceback (most recent call last):
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\urllib3\connection.py", line 203, in _new_conn
+    sock = connection.create_connection(
+        (self._dns_host, self.port),
+    ...<2 lines>...
+        socket_options=self.socket_options,
+    )
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\urllib3\util\connection.py", line 85, in create_connection
+    raise err
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\urllib3\util\connection.py", line 73, in create_connection
+    sock.connect(sa)
+    ~~~~~~~~~~~~^^^^
+ConnectionRefusedError: [WinError 10061] Подключение не установлено, т.к. конечный компьютер отверг запрос на подключение
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\urllib3\connectionpool.py", line 791, in urlopen
+    response = self._make_request(
+        conn,
+    ...<10 lines>...
+        **response_kw,
+    )
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\urllib3\connectionpool.py", line 497, in _make_request
+    conn.request(
+    ~~~~~~~~~~~~^
+        method,
+        ^^^^^^^
+    ...<6 lines>...
+        enforce_content_length=enforce_content_length,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\urllib3\connection.py", line 395, in request
+    self.endheaders()
+    ~~~~~~~~~~~~~~~^^
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.13_3.13.1008.0_x64__qbz5n2kfra8p0\Lib\http\client.py", line 1333, in endheaders
+    self._send_output(message_body, encode_chunked=encode_chunked)
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.13_3.13.1008.0_x64__qbz5n2kfra8p0\Lib\http\client.py", line 1093, in _send_output
+    self.send(msg)
+    ~~~~~~~~~^^^^^
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.13_3.13.1008.0_x64__qbz5n2kfra8p0\Lib\http\client.py", line 1037, in send
+    self.connect()
+    ~~~~~~~~~~~~^^
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\urllib3\connection.py", line 243, in connect
+    self.sock = self._new_conn()
+                ~~~~~~~~~~~~~~^^
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\urllib3\connection.py", line 218, in _new_conn
+    raise NewConnectionError(
+        self, f"Failed to establish a new connection: {e}"
+    ) from e
+urllib3.exceptions.NewConnectionError: <urllib3.connection.HTTPConnection object at 0x0000025D991EB020>: Failed to establish a new connection: [WinError 10061] Подключение не установлено, т.к. конечный компьютер отверг запрос на подключение
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\requests\adapters.py", line 486, in send
+    resp = conn.urlopen(
+        method=request.method,
+    ...<9 lines>...
+        chunked=chunked,
+    )
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\urllib3\connectionpool.py", line 845, in urlopen
+    retries = retries.increment(
+        method, url, error=new_e, _pool=self, _stacktrace=sys.exc_info()[2]
+    )
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\urllib3\util\retry.py", line 515, in increment
+    raise MaxRetryError(_pool, url, reason) from reason  # type: ignore[arg-type]
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+urllib3.exceptions.MaxRetryError: HTTPConnectionPool(host='147.45.153.16', port=8000): Max retries exceeded with url: /api/activities/ (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x0000025D991EB020>: Failed to establish a new connection: [WinError 10061] Подключение не установлено, т.к. конечный компьютер отверг запрос на подключение'))
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\mihai\Heist_master_PC\Documents\GitHub\Tracker33\desktop_app\main.py", line 2572, in send_activity_data
+    response = self.session.post(activities_url, json=payload, headers=headers, timeout=30)
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\requests\sessions.py", line 637, in post
+    return self.request("POST", url, data=data, json=json, **kwargs)
+           ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\requests\sessions.py", line 589, in request
+    resp = self.send(prep, **send_kwargs)
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\requests\sessions.py", line 703, in send
+    r = adapter.send(request, **kwargs)
+  File "C:\Users\mihai\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\requests\adapters.py", line 519, in send
+    raise ConnectionError(e, request=request)
+requests.exceptions.ConnectionError: HTTPConnectionPool(host='147.45.153.16', port=8000): Max retries exceeded with url: /api/activities/ (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x0000025D991EB020>: Failed to establish a new connection: [WinError 10061] Подключение не установлено, т.к. конечный компьютер отверг запрос на подключение'))
+2025-06-03 12:57:11,577 - TimeTracker - INFO - Активность возвращена в очередь из-за ошибки: HTTPConnectionPool(host='147.45.153.16', port=8000): Max retries exceeded with url: /api/activities/ (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x0000025D991EB020>: Failed to establish a new connection: [WinError 10061] Подключение не установлено, т.к. конечный компьютер отверг запрос на подключение'))
+2025-06-03 12:57:11,578 - TimeTracker - ERROR - Ошибка при отправке данных: 400 - Успешно отправлено 0 из 6 записей
+2025-06-03 12:57:11,589 - TimeTracker - INFO - Изменилось активное окно: python3.13.exe -> cursor.exe
+2025-06-03 12:57:11,589 - TimeTracker - INFO - Завершена сессия активности: App='python3.13.exe', Title='Авторизация, Duration=37s, Keyboard=0 нажатий. В очереди: 13
+2025-06-03 12:57:11,590 - TimeTracker - INFO - В очереди есть активности, запускаем немедленную отправку данных
+2025-06-03 12:57:11,591 - TimeTracker - INFO - Начата новая сессия активности: App='cursor.exe', Title='Cursor'
+2025-06-03 12:57:11,690 - TimeTracker - INFO - Начинаем отправку данных. В очереди 13 записей активности.
+2025-06-03 12:57:11,691 - TimeTracker - INFO - Найден токен авторизации длиной 228 символов.
+2025-06-03 12:57:11,691 - TimeTracker - INFO - Используется user_id: 3
+2025-06-03 12:57:11,692 - TimeTracker - INFO - URL API из секции Credentials: http://147.45.153.16:8000/api/
+2025-06-03 12:57:11,692 - TimeTracker - INFO - URL для отправки активностей: http://147.45.153.16:8000/api/activities/
+2025-06-03 12:57:11,692 - TimeTracker - INFO - Вычисленная длительность: 14.001046 секунд
+2025-06-03 12:57:11,692 - TimeTracker - INFO - Отправляем запрос на создание приложения: http://147.45.153.16:8000/api/applications/
+2025-06-03 12:57:13,741 - TimeTracker - ERROR - Ошибка при создании приложения python3.13.exe: HTTPConnectionPool(host='147.45.153.16', port=8000): Max retries exceeded with url: /api/applications/ (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x0000025D991EB350>: Failed to establish a new connection: [WinError 10061] Подключение не установлено, т.к. конечный компьютер отверг запрос на подключение'))
+2025-06-03 12:57:13,742 - TimeTracker - INFO - Для приложения python3.13.exe выбран ID=1
+2025-06-03 12:57:13,742 - TimeTracker - INFO - Отправка активности: start_time=2025-06-03T09:56:15.297149Z, end_time=2025-06-03T09:56:29.298195Z, длительность=14.001046 секунд
+2025-06-03 12:57:13,743 - TimeTracker - INFO - Вычисленная длительность: 14.001046 секунд
+2025-06-03 12:57:13,743 - TimeTracker - INFO - Отправляем запрос на создание приложения: http://147.45.153.16:8000/api/applications/
+2025-06-03 12:57:15,801 - TimeTracker - ERROR - Ошибка при создании приложения python3.13.exe: HTTPConnectionPool(host='147.45.153.16', port=8000): Max retries exceeded with url: /api/applications/ (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x0000025D991EB570>: Failed to establish a new connection: [WinError 10061] Подключение не установлено, т.к. конечный компьютер отверг запрос на подключение'))
+2025-06-03 12:57:15,802 - TimeTracker - INFO - Для приложения python3.13.exe выбран ID=1
+2025-06-03 12:57:15,802 - TimeTracker - INFO - Отправка активности: start_time=2025-06-03T09:56:15.297149Z, end_time=2025-06-03T09:56:29.298195Z, длительность=14.001046 секунд
+2025-06-03 12:57:15,802 - TimeTracker - INFO - Вычисленная длительность: 4.997536 секунд
+2025-06-03 12:57:15,802 - TimeTracker - INFO - Отправляем запрос на создание приложения: http://147.45.153.16:8000/api/applications/
+2025-06-03 12:57:17,858 - TimeTracker - ERROR - Ошибка при создании приложения python3.13.exe: HTTPConnectionPool(host='147.45.153.16', port=8000): Max retries exceeded with url: /api/applications/ (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x0000025D991EB790>: Failed to establish a new connection: [WinError 10061] Подключение не установлено, т.к. конечный компьютер отверг запрос на подключение'))
+2025-06-03 12:57:17,859 - TimeTracker - INFO - Для приложения python3.13.exe выбран ID=1
+2025-06-03 12:57:17,859 - TimeTracker - INFO - Отправка активности: start_time=2025-06-03T09:56:29.299428Z, end_time=2025-06-03T09:56:34.296964Z, длительность=4.997536 секунд
+2025-06-03 12:57:17,859 - TimeTracker - INFO - Вычисленная длительность: 14.001046 секунд
+2025-06-03 12:57:17,860 - TimeTracker - INFO - Отправляем запрос на создание приложения: http://147.45.153.16:8000/api/applications/
+2025-06-03 12:57:19,921 - TimeTracker - ERROR - Ошибка при создании приложения python3.13.exe: HTTPConnectionPool(host='147.45.153.16', port=8000): Max retries exceeded with url: /api/applications/ (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x0000025D991EB9B0>: Failed to establish a new connection: [WinError 10061] Подключение не установлено, т.к. конечный компьютер отверг запрос на подключение'))
+2025-06-03 12:57:19,922 - TimeTracker - INFO - Для приложения python3.13.exe выбран ID=1
+2025-06-03 12:57:19,922 - TimeTracker - INFO - Отправка активности: start_time=2025-06-03T09:56:15.297149Z, end_time=2025-06-03T09:56:29.298195Z, длительность=14.001046 секунд
+2025-06-03 12:57:19,923 - TimeTracker - INFO - Вычисленная длительность: 14.001046 секунд
+2025-06-03 12:57:19,923 - TimeTracker - INFO - Отправляем запрос на создание приложения: http://147.45.153.16:8000/api/applications/
+2025-06-03 12:57:21,981 - TimeTracker - ERROR - Ошибка при создании приложения python3.13.exe: HTTPConnectionPool(host='147.45.153.16', port=8000): Max retries exceeded with url: /api/applications/ (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x0000025D991EBBD0>: Failed to establish a new connection: [WinError 10061] Подключение не установлено, т.к. конечный компьютер отверг запрос на подключение'))
+2025-06-03 12:57:21,982 - TimeTracker - INFO - Для приложения python3.13.exe выбран ID=1
+2025-06-03 12:57:21,982 - TimeTracker - INFO - Отправка активности: start_time=2025-06-03T09:56:15.297149Z, end_time=2025-06-03T09:56:29.298195Z, длительность=14.001046 секунд
+2025-06-03 12:57:21,983 - TimeTracker - INFO - Вычисленная длительность: 4.997536 секунд
+2025-06-03 12:57:21,983 - TimeTracker - INFO - Отправляем запрос на создание приложения: http://147.45.153.16:8000/api/applications/
+2025-06-03 12:57:24,042 - TimeTracker - ERROR - Ошибка при создании приложения python3.13.exe: HTTPConnectionPool(host='147.45.153.16', port=8000): Max retries exceeded with url: /api/applications/ (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x0000025D991EBDF0>: Failed to establish a new connection: [WinError 10061] Подключение не установлено, т.к. конечный компьютер отверг запрос на подключение'))
+2025-06-03 12:57:24,042 - TimeTracker - INFO - Для приложения python3.13.exe выбран ID=1
+2025-06-03 12:57:24,043 - TimeTracker - INFO - Отправка активности: start_time=2025-06-03T09:56:29.299428Z, end_time=2025-06-03T09:56:34.296964Z, длительность=4.997536 секунд
+2025-06-03 12:57:24,043 - TimeTracker - INFO - Вычисленная длительность: 14.001046 секунд
+2025-06-03 12:57:24,043 - TimeTracker - INFO - Отправляем запрос на создание приложения: http://147.45.153.16:8000/api/applications/
+2025-06-03 12:57:26,099 - TimeTracker - ERROR - Ошибка при создании приложения python3.13.exe: HTTPConnectionPool(host='147.45.153.16', port=8000): Max retries exceeded with url: /api/applications/ (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x0000025D991EBF00>: Failed to establish a new connection: [WinError 10061] Подключение не установлено, т.к. конечный компьютер отверг запрос на подключение'))
+2025-06-03 12:57:26,100 - TimeTracker - INFO - Для приложения python3.13.exe выбран ID=1
+2025-06-03 12:57:26,100 - TimeTracker - INFO - Отправка активности: start_time=2025-06-03T09:56:15.297149Z, end_time=2025-06-03T09:56:29.298195Z, длительность=14.001046 секунд
+2025-06-03 12:57:26,100 - TimeTracker - INFO - Вычисленная длительность: 14.001046 секунд
+2025-06-03 12:57:26,100 - TimeTracker - INFO - Отправляем запрос на создание приложения: http://147.45.153.16:8000/api/applications/
+2025-06-03 12:57:28,156 - TimeTracker - ERROR - Ошибка при создании приложения python3.13.exe: HTTPConnectionPool(host='147.45.153.16', port=8000): Max retries exceeded with url: /api/applications/ (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x0000025D994E4270>: Failed to establish a new connection: [WinError 10061] Подключение не установлено, т.к. конечный компьютер отверг запрос на подключение'))
+2025-06-03 12:57:28,156 - TimeTracker - INFO - Для приложения python3.13.exe выбран ID=1
+2025-06-03 12:57:28,157 - TimeTracker - INFO - Отправка активности: start_time=2025-06-03T09:56:15.297149Z, end_time=2025-06-03T09:56:29.298195Z, длительность=14.001046 секунд
+2025-06-03 12:57:28,157 - TimeTracker - INFO - Вычисленная длительность: 4.997536 секунд
+2025-06-03 12:57:28,158 - TimeTracker - INFO - Отправляем запрос на создание приложения: http://147.45.153.16:8000/api/applications/
+2025-06-03 12:57:30,215 - TimeTracker - ERROR - Ошибка при создании приложения python3.13.exe: HTTPConnectionPool(host='147.45.153.16', port=8000): Max retries exceeded with url: /api/applications/ (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x0000025D994E4490>: Failed to establish a new connection: [WinError 10061] Подключение не установлено, т.к. конечный компьютер отверг запрос на подключение'))
+2025-06-03 12:57:30,216 - TimeTracker - INFO - Для приложения python3.13.exe выбран ID=1
+2025-06-03 12:57:30,216 - TimeTracker - INFO - Отправляем клавиатурную активность: 1 нажатий
+2025-06-03 12:57:30,217 - TimeTracker - INFO - Отправка активности: start_time=2025-06-03T09:56:29.299428Z, end_time=2025-06-03T09:56:34.296964Z, длительность=4.997536 секунд
+2025-06-03 12:57:30,217 - TimeTracker - INFO - Вычисленная длительность: 14.001046 секунд
+2025-06-03 12:57:30,217 - TimeTracker - INFO - Отправляем запрос на создание приложения: http://147.45.153.16:8000/api/applications/
+2025-06-03 12:57:32,265 - TimeTracker - ERROR - Ошибка при создании приложения python3.13.exe: HTTPConnectionPool(host='147.45.153.16', port=8000): Max retries exceeded with url: /api/applications/ (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x0000025D994E46B0>: Failed to establish a new connection: [WinError 10061] Подключение не установлено, т.к. конечный компьютер отверг запрос на подключение'))
+2025-06-03 12:57:32,266 - TimeTracker - INFO - Для приложения python3.13.exe выбран ID=1
+2025-06-03 12:57:32,266 - TimeTracker - INFO - Отправка активности: start_time=2025-06-03T09:56:15.297149Z, end_time=2025-06-03T09:56:29.298195Z, длительность=14.001046 секунд
+2025-06-03 12:57:32,266 - TimeTracker - INFO - Вычисленная длительность: 14.001046 секунд
+2025-06-03 12:57:32,267 - TimeTracker - INFO - Отправляем запрос на создание приложения: http://147.45.153.16:8000/api/applications/
+2025-06-03 12:57:34,327 - TimeTracker - ERROR - Ошибка при создании приложения python3.13.exe: HTTPConnectionPool(host='147.45.153.16', port=8000): Max retries exceeded with url: /api/applications/ (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x0000025D994E48D0>: Failed to establish a new connection: [WinError 10061] Подключение не установлено, т.к. конечный компьютер отверг запрос на подключение'))
+2025-06-03 12:57:34,328 - TimeTracker - INFO - Для приложения python3.13.exe выбран ID=1
+2025-06-03 12:57:34,328 - TimeTracker - INFO - Отправка активности: start_time=2025-06-03T09:56:15.297149Z, end_time=2025-06-03T09:56:29.298195Z, длительность=14.001046 секунд
+2025-06-03 12:57:34,329 - TimeTracker - INFO - Вычисленная длительность: 4.997536 секунд
+2025-06-03 12:57:34,329 - TimeTracker - INFO - Отправляем запрос на создание приложения: http://147.45.153.16:8000/api/applications/
+2025-06-03 12:57:35,439 - TimeTracker - WARNING - Не удалось создать приложение python3.13.exe, используем ID по умолчанию. Код ответа: 401
+2025-06-03 12:57:35,439 - TimeTracker - INFO - Для приложения python3.13.exe выбран ID=1
+2025-06-03 12:57:35,440 - TimeTracker - INFO - Отправляем клавиатурную активность: 13 нажатий
+2025-06-03 12:57:35,440 - TimeTracker - INFO - Отправка активности: start_time=2025-06-03T09:56:29.299428Z, end_time=2025-06-03T09:56:34.296964Z, длительность=4.997536 секунд
+2025-06-03 12:57:35,440 - TimeTracker - INFO - Вычисленная длительность: 37.291342 секунд
+2025-06-03 12:57:35,440 - TimeTracker - INFO - Отправляем запрос на создание приложения: http://147.45.153.16:8000/api/applications/
+2025-06-03 12:57:35,502 - TimeTracker - WARNING - Не удалось создать приложение python3.13.exe, используем ID по умолчанию. Код ответа: 401
+2025-06-03 12:57:35,502 - TimeTracker - INFO - Для приложения python3.13.exe выбран ID=1
+2025-06-03 12:57:35,502 - TimeTracker - INFO - Отправка активности: start_time=2025-06-03T09:56:34.298102Z, end_time=2025-06-03T09:57:11.589444Z, длительность=37.291342 секунд
+2025-06-03 12:57:35,502 - TimeTracker - INFO - Отправка 13 записей активности на сервер.
+2025-06-03 12:57:35,503 - TimeTracker - INFO - Отправляем пайлоад: {'application': 1, 'title': 'Авторизация', 'start_time': '2025-06-03T09:56:15.297149Z', 'end_time': '2025-06-03T09:56:29.298195Z', 'is_productive': True, 'app_name': 'python3.13.exe', 'keyboard_presses': 24}
+2025-06-03 12:57:35,566 - TimeTracker - INFO - Ответ сервера: код=401, тело={"status":"error","code":401,"detail":{"detail":"Данный токен недействителен для любого типа токена","code":"token_not_valid","messages":[{"token_class":"AccessToken","token_type":"access","message":"Токен недействителен или просрочен"}]}}
+2025-06-03 12:57:35,566 - TimeTracker - ERROR - Ошибка авторизации: 401 - {"status":"error","code":401,"detail":{"detail":"Данный токен недействителен для любого типа токена","code":"token_not_valid","messages":[{"token_class":"AccessToken","token_type":"access","message":"Токен недействителен или просрочен"}]}}
+2025-06-03 12:57:35,567 - TimeTracker - ERROR - Ошибка при сохранении конфигурации: [WinError 3] Системе не удается найти указанный путь: ''
+2025-06-03 12:57:35,567 - TimeTracker - INFO - Конфигурация сохранена в резервное место: config.ini
+2025-06-03 12:57:35,568 - TimeTracker - INFO - Требуется повторная авторизация. Запрашиваем новый токен...
+2025-06-03 12:57:35,576 - TimeTracker - INFO - Изменилось активное окно: cursor.exe -> cursor.exe
+2025-06-03 12:57:35,577 - TimeTracker - INFO - Завершена сессия активности: App='cursor.exe', Title='Cursor, Duration=24s, Keyboard=0 нажатий. В очереди: 14
+2025-06-03 12:57:35,578 - TimeTracker - INFO - В очереди есть активности, запускаем немедленную отправку данных
+2025-06-03 12:57:35,581 - TimeTracker - INFO - Начата новая сессия активности: App='cursor.exe', Title='config.ini - Tracker33 [SSH: M...'
+2025-06-03 12:57:35,581 - TimeTracker - INFO - Начинаем отправку данных. В очереди 14 записей активности.
+2025-06-03 12:57:35,582 - TimeTracker - WARNING - Токен авторизации пустой в секции Credentials.
+2025-06-03 12:57:35,582 - TimeTracker - INFO - Используется user_id: 3
+2025-06-03 12:57:35,582 - TimeTracker - WARNING - Токен не найден в секции Credentials, проверяем другие секции...
+2025-06-03 12:57:35,583 - TimeTracker - INFO - Токен найден в секции Server
+2025-06-03 12:57:35,583 - TimeTracker - INFO - URL API из секции Credentials: http://147.45.153.16:8000/api/
+2025-06-03 12:57:35,583 - TimeTracker - INFO - URL для отправки активностей: http://147.45.153.16:8000/api/activities/
+2025-06-03 12:57:35,584 - TimeTracker - WARNING - Отсутствует токен авторизации. Переключение в демо-режим.
+2025-06-03 12:57:35,584 - TimeTracker - ERROR - Ошибка при сохранении конфигурации: [WinError 3] Системе не удается найти указанный путь: ''
+2025-06-03 12:57:35,585 - TimeTracker - INFO - Конфигурация сохранена в резервное место: config.ini
+2025-06-03 12:57:35,679 - TimeTracker - INFO - Начинаем отправку данных. В очереди 14 записей активности.
+2025-06-03 12:57:35,679 - TimeTracker - INFO - Демо-режим: Обработано 14 записей активности. Данные не отправляются на сервер.
+2025-06-03 12:57:44,303 - TimeTracker - INFO - Изменилось активное окно: cursor.exe -> python3.13.exe
+2025-06-03 12:57:44,303 - TimeTracker - INFO - Завершена сессия активности: App='cursor.exe', Title='config.ini - Tracker33 [SSH: M..., Duration=9s, Keyboard=4 нажатий. В очереди: 1
+2025-06-03 12:57:44,304 - TimeTracker - INFO - В очереди есть активности, запускаем немедленную отправку данных
+2025-06-03 12:57:44,308 - TimeTracker - INFO - Начата новая сессия активности: App='python3.13.exe', Title='Авторизация'
+2025-06-03 12:57:44,412 - TimeTracker - INFO - Начинаем отправку данных. В очереди 1 записей активности.
+2025-06-03 12:57:44,413 - TimeTracker - INFO - Демо-режим: Обработано 1 записей активности. Данные не отправляются на сервер.
+2025-06-03 12:57:45,227 - TimeTracker - INFO - Используем URL сервера из конфигурации: http://147.45.153.16:8000/api
+2025-06-03 12:57:45,228 - TimeTracker - WARNING - Загруженный токен истек, требуется повторная авторизация
+2025-06-03 12:57:45,229 - TimeTracker - ERROR - Ошибка загрузки токена: [WinError 32] Процесс не может получить доступ к файлу, так как этот файл занят другим процессом: 'C:\\Users\\mihai\\.timetracker\\token.json'
+2025-06-03 12:57:45,232 - TimeTracker - INFO - Авторизация по URL: http://147.45.153.16:8000/api/token/
+2025-06-03 12:57:45,850 - TimeTracker - INFO - Токен после логина: eyJ0eXAiOiJKV1QiLCJh... действителен до 2025-06-03 13:57:49
+2025-06-03 12:57:45,851 - TimeTracker - ERROR - Ошибка при сохранении конфигурации: [WinError 3] Системе не удается найти указанный путь: ''
+2025-06-03 12:57:45,852 - TimeTracker - INFO - Конфигурация сохранена в резервное место: config.ini
+2025-06-03 12:57:45,853 - TimeTracker - INFO - Токен авторизации успешно сохранен в конфигурации.
+2025-06-03 12:57:45,860 - TimeTracker - INFO - Вход выполнен успешно через диалог.
+2025-06-03 12:57:48,037 - TimeTracker - INFO - Открываем веб-интерфейс: http://147.45.153.16:8000/dashboard/
+2025-06-03 12:57:49,308 - TimeTracker - INFO - Изменилось активное окно: python3.13.exe -> chrome.exe
+2025-06-03 12:57:49,309 - TimeTracker - INFO - Завершена сессия активности: App='python3.13.exe', Title='Авторизация, Duration=5s, Keyboard=0 нажатий. В очереди: 1
+2025-06-03 12:57:49,311 - TimeTracker - INFO - В очереди есть активности, запускаем немедленную отправку данных
+2025-06-03 12:57:49,313 - TimeTracker - INFO - Начата новая сессия активности: App='chrome.exe', Title='Главная - Time Tracker - Googl...'
+2025-06-03 12:57:49,418 - TimeTracker - INFO - Начинаем отправку данных. В очереди 1 записей активности.
+2025-06-03 12:57:49,418 - TimeTracker - INFO - Найден токен авторизации длиной 228 символов.
+2025-06-03 12:57:49,419 - TimeTracker - INFO - Используется user_id: 3
+2025-06-03 12:57:49,419 - TimeTracker - INFO - URL API из секции Credentials: http://147.45.153.16:8000/api/
+2025-06-03 12:57:49,419 - TimeTracker - INFO - URL для отправки активностей: http://147.45.153.16:8000/api/activities/
+2025-06-03 12:57:49,420 - TimeTracker - INFO - Вычисленная длительность: 5.003789 секунд
+2025-06-03 12:57:49,420 - TimeTracker - INFO - Отправляем запрос на создание приложения: http://147.45.153.16:8000/api/applications/
+2025-06-03 12:57:49,503 - TimeTracker - INFO - Создано новое приложение: python3.13.exe с ID=158
+2025-06-03 12:57:49,504 - TimeTracker - INFO - Для приложения python3.13.exe выбран ID=158
+2025-06-03 12:57:49,504 - TimeTracker - INFO - Отправка активности: start_time=2025-06-03T09:57:44.305386Z, end_time=2025-06-03T09:57:49.309175Z, длительность=5.003789 секунд
+2025-06-03 12:57:49,504 - TimeTracker - INFO - Отправка 1 записей активности на сервер.
+2025-06-03 12:57:49,505 - TimeTracker - INFO - Отправляем пайлоад: {'application': 158, 'title': 'Авторизация', 'start_time': '2025-06-03T09:57:44.305386Z', 'end_time': '2025-06-03T09:57:49.309175Z', 'is_productive': True, 'app_name': 'python3.13.exe', 'keyboard_presses': 0}
+2025-06-03 12:57:49,610 - TimeTracker - INFO - Ответ сервера: код=201, тело={"id":1830,"user":3,"application":159,"start_time":"2025-06-03T12:57:44.305386+03:00","end_time":"2025-06-03T12:57:49.309175+03:00","duration":"00:00:05.003789","keyboard_presses":0}
+2025-06-03 12:57:49,610 - TimeTracker - INFO - Успешно отправлено: 201 - {"id":1830,"user":3,"application":159,"start_time":"2025-06-03T12:57:44.305386+03:00","end_time":"2025-06-03T12:57:49.309175+03:00","duration":"00:00:05.003789","keyboard_presses":0}
+2025-06-03 12:57:49,610 - TimeTracker - INFO - Ответ сервера в JSON: {'id': 1830, 'user': 3, 'application': 159, 'start_time': '2025-06-03T12:57:44.305386+03:00', 'end_time': '2025-06-03T12:57:49.309175+03:00', 'duration': '00:00:05.003789', 'keyboard_presses': 0}
+2025-06-03 12:57:49,611 - TimeTracker - INFO - Успешно отправлено 1 из 1 записей активности.
+2025-06-03 12:58:04,309 - TimeTracker - INFO - Изменилось активное окно: chrome.exe -> chrome.exe
+2025-06-03 12:58:04,309 - TimeTracker - INFO - Завершена сессия активности: App='chrome.exe', Title='Главная - Time Tracker - Googl..., Duration=15s, Keyboard=0 нажатий. В очереди: 1
+2025-06-03 12:58:04,310 - TimeTracker - INFO - В очереди есть активности, запускаем немедленную отправку данных
+2025-06-03 12:58:04,313 - TimeTracker - INFO - Начата новая сессия активности: App='chrome.exe', Title='Статистика - Time Tracker - Go...'
+2025-06-03 12:58:04,416 - TimeTracker - INFO - Начинаем отправку данных. В очереди 1 записей активности.
+2025-06-03 12:58:04,417 - TimeTracker - INFO - Найден токен авторизации длиной 228 символов.
+2025-06-03 12:58:04,417 - TimeTracker - INFO - Используется user_id: 3
+2025-06-03 12:58:04,417 - TimeTracker - INFO - URL API из секции Credentials: http://147.45.153.16:8000/api/
+2025-06-03 12:58:04,418 - TimeTracker - INFO - URL для отправки активностей: http://147.45.153.16:8000/api/activities/
+2025-06-03 12:58:04,418 - TimeTracker - INFO - Вычисленная длительность: 14.997955 секунд
+2025-06-03 12:58:04,418 - TimeTracker - INFO - Отправляем запрос на создание приложения: http://147.45.153.16:8000/api/applications/
+2025-06-03 12:58:04,496 - TimeTracker - INFO - Создано новое приложение: chrome.exe с ID=160
+2025-06-03 12:58:04,496 - TimeTracker - INFO - Для приложения chrome.exe выбран ID=160
+2025-06-03 12:58:04,497 - TimeTracker - INFO - Отправка активности: start_time=2025-06-03T09:57:49.311611Z, end_time=2025-06-03T09:58:04.309566Z, длительность=14.997955 секунд
+2025-06-03 12:58:04,497 - TimeTracker - INFO - Отправка 1 записей активности на сервер.
+2025-06-03 12:58:04,497 - TimeTracker - INFO - Отправляем пайлоад: {'application': 160, 'title': 'Главная - Time Tracker - Google Chrome', 'start_time': '2025-06-03T09:57:49.311611Z', 'end_time': '2025-06-03T09:58:04.309566Z', 'is_productive': True, 'app_name': 'chrome.exe', 'keyboard_presses': 0}
+2025-06-03 12:58:04,573 - TimeTracker - INFO - Ответ сервера: код=201, тело={"id":1831,"user":3,"application":161,"start_time":"2025-06-03T12:57:49.311611+03:00","end_time":"2025-06-03T12:58:04.309566+03:00","duration":"00:00:14.997955","keyboard_presses":0}
+2025-06-03 12:58:04,574 - TimeTracker - INFO - Успешно отправлено: 201 - {"id":1831,"user":3,"application":161,"start_time":"2025-06-03T12:57:49.311611+03:00","end_time":"2025-06-03T12:58:04.309566+03:00","duration":"00:00:14.997955","keyboard_presses":0}
+2025-06-03 12:58:04,574 - TimeTracker - INFO - Ответ сервера в JSON: {'id': 1831, 'user': 3, 'application': 161, 'start_time': '2025-06-03T12:57:49.311611+03:00', 'end_time': '2025-06-03T12:58:04.309566+03:00', 'duration': '00:00:14.997955', 'keyboard_presses': 0}
+2025-06-03 12:58:04,575 - TimeTracker - INFO - Успешно отправлено 1 из 1 записей активности.
+2025-06-03 12:58:09,298 - TimeTracker - INFO - Изменилось активное окно: chrome.exe -> chrome.exe
+2025-06-03 12:58:09,298 - TimeTracker - INFO - Завершена сессия активности: App='chrome.exe', Title='Статистика - Time Tracker - Go..., Duration=5s, Keyboard=0 нажатий. В очереди: 1
+2025-06-03 12:58:09,299 - TimeTracker - INFO - В очереди есть активности, запускаем немедленную отправку данных
+2025-06-03 12:58:09,301 - TimeTracker - INFO - Начата новая сессия активности: App='chrome.exe', Title='Админ-панель - Time Tracker - ...'
+2025-06-03 12:58:09,405 - TimeTracker - INFO - Начинаем отправку данных. В очереди 1 записей активности.
+2025-06-03 12:58:09,405 - TimeTracker - INFO - Найден токен авторизации длиной 228 символов.
+2025-06-03 12:58:09,406 - TimeTracker - INFO - Используется user_id: 3
+2025-06-03 12:58:09,406 - TimeTracker - INFO - URL API из секции Credentials: http://147.45.153.16:8000/api/
+2025-06-03 12:58:09,407 - TimeTracker - INFO - URL для отправки активностей: http://147.45.153.16:8000/api/activities/
+2025-06-03 12:58:09,407 - TimeTracker - INFO - Вычисленная длительность: 4.987145 секунд
+2025-06-03 12:58:09,407 - TimeTracker - INFO - Для приложения chrome.exe выбран ID=160
+2025-06-03 12:58:09,408 - TimeTracker - INFO - Отправка активности: start_time=2025-06-03T09:58:04.311404Z, end_time=2025-06-03T09:58:09.298549Z, длительность=4.987145 секунд
+2025-06-03 12:58:09,408 - TimeTracker - INFO - Отправка 1 записей активности на сервер.
+2025-06-03 12:58:09,409 - TimeTracker - INFO - Отправляем пайлоад: {'application': 160, 'title': 'Статистика - Time Tracker - Google Chrome', 'start_time': '2025-06-03T09:58:04.311404Z', 'end_time': '2025-06-03T09:58:09.298549Z', 'is_productive': True, 'app_name': 'chrome.exe', 'keyboard_presses': 0}
+2025-06-03 12:58:09,486 - TimeTracker - INFO - Ответ сервера: код=201, тело={"id":1832,"user":3,"application":161,"start_time":"2025-06-03T12:58:04.311404+03:00","end_time":"2025-06-03T12:58:09.298549+03:00","duration":"00:00:04.987145","keyboard_presses":0}
+2025-06-03 12:58:09,487 - TimeTracker - INFO - Успешно отправлено: 201 - {"id":1832,"user":3,"application":161,"start_time":"2025-06-03T12:58:04.311404+03:00","end_time":"2025-06-03T12:58:09.298549+03:00","duration":"00:00:04.987145","keyboard_presses":0}
+2025-06-03 12:58:09,487 - TimeTracker - INFO - Ответ сервера в JSON: {'id': 1832, 'user': 3, 'application': 161, 'start_time': '2025-06-03T12:58:04.311404+03:00', 'end_time': '2025-06-03T12:58:09.298549+03:00', 'duration': '00:00:04.987145', 'keyboard_presses': 0}
+2025-06-03 12:58:09,487 - TimeTracker - INFO - Успешно отправлено 1 из 1 записей активности.
+2025-06-03 12:58:49,296 - TimeTracker - INFO - Изменилось активное окно: chrome.exe -> cursor.exe
+2025-06-03 12:58:49,297 - TimeTracker - INFO - Завершена сессия активности: App='chrome.exe', Title='Админ-панель - Time Tracker - ..., Duration=40s, Keyboard=9 нажатий. В очереди: 1
+2025-06-03 12:58:49,298 - TimeTracker - INFO - В очереди есть активности, запускаем немедленную отправку данных
+2025-06-03 12:58:49,299 - TimeTracker - INFO - Начата новая сессия активности: App='cursor.exe', Title='Практическая-работа-по-ролевым...'
+2025-06-03 12:58:49,411 - TimeTracker - INFO - Начинаем отправку данных. В очереди 1 записей активности.
+2025-06-03 12:58:49,411 - TimeTracker - INFO - Найден токен авторизации длиной 228 символов.
+2025-06-03 12:58:49,412 - TimeTracker - INFO - Используется user_id: 3
+2025-06-03 12:58:49,412 - TimeTracker - INFO - URL API из секции Credentials: http://147.45.153.16:8000/api/
+2025-06-03 12:58:49,412 - TimeTracker - INFO - URL для отправки активностей: http://147.45.153.16:8000/api/activities/
+2025-06-03 12:58:49,413 - TimeTracker - INFO - Вычисленная длительность: 39.997235 секунд
+2025-06-03 12:58:49,413 - TimeTracker - INFO - Для приложения chrome.exe выбран ID=160
+2025-06-03 12:58:49,413 - TimeTracker - INFO - Отправка активности: start_time=2025-06-03T09:58:09.299836Z, end_time=2025-06-03T09:58:49.297071Z, длительность=39.997235 секунд
+2025-06-03 12:58:49,414 - TimeTracker - INFO - Отправка 1 записей активности на сервер.
+2025-06-03 12:58:49,414 - TimeTracker - INFO - Отправляем пайлоад: {'application': 160, 'title': 'Админ-панель - Time Tracker - Google Chrome', 'start_time': '2025-06-03T09:58:09.299836Z', 'end_time': '2025-06-03T09:58:49.297071Z', 'is_productive': True, 'app_name': 'chrome.exe', 'keyboard_presses': 9}
+2025-06-03 12:58:49,491 - TimeTracker - INFO - Ответ сервера: код=201, тело={"id":1833,"user":3,"application":161,"start_time":"2025-06-03T12:58:09.299836+03:00","end_time":"2025-06-03T12:58:49.297071+03:00","duration":"00:00:39.997235","keyboard_presses":9}
+2025-06-03 12:58:49,492 - TimeTracker - INFO - Успешно отправлено: 201 - {"id":1833,"user":3,"application":161,"start_time":"2025-06-03T12:58:09.299836+03:00","end_time":"2025-06-03T12:58:49.297071+03:00","duration":"00:00:39.997235","keyboard_presses":9}
+2025-06-03 12:58:49,492 - TimeTracker - INFO - Ответ сервера в JSON: {'id': 1833, 'user': 3, 'application': 161, 'start_time': '2025-06-03T12:58:09.299836+03:00', 'end_time': '2025-06-03T12:58:49.297071+03:00', 'duration': '00:00:39.997235', 'keyboard_presses': 9}
+2025-06-03 12:58:49,493 - TimeTracker - INFO - Успешно отправлено 1 из 1 записей активности.
+2025-06-03 12:58:59,303 - TimeTracker - INFO - Изменилось активное окно: cursor.exe -> cursor.exe
+2025-06-03 12:58:59,304 - TimeTracker - INFO - Завершена сессия активности: App='cursor.exe', Title='Практическая-работа-по-ролевым..., Duration=10s, Keyboard=5 нажатий. В очереди: 1
+2025-06-03 12:58:59,304 - TimeTracker - INFO - В очереди есть активности, запускаем немедленную отправку данных
+2025-06-03 12:58:59,306 - TimeTracker - INFO - Начата новая сессия активности: App='cursor.exe', Title='README.md - Tracker33 - Cursor'
+2025-06-03 12:58:59,414 - TimeTracker - INFO - Начинаем отправку данных. В очереди 1 записей активности.
+2025-06-03 12:58:59,415 - TimeTracker - INFO - Найден токен авторизации длиной 228 символов.
+2025-06-03 12:58:59,415 - TimeTracker - INFO - Используется user_id: 3
+2025-06-03 12:58:59,415 - TimeTracker - INFO - URL API из секции Credentials: http://147.45.153.16:8000/api/
+2025-06-03 12:58:59,416 - TimeTracker - INFO - URL для отправки активностей: http://147.45.153.16:8000/api/activities/
+2025-06-03 12:58:59,416 - TimeTracker - INFO - Вычисленная длительность: 10.005381 секунд
+2025-06-03 12:58:59,416 - TimeTracker - INFO - Отправляем запрос на создание приложения: http://147.45.153.16:8000/api/applications/
+2025-06-03 12:58:59,480 - TimeTracker - INFO - Создано новое приложение: cursor.exe с ID=162
+2025-06-03 12:58:59,480 - TimeTracker - INFO - Для приложения cursor.exe выбран ID=162
+2025-06-03 12:58:59,481 - TimeTracker - INFO - Отправка активности: start_time=2025-06-03T09:58:49.298682Z, end_time=2025-06-03T09:58:59.304063Z, длительность=10.005381 секунд
+2025-06-03 12:58:59,481 - TimeTracker - INFO - Отправка 1 записей активности на сервер.
+2025-06-03 12:58:59,481 - TimeTracker - INFO - Отправляем пайлоад: {'application': 162, 'title': 'Практическая-работа-по-ролевым-моделям-with-images.docx - bank_service - Cursor', 'start_time': '2025-06-03T09:58:49.298682Z', 'end_time': '2025-06-03T09:58:59.304063Z', 'is_productive': True, 'app_name': 'cursor.exe', 'keyboard_presses': 5}
+2025-06-03 12:58:59,559 - TimeTracker - INFO - Ответ сервера: код=201, тело={"id":1834,"user":3,"application":163,"start_time":"2025-06-03T12:58:49.298682+03:00","end_time":"2025-06-03T12:58:59.304063+03:00","duration":"00:00:10.005381","keyboard_presses":5}
+2025-06-03 12:58:59,559 - TimeTracker - INFO - Успешно отправлено: 201 - {"id":1834,"user":3,"application":163,"start_time":"2025-06-03T12:58:49.298682+03:00","end_time":"2025-06-03T12:58:59.304063+03:00","duration":"00:00:10.005381","keyboard_presses":5}
+2025-06-03 12:58:59,560 - TimeTracker - INFO - Ответ сервера в JSON: {'id': 1834, 'user': 3, 'application': 163, 'start_time': '2025-06-03T12:58:49.298682+03:00', 'end_time': '2025-06-03T12:58:59.304063+03:00', 'duration': '00:00:10.005381', 'keyboard_presses': 5}
+2025-06-03 12:58:59,560 - TimeTracker - INFO - Успешно отправлено 1 из 1 записей активности.
+2025-06-03 13:02:59,315 - TimeTracker - INFO - Изменилось активное окно: cursor.exe -> telegram.exe
+2025-06-03 13:02:59,316 - TimeTracker - INFO - Завершена сессия активности: App='cursor.exe', Title='README.md - Tracker33 - Cursor, Duration=240s, Keyboard=857 нажатий. В очереди: 1
+2025-06-03 13:02:59,319 - TimeTracker - INFO - В очереди есть активности, запускаем немедленную отправку данных
+2025-06-03 13:02:59,319 - TimeTracker - ERROR - Ошибка при сохранении конфигурации: [WinError 3] Системе не удается найти указанный путь: ''
+2025-06-03 13:02:59,320 - TimeTracker - INFO - Конфигурация сохранена в резервное место: config.ini
+2025-06-03 13:02:59,321 - TimeTracker - INFO - Новое приложение telegram.exe автоматически добавлено в отслеживаемые как полезное
+2025-06-03 13:02:59,322 - TimeTracker - INFO - Начата новая сессия активности: App='telegram.exe', Title='‎Михаил (17376)'
+2025-06-03 13:02:59,424 - TimeTracker - INFO - Начинаем отправку данных. В очереди 1 записей активности.
+2025-06-03 13:02:59,424 - TimeTracker - INFO - Найден токен авторизации длиной 228 символов.
+2025-06-03 13:02:59,425 - TimeTracker - INFO - Используется user_id: 3
+2025-06-03 13:02:59,425 - TimeTracker - INFO - URL API из секции Credentials: http://147.45.153.16:8000/api/
+2025-06-03 13:02:59,425 - TimeTracker - INFO - URL для отправки активностей: http://147.45.153.16:8000/api/activities/
+2025-06-03 13:02:59,425 - TimeTracker - INFO - Вычисленная длительность: 240.010953 секунд
+2025-06-03 13:02:59,425 - TimeTracker - INFO - Для приложения cursor.exe выбран ID=162
+2025-06-03 13:02:59,426 - TimeTracker - INFO - Отправка активности: start_time=2025-06-03T09:58:59.305206Z, end_time=2025-06-03T10:02:59.316159Z, длительность=240.010953 секунд
+2025-06-03 13:02:59,426 - TimeTracker - INFO - Отправка 1 записей активности на сервер.
+2025-06-03 13:02:59,426 - TimeTracker - INFO - Отправляем пайлоад: {'application': 162, 'title': 'README.md - Tracker33 - Cursor', 'start_time': '2025-06-03T09:58:59.305206Z', 'end_time': '2025-06-03T10:02:59.316159Z', 'is_productive': True, 'app_name': 'cursor.exe', 'keyboard_presses': 857}
+2025-06-03 13:02:59,536 - TimeTracker - INFO - Ответ сервера: код=201, тело={"id":1835,"user":3,"application":163,"start_time":"2025-06-03T12:58:59.305206+03:00","end_time":"2025-06-03T13:02:59.316159+03:00","duration":"00:04:00.010953","keyboard_presses":857}
+2025-06-03 13:02:59,536 - TimeTracker - INFO - Успешно отправлено: 201 - {"id":1835,"user":3,"application":163,"start_time":"2025-06-03T12:58:59.305206+03:00","end_time":"2025-06-03T13:02:59.316159+03:00","duration":"00:04:00.010953","keyboard_presses":857}
+2025-06-03 13:02:59,536 - TimeTracker - INFO - Ответ сервера в JSON: {'id': 1835, 'user': 3, 'application': 163, 'start_time': '2025-06-03T12:58:59.305206+03:00', 'end_time': '2025-06-03T13:02:59.316159+03:00', 'duration': '00:04:00.010953', 'keyboard_presses': 857}
+2025-06-03 13:02:59,537 - TimeTracker - INFO - Успешно отправлено 1 из 1 записей активности.
+2025-06-03 13:03:04,314 - TimeTracker - INFO - Изменилось активное окно: telegram.exe -> cursor.exe
+2025-06-03 13:03:04,314 - TimeTracker - INFO - Завершена сессия активности: App='telegram.exe', Title='‎Михаил (17376), Duration=5s, Keyboard=0 нажатий. В очереди: 1
+2025-06-03 13:03:04,315 - TimeTracker - INFO - В очереди есть активности, запускаем немедленную отправку данных
+2025-06-03 13:03:04,317 - TimeTracker - INFO - Начата новая сессия активности: App='cursor.exe', Title='README.md - Tracker33 - Cursor'
+2025-06-03 13:03:04,422 - TimeTracker - INFO - Начинаем отправку данных. В очереди 1 записей активности.
+2025-06-03 13:03:04,423 - TimeTracker - INFO - Найден токен авторизации длиной 228 символов.
+2025-06-03 13:03:04,423 - TimeTracker - INFO - Используется user_id: 3
+2025-06-03 13:03:04,424 - TimeTracker - INFO - URL API из секции Credentials: http://147.45.153.16:8000/api/
+2025-06-03 13:03:04,424 - TimeTracker - INFO - URL для отправки активностей: http://147.45.153.16:8000/api/activities/
+2025-06-03 13:03:04,424 - TimeTracker - INFO - Вычисленная длительность: 4.993491 секунд
+2025-06-03 13:03:04,425 - TimeTracker - INFO - Отправляем запрос на создание приложения: http://147.45.153.16:8000/api/applications/
+2025-06-03 13:03:04,488 - TimeTracker - INFO - Создано новое приложение: telegram.exe с ID=164
+2025-06-03 13:03:04,488 - TimeTracker - INFO - Для приложения telegram.exe выбран ID=164
+2025-06-03 13:03:04,488 - TimeTracker - INFO - Отправка активности: start_time=2025-06-03T10:02:59.321361Z, end_time=2025-06-03T10:03:04.314852Z, длительность=4.993491 секунд
+2025-06-03 13:03:04,489 - TimeTracker - INFO - Отправка 1 записей активности на сервер.
+2025-06-03 13:03:04,489 - TimeTracker - INFO - Отправляем пайлоад: {'application': 164, 'title': '\u200eМихаил (17376)', 'start_time': '2025-06-03T10:02:59.321361Z', 'end_time': '2025-06-03T10:03:04.314852Z', 'is_productive': False, 'app_name': 'telegram.exe', 'keyboard_presses': 0}
+2025-06-03 13:03:04,566 - TimeTracker - INFO - Ответ сервера: код=201, тело={"id":1836,"user":3,"application":165,"start_time":"2025-06-03T13:02:59.321361+03:00","end_time":"2025-06-03T13:03:04.314852+03:00","duration":"00:00:04.993491","keyboard_presses":0}
+2025-06-03 13:03:04,566 - TimeTracker - INFO - Успешно отправлено: 201 - {"id":1836,"user":3,"application":165,"start_time":"2025-06-03T13:02:59.321361+03:00","end_time":"2025-06-03T13:03:04.314852+03:00","duration":"00:00:04.993491","keyboard_presses":0}
+2025-06-03 13:03:04,566 - TimeTracker - INFO - Ответ сервера в JSON: {'id': 1836, 'user': 3, 'application': 165, 'start_time': '2025-06-03T13:02:59.321361+03:00', 'end_time': '2025-06-03T13:03:04.314852+03:00', 'duration': '00:00:04.993491', 'keyboard_presses': 0}
+2025-06-03 13:03:04,567 - TimeTracker - INFO - Успешно отправлено 1 из 1 записей активности.
+2025-06-03 13:03:09,316 - TimeTracker - INFO - Изменилось активное окно: cursor.exe -> chrome.exe
+2025-06-03 13:03:09,316 - TimeTracker - INFO - Завершена сессия активности: App='cursor.exe', Title='README.md - Tracker33 - Cursor, Duration=5s, Keyboard=0 нажатий. В очереди: 1
+2025-06-03 13:03:09,317 - TimeTracker - INFO - В очереди есть активности, запускаем немедленную отправку данных
+2025-06-03 13:03:09,320 - TimeTracker - INFO - Начата новая сессия активности: App='chrome.exe', Title='Админ-панель - Time Tracker - ...'
+2025-06-03 13:03:09,426 - TimeTracker - INFO - Начинаем отправку данных. В очереди 1 записей активности.
+2025-06-03 13:03:09,427 - TimeTracker - INFO - Найден токен авторизации длиной 228 символов.
+2025-06-03 13:03:09,427 - TimeTracker - INFO - Используется user_id: 3
+2025-06-03 13:03:09,428 - TimeTracker - INFO - URL API из секции Credentials: http://147.45.153.16:8000/api/
+2025-06-03 13:03:09,428 - TimeTracker - INFO - URL для отправки активностей: http://147.45.153.16:8000/api/activities/
+2025-06-03 13:03:09,428 - TimeTracker - INFO - Вычисленная длительность: 5.000732 секунд
+2025-06-03 13:03:09,429 - TimeTracker - INFO - Для приложения cursor.exe выбран ID=162
+2025-06-03 13:03:09,429 - TimeTracker - INFO - Отправка активности: start_time=2025-06-03T10:03:04.315867Z, end_time=2025-06-03T10:03:09.316599Z, длительность=5.000732 секунд
+2025-06-03 13:03:09,429 - TimeTracker - INFO - Отправка 1 записей активности на сервер.
+2025-06-03 13:03:09,430 - TimeTracker - INFO - Отправляем пайлоад: {'application': 162, 'title': 'README.md - Tracker33 - Cursor', 'start_time': '2025-06-03T10:03:04.315867Z', 'end_time': '2025-06-03T10:03:09.316599Z', 'is_productive': True, 'app_name': 'cursor.exe', 'keyboard_presses': 0}
+2025-06-03 13:03:09,493 - TimeTracker - INFO - Ответ сервера: код=201, тело={"id":1837,"user":3,"application":163,"start_time":"2025-06-03T13:03:04.315867+03:00","end_time":"2025-06-03T13:03:09.316599+03:00","duration":"00:00:05.000732","keyboard_presses":0}
+2025-06-03 13:03:09,493 - TimeTracker - INFO - Успешно отправлено: 201 - {"id":1837,"user":3,"application":163,"start_time":"2025-06-03T13:03:04.315867+03:00","end_time":"2025-06-03T13:03:09.316599+03:00","duration":"00:00:05.000732","keyboard_presses":0}
+2025-06-03 13:03:09,494 - TimeTracker - INFO - Ответ сервера в JSON: {'id': 1837, 'user': 3, 'application': 163, 'start_time': '2025-06-03T13:03:04.315867+03:00', 'end_time': '2025-06-03T13:03:09.316599+03:00', 'duration': '00:00:05.000732', 'keyboard_presses': 0}
+2025-06-03 13:03:09,494 - TimeTracker - INFO - Успешно отправлено 1 из 1 записей активности.
+2025-06-03 13:03:14,322 - TimeTracker - INFO - Изменилось активное окно: chrome.exe -> chrome.exe
+2025-06-03 13:03:14,322 - TimeTracker - INFO - Завершена сессия активности: App='chrome.exe', Title='Админ-панель - Time Tracker - ..., Duration=5s, Keyboard=0 нажатий. В очереди: 1
+2025-06-03 13:03:14,323 - TimeTracker - INFO - В очереди есть активности, запускаем немедленную отправку данных
+2025-06-03 13:03:14,325 - TimeTracker - INFO - Начата новая сессия активности: App='chrome.exe', Title='Главная - Time Tracker - Googl...'
+2025-06-03 13:03:14,430 - TimeTracker - INFO - Начинаем отправку данных. В очереди 1 записей активности.
+2025-06-03 13:03:14,430 - TimeTracker - INFO - Найден токен авторизации длиной 228 символов.
+2025-06-03 13:03:14,430 - TimeTracker - INFO - Используется user_id: 3
+2025-06-03 13:03:14,431 - TimeTracker - INFO - URL API из секции Credentials: http://147.45.153.16:8000/api/
+2025-06-03 13:03:14,431 - TimeTracker - INFO - URL для отправки активностей: http://147.45.153.16:8000/api/activities/
+2025-06-03 13:03:14,431 - TimeTracker - INFO - Вычисленная длительность: 5.004386 секунд
+2025-06-03 13:03:14,431 - TimeTracker - INFO - Для приложения chrome.exe выбран ID=160
+2025-06-03 13:03:14,431 - TimeTracker - INFO - Отправка активности: start_time=2025-06-03T10:03:09.318490Z, end_time=2025-06-03T10:03:14.322876Z, длительность=5.004386 секунд
+2025-06-03 13:03:14,431 - TimeTracker - INFO - Отправка 1 записей активности на сервер.
+2025-06-03 13:03:14,432 - TimeTracker - INFO - Отправляем пайлоад: {'application': 160, 'title': 'Админ-панель - Time Tracker - Google Chrome', 'start_time': '2025-06-03T10:03:09.318490Z', 'end_time': '2025-06-03T10:03:14.322876Z', 'is_productive': True, 'app_name': 'chrome.exe', 'keyboard_presses': 0}
+2025-06-03 13:03:14,494 - TimeTracker - INFO - Ответ сервера: код=201, тело={"id":1838,"user":3,"application":161,"start_time":"2025-06-03T13:03:09.318490+03:00","end_time":"2025-06-03T13:03:14.322876+03:00","duration":"00:00:05.004386","keyboard_presses":0}
+2025-06-03 13:03:14,495 - TimeTracker - INFO - Успешно отправлено: 201 - {"id":1838,"user":3,"application":161,"start_time":"2025-06-03T13:03:09.318490+03:00","end_time":"2025-06-03T13:03:14.322876+03:00","duration":"00:00:05.004386","keyboard_presses":0}
+2025-06-03 13:03:14,495 - TimeTracker - INFO - Ответ сервера в JSON: {'id': 1838, 'user': 3, 'application': 161, 'start_time': '2025-06-03T13:03:09.318490+03:00', 'end_time': '2025-06-03T13:03:14.322876+03:00', 'duration': '00:00:05.004386', 'keyboard_presses': 0}
+2025-06-03 13:03:14,496 - TimeTracker - INFO - Успешно отправлено 1 из 1 записей активности.
+2025-06-03 13:03:34,317 - TimeTracker - INFO - Изменилось активное окно: chrome.exe -> cursor.exe
+2025-06-03 13:03:34,317 - TimeTracker - INFO - Завершена сессия активности: App='chrome.exe', Title='Главная - Time Tracker - Googl..., Duration=20s, Keyboard=29 нажатий. В очереди: 1
+2025-06-03 13:03:34,318 - TimeTracker - INFO - В очереди есть активности, запускаем немедленную отправку данных
+2025-06-03 13:03:34,320 - TimeTracker - INFO - Начата новая сессия активности: App='cursor.exe', Title='● README.md - Tracker33 - Curs...'
+2025-06-03 13:03:34,425 - TimeTracker - INFO - Начинаем отправку данных. В очереди 1 записей активности.
+2025-06-03 13:03:34,425 - TimeTracker - INFO - Найден токен авторизации длиной 228 символов.
+2025-06-03 13:03:34,425 - TimeTracker - INFO - Используется user_id: 3
+2025-06-03 13:03:34,426 - TimeTracker - INFO - URL API из секции Credentials: http://147.45.153.16:8000/api/
+2025-06-03 13:03:34,426 - TimeTracker - INFO - URL для отправки активностей: http://147.45.153.16:8000/api/activities/
+2025-06-03 13:03:34,426 - TimeTracker - INFO - Вычисленная длительность: 19.993788 секунд
+2025-06-03 13:03:34,426 - TimeTracker - INFO - Для приложения chrome.exe выбран ID=160
+2025-06-03 13:03:34,426 - TimeTracker - INFO - Отправка активности: start_time=2025-06-03T10:03:14.323839Z, end_time=2025-06-03T10:03:34.317627Z, длительность=19.993788 секунд
+2025-06-03 13:03:34,427 - TimeTracker - INFO - Отправка 1 записей активности на сервер.
+2025-06-03 13:03:34,427 - TimeTracker - INFO - Отправляем пайлоад: {'application': 160, 'title': 'Главная - Time Tracker - Google Chrome', 'start_time': '2025-06-03T10:03:14.323839Z', 'end_time': '2025-06-03T10:03:34.317627Z', 'is_productive': True, 'app_name': 'chrome.exe', 'keyboard_presses': 29}
+2025-06-03 13:03:34,491 - TimeTracker - INFO - Ответ сервера: код=201, тело={"id":1839,"user":3,"application":161,"start_time":"2025-06-03T13:03:14.323839+03:00","end_time":"2025-06-03T13:03:34.317627+03:00","duration":"00:00:19.993788","keyboard_presses":29}
+2025-06-03 13:03:34,491 - TimeTracker - INFO - Успешно отправлено: 201 - {"id":1839,"user":3,"application":161,"start_time":"2025-06-03T13:03:14.323839+03:00","end_time":"2025-06-03T13:03:34.317627+03:00","duration":"00:00:19.993788","keyboard_presses":29}
+2025-06-03 13:03:34,492 - TimeTracker - INFO - Ответ сервера в JSON: {'id': 1839, 'user': 3, 'application': 161, 'start_time': '2025-06-03T13:03:14.323839+03:00', 'end_time': '2025-06-03T13:03:34.317627+03:00', 'duration': '00:00:19.993788', 'keyboard_presses': 29}
+2025-06-03 13:03:34,492 - TimeTracker - INFO - Успешно отправлено 1 из 1 записей активности.
+2025-06-03 13:03:39,313 - TimeTracker - INFO - Изменилось активное окно: cursor.exe -> chrome.exe
+2025-06-03 13:03:39,313 - TimeTracker - INFO - Завершена сессия активности: App='cursor.exe', Title='● README.md - Tracker33 - Curs..., Duration=5s, Keyboard=2 нажатий. В очереди: 1
+2025-06-03 13:03:39,314 - TimeTracker - INFO - В очереди есть активности, запускаем немедленную отправку данных
+2025-06-03 13:03:39,316 - TimeTracker - INFO - Начата новая сессия активности: App='chrome.exe', Title='Главная - Time Tracker - Googl...'
+2025-06-03 13:03:39,421 - TimeTracker - INFO - Начинаем отправку данных. В очереди 1 записей активности.
+2025-06-03 13:03:39,421 - TimeTracker - INFO - Найден токен авторизации длиной 228 символов.
+2025-06-03 13:03:39,422 - TimeTracker - INFO - Используется user_id: 3
+2025-06-03 13:03:39,422 - TimeTracker - INFO - URL API из секции Credentials: http://147.45.153.16:8000/api/
+2025-06-03 13:03:39,422 - TimeTracker - INFO - URL для отправки активностей: http://147.45.153.16:8000/api/activities/
+2025-06-03 13:03:39,423 - TimeTracker - INFO - Вычисленная длительность: 4.9948 секунд
+2025-06-03 13:03:39,423 - TimeTracker - INFO - Для приложения cursor.exe выбран ID=162
+2025-06-03 13:03:39,423 - TimeTracker - INFO - Отправка активности: start_time=2025-06-03T10:03:34.318664Z, end_time=2025-06-03T10:03:39.313464Z, длительность=4.9948 секунд
+2025-06-03 13:03:39,424 - TimeTracker - INFO - Отправка 1 записей активности на сервер.
+2025-06-03 13:03:39,424 - TimeTracker - INFO - Отправляем пайлоад: {'application': 162, 'title': '● README.md - Tracker33 - Cursor', 'start_time': '2025-06-03T10:03:34.318664Z', 'end_time': '2025-06-03T10:03:39.313464Z', 'is_productive': True, 'app_name': 'cursor.exe', 'keyboard_presses': 2}
+2025-06-03 13:03:39,485 - TimeTracker - INFO - Ответ сервера: код=201, тело={"id":1840,"user":3,"application":163,"start_time":"2025-06-03T13:03:34.318664+03:00","end_time":"2025-06-03T13:03:39.313464+03:00","duration":"00:00:04.994800","keyboard_presses":2}
+2025-06-03 13:03:39,486 - TimeTracker - INFO - Успешно отправлено: 201 - {"id":1840,"user":3,"application":163,"start_time":"2025-06-03T13:03:34.318664+03:00","end_time":"2025-06-03T13:03:39.313464+03:00","duration":"00:00:04.994800","keyboard_presses":2}
+2025-06-03 13:03:39,486 - TimeTracker - INFO - Ответ сервера в JSON: {'id': 1840, 'user': 3, 'application': 163, 'start_time': '2025-06-03T13:03:34.318664+03:00', 'end_time': '2025-06-03T13:03:39.313464+03:00', 'duration': '00:00:04.994800', 'keyboard_presses': 2}
+2025-06-03 13:03:39,486 - TimeTracker - INFO - Успешно отправлено 1 из 1 записей активности.
+2025-06-03 13:03:44,317 - TimeTracker - INFO - Изменилось активное окно: chrome.exe -> cursor.exe
+2025-06-03 13:03:44,317 - TimeTracker - INFO - Завершена сессия активности: App='chrome.exe', Title='Главная - Time Tracker - Googl..., Duration=5s, Keyboard=2 нажатий. В очереди: 1
+2025-06-03 13:03:44,318 - TimeTracker - INFO - В очереди есть активности, запускаем немедленную отправку данных
+2025-06-03 13:03:44,319 - TimeTracker - INFO - Начата новая сессия активности: App='cursor.exe', Title='README.md - Tracker33 - Cursor'
+2025-06-03 13:03:44,425 - TimeTracker - INFO - Начинаем отправку данных. В очереди 1 записей активности.
+2025-06-03 13:03:44,425 - TimeTracker - INFO - Найден токен авторизации длиной 228 символов.
+2025-06-03 13:03:44,426 - TimeTracker - INFO - Используется user_id: 3
+2025-06-03 13:03:44,426 - TimeTracker - INFO - URL API из секции Credentials: http://147.45.153.16:8000/api/
+2025-06-03 13:03:44,426 - TimeTracker - INFO - URL для отправки активностей: http://147.45.153.16:8000/api/activities/
+2025-06-03 13:03:44,427 - TimeTracker - INFO - Вычисленная длительность: 5.00289 секунд
+2025-06-03 13:03:44,427 - TimeTracker - INFO - Для приложения chrome.exe выбран ID=160
+2025-06-03 13:03:44,427 - TimeTracker - INFO - Отправка активности: start_time=2025-06-03T10:03:39.314701Z, end_time=2025-06-03T10:03:44.317591Z, длительность=5.00289 секунд
+2025-06-03 13:03:44,427 - TimeTracker - INFO - Отправка 1 записей активности на сервер.
+2025-06-03 13:03:44,428 - TimeTracker - INFO - Отправляем пайлоад: {'application': 160, 'title': 'Главная - Time Tracker - Google Chrome', 'start_time': '2025-06-03T10:03:39.314701Z', 'end_time': '2025-06-03T10:03:44.317591Z', 'is_productive': True, 'app_name': 'chrome.exe', 'keyboard_presses': 2}
+2025-06-03 13:03:44,490 - TimeTracker - INFO - Ответ сервера: код=201, тело={"id":1841,"user":3,"application":161,"start_time":"2025-06-03T13:03:39.314701+03:00","end_time":"2025-06-03T13:03:44.317591+03:00","duration":"00:00:05.002890","keyboard_presses":2}
+2025-06-03 13:03:44,491 - TimeTracker - INFO - Успешно отправлено: 201 - {"id":1841,"user":3,"application":161,"start_time":"2025-06-03T13:03:39.314701+03:00","end_time":"2025-06-03T13:03:44.317591+03:00","duration":"00:00:05.002890","keyboard_presses":2}
+2025-06-03 13:03:44,491 - TimeTracker - INFO - Ответ сервера в JSON: {'id': 1841, 'user': 3, 'application': 161, 'start_time': '2025-06-03T13:03:39.314701+03:00', 'end_time': '2025-06-03T13:03:44.317591+03:00', 'duration': '00:00:05.002890', 'keyboard_presses': 2}
+2025-06-03 13:03:44,492 - TimeTracker - INFO - Успешно отправлено 1 из 1 записей активности.
+2025-06-03 13:04:34,326 - TimeTracker - INFO - Изменилось активное окно: cursor.exe -> chrome.exe
+2025-06-03 13:04:34,326 - TimeTracker - INFO - Завершена сессия активности: App='cursor.exe', Title='README.md - Tracker33 - Cursor, Duration=50s, Keyboard=4 нажатий. В очереди: 1
+2025-06-03 13:04:34,327 - TimeTracker - INFO - В очереди есть активности, запускаем немедленную отправку данных
+2025-06-03 13:04:34,329 - TimeTracker - INFO - Начата новая сессия активности: App='chrome.exe', Title='MCP Server Configuration Updat...'
+2025-06-03 13:04:34,435 - TimeTracker - INFO - Начинаем отправку данных. В очереди 1 записей активности.
+2025-06-03 13:04:34,435 - TimeTracker - INFO - Найден токен авторизации длиной 228 символов.
+2025-06-03 13:04:34,436 - TimeTracker - INFO - Используется user_id: 3
+2025-06-03 13:04:34,436 - TimeTracker - INFO - URL API из секции Credentials: http://147.45.153.16:8000/api/
+2025-06-03 13:04:34,436 - TimeTracker - INFO - URL для отправки активностей: http://147.45.153.16:8000/api/activities/
+2025-06-03 13:04:34,437 - TimeTracker - INFO - Вычисленная длительность: 50.008038 секунд
+2025-06-03 13:04:34,437 - TimeTracker - INFO - Для приложения cursor.exe выбран ID=162
+2025-06-03 13:04:34,438 - TimeTracker - INFO - Отправка активности: start_time=2025-06-03T10:03:44.318683Z, end_time=2025-06-03T10:04:34.326721Z, длительность=50.008038 секунд
+2025-06-03 13:04:34,438 - TimeTracker - INFO - Отправка 1 записей активности на сервер.
+2025-06-03 13:04:34,438 - TimeTracker - INFO - Отправляем пайлоад: {'application': 162, 'title': 'README.md - Tracker33 - Cursor', 'start_time': '2025-06-03T10:03:44.318683Z', 'end_time': '2025-06-03T10:04:34.326721Z', 'is_productive': True, 'app_name': 'cursor.exe', 'keyboard_presses': 4}
+2025-06-03 13:04:34,500 - TimeTracker - INFO - Ответ сервера: код=201, тело={"id":1842,"user":3,"application":163,"start_time":"2025-06-03T13:03:44.318683+03:00","end_time":"2025-06-03T13:04:34.326721+03:00","duration":"00:00:50.008038","keyboard_presses":4}
+2025-06-03 13:04:34,500 - TimeTracker - INFO - Успешно отправлено: 201 - {"id":1842,"user":3,"application":163,"start_time":"2025-06-03T13:03:44.318683+03:00","end_time":"2025-06-03T13:04:34.326721+03:00","duration":"00:00:50.008038","keyboard_presses":4}
+2025-06-03 13:04:34,501 - TimeTracker - INFO - Ответ сервера в JSON: {'id': 1842, 'user': 3, 'application': 163, 'start_time': '2025-06-03T13:03:44.318683+03:00', 'end_time': '2025-06-03T13:04:34.326721+03:00', 'duration': '00:00:50.008038', 'keyboard_presses': 4}
+2025-06-03 13:04:34,501 - TimeTracker - INFO - Успешно отправлено 1 из 1 записей активности.
+2025-06-03 13:04:39,318 - TimeTracker - INFO - Изменилось активное окно: chrome.exe -> chrome.exe
+2025-06-03 13:04:39,319 - TimeTracker - INFO - Завершена сессия активности: App='chrome.exe', Title='MCP Server Configuration Updat..., Duration=5s, Keyboard=0 нажатий. В очереди: 1
+2025-06-03 13:04:39,320 - TimeTracker - INFO - В очереди есть активности, запускаем немедленную отправку данных
+2025-06-03 13:04:39,322 - TimeTracker - INFO - Начата новая сессия активности: App='chrome.exe', Title='Новая вкладка - Google Chrome'
+2025-06-03 13:04:39,427 - TimeTracker - INFO - Начинаем отправку данных. В очереди 1 записей активности.
+2025-06-03 13:04:39,428 - TimeTracker - INFO - Найден токен авторизации длиной 228 символов.
+2025-06-03 13:04:39,428 - TimeTracker - INFO - Используется user_id: 3
+2025-06-03 13:04:39,428 - TimeTracker - INFO - URL API из секции Credentials: http://147.45.153.16:8000/api/
+2025-06-03 13:04:39,429 - TimeTracker - INFO - URL для отправки активностей: http://147.45.153.16:8000/api/activities/
+2025-06-03 13:04:39,429 - TimeTracker - INFO - Вычисленная длительность: 4.991079 секунд
+2025-06-03 13:04:39,429 - TimeTracker - INFO - Для приложения chrome.exe выбран ID=160
+2025-06-03 13:04:39,430 - TimeTracker - INFO - Отправка активности: start_time=2025-06-03T10:04:34.328071Z, end_time=2025-06-03T10:04:39.319150Z, длительность=4.991079 секунд
+2025-06-03 13:04:39,430 - TimeTracker - INFO - Отправка 1 записей активности на сервер.
+2025-06-03 13:04:39,430 - TimeTracker - INFO - Отправляем пайлоад: {'application': 160, 'title': 'MCP Server Configuration Update - Claude - Google Chrome', 'start_time': '2025-06-03T10:04:34.328071Z', 'end_time': '2025-06-03T10:04:39.319150Z', 'is_productive': True, 'app_name': 'chrome.exe', 'keyboard_presses': 0}
+2025-06-03 13:04:39,507 - TimeTracker - INFO - Ответ сервера: код=201, тело={"id":1843,"user":3,"application":161,"start_time":"2025-06-03T13:04:34.328071+03:00","end_time":"2025-06-03T13:04:39.319150+03:00","duration":"00:00:04.991079","keyboard_presses":0}
+2025-06-03 13:04:39,508 - TimeTracker - INFO - Успешно отправлено: 201 - {"id":1843,"user":3,"application":161,"start_time":"2025-06-03T13:04:34.328071+03:00","end_time":"2025-06-03T13:04:39.319150+03:00","duration":"00:00:04.991079","keyboard_presses":0}
+2025-06-03 13:04:39,508 - TimeTracker - INFO - Ответ сервера в JSON: {'id': 1843, 'user': 3, 'application': 161, 'start_time': '2025-06-03T13:04:34.328071+03:00', 'end_time': '2025-06-03T13:04:39.319150+03:00', 'duration': '00:00:04.991079', 'keyboard_presses': 0}
+2025-06-03 13:04:39,509 - TimeTracker - INFO - Успешно отправлено 1 из 1 записей активности.
+2025-06-03 13:04:49,315 - TimeTracker - INFO - Изменилось активное окно: chrome.exe -> chrome.exe
+2025-06-03 13:04:49,315 - TimeTracker - INFO - Завершена сессия активности: App='chrome.exe', Title='Новая вкладка - Google Chrome, Duration=10s, Keyboard=18 нажатий. В очереди: 1
+2025-06-03 13:04:49,316 - TimeTracker - INFO - В очереди есть активности, запускаем немедленную отправку данных
+2025-06-03 13:04:49,318 - TimeTracker - INFO - Начата новая сессия активности: App='chrome.exe', Title='ChatGPT - Google Chrome'
+2025-06-03 13:04:49,423 - TimeTracker - INFO - Начинаем отправку данных. В очереди 1 записей активности.
+2025-06-03 13:04:49,423 - TimeTracker - INFO - Найден токен авторизации длиной 228 символов.
+2025-06-03 13:04:49,424 - TimeTracker - INFO - Используется user_id: 3
+2025-06-03 13:04:49,424 - TimeTracker - INFO - URL API из секции Credentials: http://147.45.153.16:8000/api/
+2025-06-03 13:04:49,424 - TimeTracker - INFO - URL для отправки активностей: http://147.45.153.16:8000/api/activities/
+2025-06-03 13:04:49,425 - TimeTracker - INFO - Вычисленная длительность: 9.995189 секунд
+2025-06-03 13:04:49,425 - TimeTracker - INFO - Для приложения chrome.exe выбран ID=160
+2025-06-03 13:04:49,425 - TimeTracker - INFO - Отправка активности: start_time=2025-06-03T10:04:39.320604Z, end_time=2025-06-03T10:04:49.315793Z, длительность=9.995189 секунд
+2025-06-03 13:04:49,426 - TimeTracker - INFO - Отправка 1 записей активности на сервер.
+2025-06-03 13:04:49,426 - TimeTracker - INFO - Отправляем пайлоад: {'application': 160, 'title': 'Новая вкладка - Google Chrome', 'start_time': '2025-06-03T10:04:39.320604Z', 'end_time': '2025-06-03T10:04:49.315793Z', 'is_productive': True, 'app_name': 'chrome.exe', 'keyboard_presses': 18}
+2025-06-03 13:04:49,503 - TimeTracker - INFO - Ответ сервера: код=201, тело={"id":1844,"user":3,"application":161,"start_time":"2025-06-03T13:04:39.320604+03:00","end_time":"2025-06-03T13:04:49.315793+03:00","duration":"00:00:09.995189","keyboard_presses":18}
+2025-06-03 13:04:49,503 - TimeTracker - INFO - Успешно отправлено: 201 - {"id":1844,"user":3,"application":161,"start_time":"2025-06-03T13:04:39.320604+03:00","end_time":"2025-06-03T13:04:49.315793+03:00","duration":"00:00:09.995189","keyboard_presses":18}
+2025-06-03 13:04:49,503 - TimeTracker - INFO - Ответ сервера в JSON: {'id': 1844, 'user': 3, 'application': 161, 'start_time': '2025-06-03T13:04:39.320604+03:00', 'end_time': '2025-06-03T13:04:49.315793+03:00', 'duration': '00:00:09.995189', 'keyboard_presses': 18}
+2025-06-03 13:04:49,504 - TimeTracker - INFO - Успешно отправлено 1 из 1 записей активности.
+2025-06-03 13:05:04,316 - TimeTracker - INFO - Изменилось активное окно: chrome.exe -> chrome.exe
+2025-06-03 13:05:04,317 - TimeTracker - INFO - Завершена сессия активности: App='chrome.exe', Title='ChatGPT - Google Chrome, Duration=15s, Keyboard=49 нажатий. В очереди: 1
+2025-06-03 13:05:04,318 - TimeTracker - INFO - В очереди есть активности, запускаем немедленную отправку данных
+2025-06-03 13:05:04,320 - TimeTracker - INFO - Начата новая сессия активности: App='chrome.exe', Title='Лучше ли последовательное мышл...'
+2025-06-03 13:05:04,425 - TimeTracker - INFO - Начинаем отправку данных. В очереди 1 записей активности.
+2025-06-03 13:05:04,426 - TimeTracker - INFO - Найден токен авторизации длиной 228 символов.
+2025-06-03 13:05:04,426 - TimeTracker - INFO - Используется user_id: 3
+2025-06-03 13:05:04,426 - TimeTracker - INFO - URL API из секции Credentials: http://147.45.153.16:8000/api/
+2025-06-03 13:05:04,427 - TimeTracker - INFO - URL для отправки активностей: http://147.45.153.16:8000/api/activities/
+2025-06-03 13:05:04,427 - TimeTracker - INFO - Вычисленная длительность: 15.000066 секунд
+2025-06-03 13:05:04,427 - TimeTracker - INFO - Для приложения chrome.exe выбран ID=160
+2025-06-03 13:05:04,428 - TimeTracker - INFO - Отправка активности: start_time=2025-06-03T10:04:49.317146Z, end_time=2025-06-03T10:05:04.317212Z, длительность=15.000066 секунд
+2025-06-03 13:05:04,428 - TimeTracker - INFO - Отправка 1 записей активности на сервер.
+2025-06-03 13:05:04,428 - TimeTracker - INFO - Отправляем пайлоад: {'application': 160, 'title': 'ChatGPT - Google Chrome', 'start_time': '2025-06-03T10:04:49.317146Z', 'end_time': '2025-06-03T10:05:04.317212Z', 'is_productive': True, 'app_name': 'chrome.exe', 'keyboard_presses': 49}
+2025-06-03 13:05:04,491 - TimeTracker - INFO - Ответ сервера: код=201, тело={"id":1845,"user":3,"application":161,"start_time":"2025-06-03T13:04:49.317146+03:00","end_time":"2025-06-03T13:05:04.317212+03:00","duration":"00:00:15.000066","keyboard_presses":49}
+2025-06-03 13:05:04,491 - TimeTracker - INFO - Успешно отправлено: 201 - {"id":1845,"user":3,"application":161,"start_time":"2025-06-03T13:04:49.317146+03:00","end_time":"2025-06-03T13:05:04.317212+03:00","duration":"00:00:15.000066","keyboard_presses":49}
+2025-06-03 13:05:04,492 - TimeTracker - INFO - Ответ сервера в JSON: {'id': 1845, 'user': 3, 'application': 161, 'start_time': '2025-06-03T13:04:49.317146+03:00', 'end_time': '2025-06-03T13:05:04.317212+03:00', 'duration': '00:00:15.000066', 'keyboard_presses': 49}
+2025-06-03 13:05:04,492 - TimeTracker - INFO - Успешно отправлено 1 из 1 записей активности.
+2025-06-03 13:05:09,315 - TimeTracker - INFO - Изменилось активное окно: chrome.exe -> chrome.exe
+2025-06-03 13:05:09,316 - TimeTracker - INFO - Завершена сессия активности: App='chrome.exe', Title='Лучше ли последовательное мышл..., Duration=5s, Keyboard=0 нажатий. В очереди: 1
+2025-06-03 13:05:09,317 - TimeTracker - INFO - В очереди есть активности, запускаем немедленную отправку данных
+2025-06-03 13:05:09,319 - TimeTracker - INFO - Начата новая сессия активности: App='chrome.exe', Title='Sequential Thinking vs Alterna...'
+2025-06-03 13:05:09,425 - TimeTracker - INFO - Начинаем отправку данных. В очереди 1 записей активности.
+2025-06-03 13:05:09,425 - TimeTracker - INFO - Найден токен авторизации длиной 228 символов.
+2025-06-03 13:05:09,425 - TimeTracker - INFO - Используется user_id: 3
+2025-06-03 13:05:09,426 - TimeTracker - INFO - URL API из секции Credentials: http://147.45.153.16:8000/api/
+2025-06-03 13:05:09,426 - TimeTracker - INFO - URL для отправки активностей: http://147.45.153.16:8000/api/activities/
+2025-06-03 13:05:09,426 - TimeTracker - INFO - Вычисленная длительность: 4.997512 секунд
+2025-06-03 13:05:09,427 - TimeTracker - INFO - Для приложения chrome.exe выбран ID=160
+2025-06-03 13:05:09,427 - TimeTracker - INFO - Отправка активности: start_time=2025-06-03T10:05:04.318769Z, end_time=2025-06-03T10:05:09.316281Z, длительность=4.997512 секунд
+2025-06-03 13:05:09,427 - TimeTracker - INFO - Отправка 1 записей активности на сервер.
+2025-06-03 13:05:09,427 - TimeTracker - INFO - Отправляем пайлоад: {'application': 160, 'title': 'Лучше ли последовательное мышление - Google Chrome', 'start_time': '2025-06-03T10:05:04.318769Z', 'end_time': '2025-06-03T10:05:09.316281Z', 'is_productive': True, 'app_name': 'chrome.exe', 'keyboard_presses': 0}
+2025-06-03 13:05:09,489 - TimeTracker - INFO - Ответ сервера: код=201, тело={"id":1846,"user":3,"application":161,"start_time":"2025-06-03T13:05:04.318769+03:00","end_time":"2025-06-03T13:05:09.316281+03:00","duration":"00:00:04.997512","keyboard_presses":0}
+2025-06-03 13:05:09,489 - TimeTracker - INFO - Успешно отправлено: 201 - {"id":1846,"user":3,"application":161,"start_time":"2025-06-03T13:05:04.318769+03:00","end_time":"2025-06-03T13:05:09.316281+03:00","duration":"00:00:04.997512","keyboard_presses":0}
+2025-06-03 13:05:09,490 - TimeTracker - INFO - Ответ сервера в JSON: {'id': 1846, 'user': 3, 'application': 161, 'start_time': '2025-06-03T13:05:04.318769+03:00', 'end_time': '2025-06-03T13:05:09.316281+03:00', 'duration': '00:00:04.997512', 'keyboard_presses': 0}
+2025-06-03 13:05:09,490 - TimeTracker - INFO - Успешно отправлено 1 из 1 записей активности.
+2025-06-03 13:05:44,324 - TimeTracker - INFO - Изменилось активное окно: chrome.exe -> chrome.exe
+2025-06-03 13:05:44,325 - TimeTracker - INFO - Завершена сессия активности: App='chrome.exe', Title='Sequential Thinking vs Alterna..., Duration=35s, Keyboard=16 нажатий. В очереди: 1
+2025-06-03 13:05:44,326 - TimeTracker - INFO - В очереди есть активности, запускаем немедленную отправку данных
+2025-06-03 13:05:44,329 - TimeTracker - INFO - Начата новая сессия активности: App='chrome.exe', Title='Новая вкладка - Google Chrome'
+2025-06-03 13:05:44,435 - TimeTracker - INFO - Начинаем отправку данных. В очереди 1 записей активности.
+2025-06-03 13:05:44,435 - TimeTracker - INFO - Найден токен авторизации длиной 228 символов.
+2025-06-03 13:05:44,436 - TimeTracker - INFO - Используется user_id: 3
+2025-06-03 13:05:44,436 - TimeTracker - INFO - URL API из секции Credentials: http://147.45.153.16:8000/api/
+2025-06-03 13:05:44,436 - TimeTracker - INFO - URL для отправки активностей: http://147.45.153.16:8000/api/activities/
+2025-06-03 13:05:44,437 - TimeTracker - INFO - Вычисленная длительность: 35.007909 секунд
+2025-06-03 13:05:44,437 - TimeTracker - INFO - Для приложения chrome.exe выбран ID=160
+2025-06-03 13:05:44,437 - TimeTracker - INFO - Отправка активности: start_time=2025-06-03T10:05:09.317389Z, end_time=2025-06-03T10:05:44.325298Z, длительность=35.007909 секунд
+2025-06-03 13:05:44,437 - TimeTracker - INFO - Отправка 1 записей активности на сервер.
+2025-06-03 13:05:44,437 - TimeTracker - INFO - Отправляем пайлоад: {'application': 160, 'title': 'Sequential Thinking vs Alternatives - Google Chrome', 'start_time': '2025-06-03T10:05:09.317389Z', 'end_time': '2025-06-03T10:05:44.325298Z', 'is_productive': True, 'app_name': 'chrome.exe', 'keyboard_presses': 16}
+2025-06-03 13:05:44,516 - TimeTracker - INFO - Ответ сервера: код=201, тело={"id":1847,"user":3,"application":161,"start_time":"2025-06-03T13:05:09.317389+03:00","end_time":"2025-06-03T13:05:44.325298+03:00","duration":"00:00:35.007909","keyboard_presses":16}
+2025-06-03 13:05:44,517 - TimeTracker - INFO - Успешно отправлено: 201 - {"id":1847,"user":3,"application":161,"start_time":"2025-06-03T13:05:09.317389+03:00","end_time":"2025-06-03T13:05:44.325298+03:00","duration":"00:00:35.007909","keyboard_presses":16}
+2025-06-03 13:05:44,517 - TimeTracker - INFO - Ответ сервера в JSON: {'id': 1847, 'user': 3, 'application': 161, 'start_time': '2025-06-03T13:05:09.317389+03:00', 'end_time': '2025-06-03T13:05:44.325298+03:00', 'duration': '00:00:35.007909', 'keyboard_presses': 16}
+2025-06-03 13:05:44,517 - TimeTracker - INFO - Успешно отправлено 1 из 1 записей активности.
+2025-06-03 13:05:49,327 - TimeTracker - INFO - Изменилось активное окно: chrome.exe -> chrome.exe
+2025-06-03 13:05:49,327 - TimeTracker - INFO - Завершена сессия активности: App='chrome.exe', Title='Новая вкладка - Google Chrome, Duration=5s, Keyboard=3 нажатий. В очереди: 1
+2025-06-03 13:05:49,328 - TimeTracker - INFO - В очереди есть активности, запускаем немедленную отправку данных
+2025-06-03 13:05:49,330 - TimeTracker - INFO - Начата новая сессия активности: App='chrome.exe', Title='awesome-cursorrules/rules/type...'
+2025-06-03 13:05:49,438 - TimeTracker - INFO - Начинаем отправку данных. В очереди 1 записей активности.
+2025-06-03 13:05:49,439 - TimeTracker - INFO - Найден токен авторизации длиной 228 символов.
+2025-06-03 13:05:49,439 - TimeTracker - INFO - Используется user_id: 3
+2025-06-03 13:05:49,439 - TimeTracker - INFO - URL API из секции Credentials: http://147.45.153.16:8000/api/
+2025-06-03 13:05:49,440 - TimeTracker - INFO - URL для отправки активностей: http://147.45.153.16:8000/api/activities/
+2025-06-03 13:05:49,440 - TimeTracker - INFO - Вычисленная длительность: 5.000542 секунд
+2025-06-03 13:05:49,440 - TimeTracker - INFO - Для приложения chrome.exe выбран ID=160
+2025-06-03 13:05:49,440 - TimeTracker - INFO - Отправка активности: start_time=2025-06-03T10:05:44.326982Z, end_time=2025-06-03T10:05:49.327524Z, длительность=5.000542 секунд
+2025-06-03 13:05:49,441 - TimeTracker - INFO - Отправка 1 записей активности на сервер.
+2025-06-03 13:05:49,441 - TimeTracker - INFO - Отправляем пайлоад: {'application': 160, 'title': 'Новая вкладка - Google Chrome', 'start_time': '2025-06-03T10:05:44.326982Z', 'end_time': '2025-06-03T10:05:49.327524Z', 'is_productive': True, 'app_name': 'chrome.exe', 'keyboard_presses': 3}
+2025-06-03 13:05:49,533 - TimeTracker - INFO - Ответ сервера: код=201, тело={"id":1848,"user":3,"application":161,"start_time":"2025-06-03T13:05:44.326982+03:00","end_time":"2025-06-03T13:05:49.327524+03:00","duration":"00:00:05.000542","keyboard_presses":3}
+2025-06-03 13:05:49,533 - TimeTracker - INFO - Успешно отправлено: 201 - {"id":1848,"user":3,"application":161,"start_time":"2025-06-03T13:05:44.326982+03:00","end_time":"2025-06-03T13:05:49.327524+03:00","duration":"00:00:05.000542","keyboard_presses":3}
+2025-06-03 13:05:49,534 - TimeTracker - INFO - Ответ сервера в JSON: {'id': 1848, 'user': 3, 'application': 161, 'start_time': '2025-06-03T13:05:44.326982+03:00', 'end_time': '2025-06-03T13:05:49.327524+03:00', 'duration': '00:00:05.000542', 'keyboard_presses': 3}
+2025-06-03 13:05:49,534 - TimeTracker - INFO - Успешно отправлено 1 из 1 записей активности.
+2025-06-03 13:05:54,324 - TimeTracker - INFO - Изменилось активное окно: chrome.exe -> chrome.exe
+2025-06-03 13:05:54,324 - TimeTracker - INFO - Завершена сессия активности: App='chrome.exe', Title='awesome-cursorrules/rules/type..., Duration=5s, Keyboard=1 нажатий. В очереди: 1
+2025-06-03 13:05:54,325 - TimeTracker - INFO - В очереди есть активности, запускаем немедленную отправку данных
+2025-06-03 13:05:54,327 - TimeTracker - INFO - Начата новая сессия активности: App='chrome.exe', Title='Sequential Thinking vs Alterna...'
+2025-06-03 13:05:54,434 - TimeTracker - INFO - Начинаем отправку данных. В очереди 1 записей активности.
+2025-06-03 13:05:54,435 - TimeTracker - INFO - Найден токен авторизации длиной 228 символов.
+2025-06-03 13:05:54,435 - TimeTracker - INFO - Используется user_id: 3
+2025-06-03 13:05:54,435 - TimeTracker - INFO - URL API из секции Credentials: http://147.45.153.16:8000/api/
+2025-06-03 13:05:54,435 - TimeTracker - INFO - URL для отправки активностей: http://147.45.153.16:8000/api/activities/
+2025-06-03 13:05:54,436 - TimeTracker - INFO - Вычисленная длительность: 4.995932 секунд
+2025-06-03 13:05:54,436 - TimeTracker - INFO - Для приложения chrome.exe выбран ID=160
+2025-06-03 13:05:54,436 - TimeTracker - INFO - Отправка активности: start_time=2025-06-03T10:05:49.328740Z, end_time=2025-06-03T10:05:54.324672Z, длительность=4.995932 секунд
+2025-06-03 13:05:54,437 - TimeTracker - INFO - Отправка 1 записей активности на сервер.
+2025-06-03 13:05:54,437 - TimeTracker - INFO - Отправляем пайлоад: {'application': 160, 'title': 'awesome-cursorrules/rules/typescript-nextjs-react-tailwind-supabase-cursorru/.cursorrules at main · PatrickJS/awesome-cursorrules - Google Chrome', 'start_time': '2025-06-03T10:05:49.328740Z', 'end_time': '2025-06-03T10:05:54.324672Z', 'is_productive': True, 'app_name': 'chrome.exe', 'keyboard_presses': 1}
+2025-06-03 13:05:54,514 - TimeTracker - INFO - Ответ сервера: код=201, тело={"id":1849,"user":3,"application":161,"start_time":"2025-06-03T13:05:49.328740+03:00","end_time":"2025-06-03T13:05:54.324672+03:00","duration":"00:00:04.995932","keyboard_presses":1}
+2025-06-03 13:05:54,515 - TimeTracker - INFO - Успешно отправлено: 201 - {"id":1849,"user":3,"application":161,"start_time":"2025-06-03T13:05:49.328740+03:00","end_time":"2025-06-03T13:05:54.324672+03:00","duration":"00:00:04.995932","keyboard_presses":1}
+2025-06-03 13:05:54,515 - TimeTracker - INFO - Ответ сервера в JSON: {'id': 1849, 'user': 3, 'application': 161, 'start_time': '2025-06-03T13:05:49.328740+03:00', 'end_time': '2025-06-03T13:05:54.324672+03:00', 'duration': '00:00:04.995932', 'keyboard_presses': 1}
+2025-06-03 13:05:54,515 - TimeTracker - INFO - Успешно отправлено 1 из 1 записей активности.
+2025-06-03 13:05:59,319 - TimeTracker - INFO - Изменилось активное окно: chrome.exe -> chrome.exe
+2025-06-03 13:05:59,319 - TimeTracker - INFO - Завершена сессия активности: App='chrome.exe', Title='Sequential Thinking vs Alterna..., Duration=5s, Keyboard=5 нажатий. В очереди: 1
+2025-06-03 13:05:59,320 - TimeTracker - INFO - В очереди есть активности, запускаем немедленную отправку данных
+2025-06-03 13:05:59,322 - TimeTracker - INFO - Начата новая сессия активности: App='chrome.exe', Title='Repository search results - Go...'
+2025-06-03 13:05:59,428 - TimeTracker - INFO - Начинаем отправку данных. В очереди 1 записей активности.
+2025-06-03 13:05:59,429 - TimeTracker - INFO - Найден токен авторизации длиной 228 символов.
+2025-06-03 13:05:59,429 - TimeTracker - INFO - Используется user_id: 3
+2025-06-03 13:05:59,429 - TimeTracker - INFO - URL API из секции Credentials: http://147.45.153.16:8000/api/
+2025-06-03 13:05:59,429 - TimeTracker - INFO - URL для отправки активностей: http://147.45.153.16:8000/api/activities/
+2025-06-03 13:05:59,430 - TimeTracker - INFO - Вычисленная длительность: 4.993964 секунд
+2025-06-03 13:05:59,430 - TimeTracker - INFO - Для приложения chrome.exe выбран ID=160
+2025-06-03 13:05:59,430 - TimeTracker - INFO - Отправка активности: start_time=2025-06-03T10:05:54.325982Z, end_time=2025-06-03T10:05:59.319946Z, длительность=4.993964 секунд
+2025-06-03 13:05:59,430 - TimeTracker - INFO - Отправка 1 записей активности на сервер.
+2025-06-03 13:05:59,430 - TimeTracker - INFO - Отправляем пайлоад: {'application': 160, 'title': 'Sequential Thinking vs Alternatives - Google Chrome', 'start_time': '2025-06-03T10:05:54.325982Z', 'end_time': '2025-06-03T10:05:59.319946Z', 'is_productive': True, 'app_name': 'chrome.exe', 'keyboard_presses': 5}
+2025-06-03 13:05:59,523 - TimeTracker - INFO - Ответ сервера: код=201, тело={"id":1850,"user":3,"application":161,"start_time":"2025-06-03T13:05:54.325982+03:00","end_time":"2025-06-03T13:05:59.319946+03:00","duration":"00:00:04.993964","keyboard_presses":5}
+2025-06-03 13:05:59,524 - TimeTracker - INFO - Успешно отправлено: 201 - {"id":1850,"user":3,"application":161,"start_time":"2025-06-03T13:05:54.325982+03:00","end_time":"2025-06-03T13:05:59.319946+03:00","duration":"00:00:04.993964","keyboard_presses":5}
+2025-06-03 13:05:59,524 - TimeTracker - INFO - Ответ сервера в JSON: {'id': 1850, 'user': 3, 'application': 161, 'start_time': '2025-06-03T13:05:54.325982+03:00', 'end_time': '2025-06-03T13:05:59.319946+03:00', 'duration': '00:00:04.993964', 'keyboard_presses': 5}
+2025-06-03 13:05:59,524 - TimeTracker - INFO - Успешно отправлено 1 из 1 записей активности.
+2025-06-03 13:06:14,324 - TimeTracker - INFO - Изменилось активное окно: chrome.exe -> chrome.exe
+2025-06-03 13:06:14,325 - TimeTracker - INFO - Завершена сессия активности: App='chrome.exe', Title='Repository search results - Go..., Duration=15s, Keyboard=3 нажатий. В очереди: 1
+2025-06-03 13:06:14,326 - TimeTracker - INFO - В очереди есть активности, запускаем немедленную отправку данных
+2025-06-03 13:06:14,328 - TimeTracker - INFO - Начата новая сессия активности: App='chrome.exe', Title='Новая вкладка - Google Chrome'
+2025-06-03 13:06:14,431 - TimeTracker - INFO - Начинаем отправку данных. В очереди 1 записей активности.
+2025-06-03 13:06:14,431 - TimeTracker - INFO - Найден токен авторизации длиной 228 символов.
+2025-06-03 13:06:14,431 - TimeTracker - INFO - Используется user_id: 3
+2025-06-03 13:06:14,432 - TimeTracker - INFO - URL API из секции Credentials: http://147.45.153.16:8000/api/
+2025-06-03 13:06:14,432 - TimeTracker - INFO - URL для отправки активностей: http://147.45.153.16:8000/api/activities/
+2025-06-03 13:06:14,432 - TimeTracker - INFO - Вычисленная длительность: 15.004333 секунд
+2025-06-03 13:06:14,432 - TimeTracker - INFO - Для приложения chrome.exe выбран ID=160
+2025-06-03 13:06:14,433 - TimeTracker - INFO - Отправка активности: start_time=2025-06-03T10:05:59.320956Z, end_time=2025-06-03T10:06:14.325289Z, длительность=15.004333 секунд
+2025-06-03 13:06:14,433 - TimeTracker - INFO - Отправка 1 записей активности на сервер.
+2025-06-03 13:06:14,433 - TimeTracker - INFO - Отправляем пайлоад: {'application': 160, 'title': 'Repository search results - Google Chrome', 'start_time': '2025-06-03T10:05:59.320956Z', 'end_time': '2025-06-03T10:06:14.325289Z', 'is_productive': True, 'app_name': 'chrome.exe', 'keyboard_presses': 3}
+2025-06-03 13:06:14,511 - TimeTracker - INFO - Ответ сервера: код=201, тело={"id":1851,"user":3,"application":161,"start_time":"2025-06-03T13:05:59.320956+03:00","end_time":"2025-06-03T13:06:14.325289+03:00","duration":"00:00:15.004333","keyboard_presses":3}
+2025-06-03 13:06:14,512 - TimeTracker - INFO - Успешно отправлено: 201 - {"id":1851,"user":3,"application":161,"start_time":"2025-06-03T13:05:59.320956+03:00","end_time":"2025-06-03T13:06:14.325289+03:00","duration":"00:00:15.004333","keyboard_presses":3}
+2025-06-03 13:06:14,512 - TimeTracker - INFO - Ответ сервера в JSON: {'id': 1851, 'user': 3, 'application': 161, 'start_time': '2025-06-03T13:05:59.320956+03:00', 'end_time': '2025-06-03T13:06:14.325289+03:00', 'duration': '00:00:15.004333', 'keyboard_presses': 3}
+2025-06-03 13:06:14,512 - TimeTracker - INFO - Успешно отправлено 1 из 1 записей активности.
+2025-06-03 13:06:19,320 - TimeTracker - INFO - Изменилось активное окно: chrome.exe -> chrome.exe
+2025-06-03 13:06:19,321 - TimeTracker - INFO - Завершена сессия активности: App='chrome.exe', Title='Новая вкладка - Google Chrome, Duration=5s, Keyboard=2 нажатий. В очереди: 1
+2025-06-03 13:06:19,321 - TimeTracker - INFO - В очереди есть активности, запускаем немедленную отправку данных
+2025-06-03 13:06:19,323 - TimeTracker - INFO - Начата новая сессия активности: App='chrome.exe', Title='Smithery - Model Context Proto...'
+2025-06-03 13:06:19,428 - TimeTracker - INFO - Начинаем отправку данных. В очереди 1 записей активности.
+2025-06-03 13:06:19,428 - TimeTracker - INFO - Найден токен авторизации длиной 228 символов.
+2025-06-03 13:06:19,428 - TimeTracker - INFO - Используется user_id: 3
+2025-06-03 13:06:19,428 - TimeTracker - INFO - URL API из секции Credentials: http://147.45.153.16:8000/api/
+2025-06-03 13:06:19,429 - TimeTracker - INFO - URL для отправки активностей: http://147.45.153.16:8000/api/activities/
+2025-06-03 13:06:19,429 - TimeTracker - INFO - Вычисленная длительность: 4.994511 секунд
+2025-06-03 13:06:19,429 - TimeTracker - INFO - Для приложения chrome.exe выбран ID=160
+2025-06-03 13:06:19,430 - TimeTracker - INFO - Отправка активности: start_time=2025-06-03T10:06:14.326554Z, end_time=2025-06-03T10:06:19.321065Z, длительность=4.994511 секунд
+2025-06-03 13:06:19,430 - TimeTracker - INFO - Отправка 1 записей активности на сервер.
+2025-06-03 13:06:19,430 - TimeTracker - INFO - Отправляем пайлоад: {'application': 160, 'title': 'Новая вкладка - Google Chrome', 'start_time': '2025-06-03T10:06:14.326554Z', 'end_time': '2025-06-03T10:06:19.321065Z', 'is_productive': True, 'app_name': 'chrome.exe', 'keyboard_presses': 2}
+2025-06-03 13:06:19,508 - TimeTracker - INFO - Ответ сервера: код=201, тело={"id":1852,"user":3,"application":161,"start_time":"2025-06-03T13:06:14.326554+03:00","end_time":"2025-06-03T13:06:19.321065+03:00","duration":"00:00:04.994511","keyboard_presses":2}
+2025-06-03 13:06:19,509 - TimeTracker - INFO - Успешно отправлено: 201 - {"id":1852,"user":3,"application":161,"start_time":"2025-06-03T13:06:14.326554+03:00","end_time":"2025-06-03T13:06:19.321065+03:00","duration":"00:00:04.994511","keyboard_presses":2}
+2025-06-03 13:06:19,509 - TimeTracker - INFO - Ответ сервера в JSON: {'id': 1852, 'user': 3, 'application': 161, 'start_time': '2025-06-03T13:06:14.326554+03:00', 'end_time': '2025-06-03T13:06:19.321065+03:00', 'duration': '00:00:04.994511', 'keyboard_presses': 2}
+2025-06-03 13:06:19,509 - TimeTracker - INFO - Успешно отправлено 1 из 1 записей активности.
+2025-06-03 13:06:24,324 - TimeTracker - INFO - Изменилось активное окно: chrome.exe -> chrome.exe
+2025-06-03 13:06:24,325 - TimeTracker - INFO - Завершена сессия активности: App='chrome.exe', Title='Smithery - Model Context Proto..., Duration=5s, Keyboard=0 нажатий. В очереди: 1
+2025-06-03 13:06:24,326 - TimeTracker - INFO - В очереди есть активности, запускаем немедленную отправку данных
+2025-06-03 13:06:24,327 - TimeTracker - INFO - Начата новая сессия активности: App='chrome.exe', Title='Sequential Thinking Tools | Sm...'
+2025-06-03 13:06:24,432 - TimeTracker - INFO - Начинаем отправку данных. В очереди 1 записей активности.
+2025-06-03 13:06:24,432 - TimeTracker - INFO - Найден токен авторизации длиной 228 символов.
+2025-06-03 13:06:24,432 - TimeTracker - INFO - Используется user_id: 3
+2025-06-03 13:06:24,432 - TimeTracker - INFO - URL API из секции Credentials: http://147.45.153.16:8000/api/
+2025-06-03 13:06:24,433 - TimeTracker - INFO - URL для отправки активностей: http://147.45.153.16:8000/api/activities/
+2025-06-03 13:06:24,433 - TimeTracker - INFO - Вычисленная длительность: 5.003157 секунд
+2025-06-03 13:06:24,433 - TimeTracker - INFO - Для приложения chrome.exe выбран ID=160
+2025-06-03 13:06:24,433 - TimeTracker - INFO - Отправка активности: start_time=2025-06-03T10:06:19.322117Z, end_time=2025-06-03T10:06:24.325274Z, длительность=5.003157 секунд
+2025-06-03 13:06:24,434 - TimeTracker - INFO - Отправка 1 записей активности на сервер.
+2025-06-03 13:06:24,434 - TimeTracker - INFO - Отправляем пайлоад: {'application': 160, 'title': 'Smithery - Model Context Protocol Registry - Google Chrome', 'start_time': '2025-06-03T10:06:19.322117Z', 'end_time': '2025-06-03T10:06:24.325274Z', 'is_productive': True, 'app_name': 'chrome.exe', 'keyboard_presses': 0}
+2025-06-03 13:06:24,496 - TimeTracker - INFO - Ответ сервера: код=201, тело={"id":1853,"user":3,"application":161,"start_time":"2025-06-03T13:06:19.322117+03:00","end_time":"2025-06-03T13:06:24.325274+03:00","duration":"00:00:05.003157","keyboard_presses":0}
+2025-06-03 13:06:24,496 - TimeTracker - INFO - Успешно отправлено: 201 - {"id":1853,"user":3,"application":161,"start_time":"2025-06-03T13:06:19.322117+03:00","end_time":"2025-06-03T13:06:24.325274+03:00","duration":"00:00:05.003157","keyboard_presses":0}
+2025-06-03 13:06:24,497 - TimeTracker - INFO - Ответ сервера в JSON: {'id': 1853, 'user': 3, 'application': 161, 'start_time': '2025-06-03T13:06:19.322117+03:00', 'end_time': '2025-06-03T13:06:24.325274+03:00', 'duration': '00:00:05.003157', 'keyboard_presses': 0}
+2025-06-03 13:06:24,497 - TimeTracker - INFO - Успешно отправлено 1 из 1 записей активности.
+2025-06-03 13:06:29,312 - TimeTracker - INFO - Изменилось активное окно: chrome.exe -> chrome.exe
+2025-06-03 13:06:29,312 - TimeTracker - INFO - Завершена сессия активности: App='chrome.exe', Title='Sequential Thinking Tools | Sm..., Duration=5s, Keyboard=0 нажатий. В очереди: 1
+2025-06-03 13:06:29,313 - TimeTracker - INFO - В очереди есть активности, запускаем немедленную отправку данных
+2025-06-03 13:06:29,314 - TimeTracker - INFO - Начата новая сессия активности: App='chrome.exe', Title='Smithery - Model Context Proto...'
+2025-06-03 13:06:29,425 - TimeTracker - INFO - Начинаем отправку данных. В очереди 1 записей активности.
+2025-06-03 13:06:29,426 - TimeTracker - INFO - Найден токен авторизации длиной 228 символов.
+2025-06-03 13:06:29,426 - TimeTracker - INFO - Используется user_id: 3
+2025-06-03 13:06:29,426 - TimeTracker - INFO - URL API из секции Credentials: http://147.45.153.16:8000/api/
+2025-06-03 13:06:29,427 - TimeTracker - INFO - URL для отправки активностей: http://147.45.153.16:8000/api/activities/
+2025-06-03 13:06:29,427 - TimeTracker - INFO - Вычисленная длительность: 4.986417 секунд
+2025-06-03 13:06:29,427 - TimeTracker - INFO - Для приложения chrome.exe выбран ID=160
+2025-06-03 13:06:29,427 - TimeTracker - INFO - Отправка активности: start_time=2025-06-03T10:06:24.326345Z, end_time=2025-06-03T10:06:29.312762Z, длительность=4.986417 секунд
+2025-06-03 13:06:29,427 - TimeTracker - INFO - Отправка 1 записей активности на сервер.
+2025-06-03 13:06:29,428 - TimeTracker - INFO - Отправляем пайлоад: {'application': 160, 'title': 'Sequential Thinking Tools | Smithery - Google Chrome', 'start_time': '2025-06-03T10:06:24.326345Z', 'end_time': '2025-06-03T10:06:29.312762Z', 'is_productive': True, 'app_name': 'chrome.exe', 'keyboard_presses': 0}
+2025-06-03 13:06:29,491 - TimeTracker - INFO - Ответ сервера: код=201, тело={"id":1854,"user":3,"application":161,"start_time":"2025-06-03T13:06:24.326345+03:00","end_time":"2025-06-03T13:06:29.312762+03:00","duration":"00:00:04.986417","keyboard_presses":0}
+2025-06-03 13:06:29,492 - TimeTracker - INFO - Успешно отправлено: 201 - {"id":1854,"user":3,"application":161,"start_time":"2025-06-03T13:06:24.326345+03:00","end_time":"2025-06-03T13:06:29.312762+03:00","duration":"00:00:04.986417","keyboard_presses":0}
+2025-06-03 13:06:29,492 - TimeTracker - INFO - Ответ сервера в JSON: {'id': 1854, 'user': 3, 'application': 161, 'start_time': '2025-06-03T13:06:24.326345+03:00', 'end_time': '2025-06-03T13:06:29.312762+03:00', 'duration': '00:00:04.986417', 'keyboard_presses': 0}
+2025-06-03 13:06:29,492 - TimeTracker - INFO - Успешно отправлено 1 из 1 записей активности.
+2025-06-03 13:06:49,326 - TimeTracker - INFO - Изменилось активное окно: chrome.exe -> chrome.exe
+2025-06-03 13:06:49,327 - TimeTracker - INFO - Завершена сессия активности: App='chrome.exe', Title='Smithery - Model Context Proto..., Duration=20s, Keyboard=2 нажатий. В очереди: 1
+2025-06-03 13:06:49,328 - TimeTracker - INFO - В очереди есть активности, запускаем немедленную отправку данных
+2025-06-03 13:06:49,330 - TimeTracker - INFO - Начата новая сессия активности: App='chrome.exe', Title='Sequential Thinking | Smithery...'
+2025-06-03 13:06:49,434 - TimeTracker - INFO - Начинаем отправку данных. В очереди 1 записей активности.
+2025-06-03 13:06:49,434 - TimeTracker - INFO - Найден токен авторизации длиной 228 символов.
+2025-06-03 13:06:49,434 - TimeTracker - INFO - Используется user_id: 3
+2025-06-03 13:06:49,435 - TimeTracker - INFO - URL API из секции Credentials: http://147.45.153.16:8000/api/
+2025-06-03 13:06:49,435 - TimeTracker - INFO - URL для отправки активностей: http://147.45.153.16:8000/api/activities/
+2025-06-03 13:06:49,435 - TimeTracker - INFO - Вычисленная длительность: 20.013656 секунд
+2025-06-03 13:06:49,435 - TimeTracker - INFO - Для приложения chrome.exe выбран ID=160
+2025-06-03 13:06:49,436 - TimeTracker - INFO - Отправка активности: start_time=2025-06-03T10:06:29.313737Z, end_time=2025-06-03T10:06:49.327393Z, длительность=20.013656 секунд
+2025-06-03 13:06:49,436 - TimeTracker - INFO - Отправка 1 записей активности на сервер.
+2025-06-03 13:06:49,436 - TimeTracker - INFO - Отправляем пайлоад: {'application': 160, 'title': 'Smithery - Model Context Protocol Registry - Google Chrome', 'start_time': '2025-06-03T10:06:29.313737Z', 'end_time': '2025-06-03T10:06:49.327393Z', 'is_productive': True, 'app_name': 'chrome.exe', 'keyboard_presses': 2}
+2025-06-03 13:06:49,499 - TimeTracker - INFO - Ответ сервера: код=201, тело={"id":1855,"user":3,"application":161,"start_time":"2025-06-03T13:06:29.313737+03:00","end_time":"2025-06-03T13:06:49.327393+03:00","duration":"00:00:20.013656","keyboard_presses":2}
+2025-06-03 13:06:49,499 - TimeTracker - INFO - Успешно отправлено: 201 - {"id":1855,"user":3,"application":161,"start_time":"2025-06-03T13:06:29.313737+03:00","end_time":"2025-06-03T13:06:49.327393+03:00","duration":"00:00:20.013656","keyboard_presses":2}
+2025-06-03 13:06:49,499 - TimeTracker - INFO - Ответ сервера в JSON: {'id': 1855, 'user': 3, 'application': 161, 'start_time': '2025-06-03T13:06:29.313737+03:00', 'end_time': '2025-06-03T13:06:49.327393+03:00', 'duration': '00:00:20.013656', 'keyboard_presses': 2}
+2025-06-03 13:06:49,500 - TimeTracker - INFO - Успешно отправлено 1 из 1 записей активности.
+2025-06-03 13:06:54,319 - TimeTracker - INFO - Изменилось активное окно: chrome.exe -> chrome.exe
+2025-06-03 13:06:54,319 - TimeTracker - INFO - Завершена сессия активности: App='chrome.exe', Title='Sequential Thinking | Smithery..., Duration=5s, Keyboard=0 нажатий. В очереди: 1
+2025-06-03 13:06:54,320 - TimeTracker - INFO - В очереди есть активности, запускаем немедленную отправку данных
+2025-06-03 13:06:54,322 - TimeTracker - INFO - Начата новая сессия активности: App='chrome.exe', Title='smithery-ai/reference-servers:...'
+2025-06-03 13:06:54,436 - TimeTracker - INFO - Начинаем отправку данных. В очереди 1 записей активности.
+2025-06-03 13:06:54,437 - TimeTracker - INFO - Найден токен авторизации длиной 228 символов.
+2025-06-03 13:06:54,437 - TimeTracker - INFO - Используется user_id: 3
+2025-06-03 13:06:54,437 - TimeTracker - INFO - URL API из секции Credentials: http://147.45.153.16:8000/api/
+2025-06-03 13:06:54,438 - TimeTracker - INFO - URL для отправки активностей: http://147.45.153.16:8000/api/activities/
+2025-06-03 13:06:54,438 - TimeTracker - INFO - Вычисленная длительность: 4.990924 секунд
+2025-06-03 13:06:54,438 - TimeTracker - INFO - Для приложения chrome.exe выбран ID=160
+2025-06-03 13:06:54,438 - TimeTracker - INFO - Отправка активности: start_time=2025-06-03T10:06:49.328647Z, end_time=2025-06-03T10:06:54.319571Z, длительность=4.990924 секунд
+2025-06-03 13:06:54,439 - TimeTracker - INFO - Отправка 1 записей активности на сервер.
+2025-06-03 13:06:54,439 - TimeTracker - INFO - Отправляем пайлоад: {'application': 160, 'title': 'Sequential Thinking | Smithery - Google Chrome', 'start_time': '2025-06-03T10:06:49.328647Z', 'end_time': '2025-06-03T10:06:54.319571Z', 'is_productive': True, 'app_name': 'chrome.exe', 'keyboard_presses': 0}
+2025-06-03 13:06:54,500 - TimeTracker - INFO - Ответ сервера: код=201, тело={"id":1856,"user":3,"application":161,"start_time":"2025-06-03T13:06:49.328647+03:00","end_time":"2025-06-03T13:06:54.319571+03:00","duration":"00:00:04.990924","keyboard_presses":0}
+2025-06-03 13:06:54,501 - TimeTracker - INFO - Успешно отправлено: 201 - {"id":1856,"user":3,"application":161,"start_time":"2025-06-03T13:06:49.328647+03:00","end_time":"2025-06-03T13:06:54.319571+03:00","duration":"00:00:04.990924","keyboard_presses":0}
+2025-06-03 13:06:54,501 - TimeTracker - INFO - Ответ сервера в JSON: {'id': 1856, 'user': 3, 'application': 161, 'start_time': '2025-06-03T13:06:49.328647+03:00', 'end_time': '2025-06-03T13:06:54.319571+03:00', 'duration': '00:00:04.990924', 'keyboard_presses': 0}
+2025-06-03 13:06:54,502 - TimeTracker - INFO - Успешно отправлено 1 из 1 записей активности.
+2025-06-03 13:07:04,317 - TimeTracker - INFO - Изменилось активное окно: chrome.exe -> chrome.exe
+2025-06-03 13:07:04,317 - TimeTracker - INFO - Завершена сессия активности: App='chrome.exe', Title='smithery-ai/reference-servers:..., Duration=10s, Keyboard=0 нажатий. В очереди: 1
+2025-06-03 13:07:04,318 - TimeTracker - INFO - В очереди есть активности, запускаем немедленную отправку данных
+2025-06-03 13:07:04,320 - TimeTracker - INFO - Начата новая сессия активности: App='chrome.exe', Title='reference-servers/src/sequenti...'
+2025-06-03 13:07:04,426 - TimeTracker - INFO - Начинаем отправку данных. В очереди 1 записей активности.
+2025-06-03 13:07:04,426 - TimeTracker - INFO - Найден токен авторизации длиной 228 символов.
+2025-06-03 13:07:04,426 - TimeTracker - INFO - Используется user_id: 3
+2025-06-03 13:07:04,427 - TimeTracker - INFO - URL API из секции Credentials: http://147.45.153.16:8000/api/
+2025-06-03 13:07:04,427 - TimeTracker - INFO - URL для отправки активностей: http://147.45.153.16:8000/api/activities/
+2025-06-03 13:07:04,427 - TimeTracker - INFO - Вычисленная длительность: 9.996882 секунд
+2025-06-03 13:07:04,427 - TimeTracker - INFO - Для приложения chrome.exe выбран ID=160
+2025-06-03 13:07:04,427 - TimeTracker - INFO - Отправка активности: start_time=2025-06-03T10:06:54.321011Z, end_time=2025-06-03T10:07:04.317893Z, длительность=9.996882 секунд
+2025-06-03 13:07:04,428 - TimeTracker - INFO - Отправка 1 записей активности на сервер.
+2025-06-03 13:07:04,428 - TimeTracker - INFO - Отправляем пайлоад: {'application': 160, 'title': 'smithery-ai/reference-servers: Model Context Protocol Servers - Google Chrome', 'start_time': '2025-06-03T10:06:54.321011Z', 'end_time': '2025-06-03T10:07:04.317893Z', 'is_productive': True, 'app_name': 'chrome.exe', 'keyboard_presses': 0}
+2025-06-03 13:07:04,490 - TimeTracker - INFO - Ответ сервера: код=201, тело={"id":1857,"user":3,"application":161,"start_time":"2025-06-03T13:06:54.321011+03:00","end_time":"2025-06-03T13:07:04.317893+03:00","duration":"00:00:09.996882","keyboard_presses":0}
+2025-06-03 13:07:04,490 - TimeTracker - INFO - Успешно отправлено: 201 - {"id":1857,"user":3,"application":161,"start_time":"2025-06-03T13:06:54.321011+03:00","end_time":"2025-06-03T13:07:04.317893+03:00","duration":"00:00:09.996882","keyboard_presses":0}
+2025-06-03 13:07:04,490 - TimeTracker - INFO - Ответ сервера в JSON: {'id': 1857, 'user': 3, 'application': 161, 'start_time': '2025-06-03T13:06:54.321011+03:00', 'end_time': '2025-06-03T13:07:04.317893+03:00', 'duration': '00:00:09.996882', 'keyboard_presses': 0}
+2025-06-03 13:07:04,491 - TimeTracker - INFO - Успешно отправлено 1 из 1 записей активности.
+2025-06-03 13:07:19,313 - TimeTracker - INFO - Изменилось активное окно: chrome.exe -> chrome.exe
+2025-06-03 13:07:19,314 - TimeTracker - INFO - Завершена сессия активности: App='chrome.exe', Title='reference-servers/src/sequenti..., Duration=15s, Keyboard=0 нажатий. В очереди: 1
+2025-06-03 13:07:19,314 - TimeTracker - INFO - В очереди есть активности, запускаем немедленную отправку данных
+2025-06-03 13:07:19,316 - TimeTracker - INFO - Начата новая сессия активности: App='chrome.exe', Title='Sequential Thinking | Smithery...'
+2025-06-03 13:07:19,422 - TimeTracker - INFO - Начинаем отправку данных. В очереди 1 записей активности.
+2025-06-03 13:07:19,423 - TimeTracker - INFO - Найден токен авторизации длиной 228 символов.
+2025-06-03 13:07:19,423 - TimeTracker - INFO - Используется user_id: 3
+2025-06-03 13:07:19,423 - TimeTracker - INFO - URL API из секции Credentials: http://147.45.153.16:8000/api/
+2025-06-03 13:07:19,423 - TimeTracker - INFO - URL для отправки активностей: http://147.45.153.16:8000/api/activities/
+2025-06-03 13:07:19,423 - TimeTracker - INFO - Вычисленная длительность: 14.994955 секунд
+2025-06-03 13:07:19,424 - TimeTracker - INFO - Для приложения chrome.exe выбран ID=160
+2025-06-03 13:07:19,424 - TimeTracker - INFO - Отправка активности: start_time=2025-06-03T10:07:04.319245Z, end_time=2025-06-03T10:07:19.314200Z, длительность=14.994955 секунд
+2025-06-03 13:07:19,424 - TimeTracker - INFO - Отправка 1 записей активности на сервер.
+2025-06-03 13:07:19,424 - TimeTracker - INFO - Отправляем пайлоад: {'application': 160, 'title': 'reference-servers/src/sequentialthinking at main · smithery-ai/reference-servers - Google Chrome', 'start_time': '2025-06-03T10:07:04.319245Z', 'end_time': '2025-06-03T10:07:19.314200Z', 'is_productive': True, 'app_name': 'chrome.exe', 'keyboard_presses': 0}
+2025-06-03 13:07:19,487 - TimeTracker - INFO - Ответ сервера: код=201, тело={"id":1858,"user":3,"application":161,"start_time":"2025-06-03T13:07:04.319245+03:00","end_time":"2025-06-03T13:07:19.314200+03:00","duration":"00:00:14.994955","keyboard_presses":0}
+2025-06-03 13:07:19,487 - TimeTracker - INFO - Успешно отправлено: 201 - {"id":1858,"user":3,"application":161,"start_time":"2025-06-03T13:07:04.319245+03:00","end_time":"2025-06-03T13:07:19.314200+03:00","duration":"00:00:14.994955","keyboard_presses":0}
+2025-06-03 13:07:19,488 - TimeTracker - INFO - Ответ сервера в JSON: {'id': 1858, 'user': 3, 'application': 161, 'start_time': '2025-06-03T13:07:04.319245+03:00', 'end_time': '2025-06-03T13:07:19.314200+03:00', 'duration': '00:00:14.994955', 'keyboard_presses': 0}
+2025-06-03 13:07:19,488 - TimeTracker - INFO - Успешно отправлено 1 из 1 записей активности.
+2025-06-03 13:07:24,317 - TimeTracker - INFO - Изменилось активное окно: chrome.exe -> cursor.exe
+2025-06-03 13:07:24,318 - TimeTracker - INFO - Завершена сессия активности: App='chrome.exe', Title='Sequential Thinking | Smithery..., Duration=5s, Keyboard=2 нажатий. В очереди: 1
+2025-06-03 13:07:24,318 - TimeTracker - INFO - В очереди есть активности, запускаем немедленную отправку данных
+2025-06-03 13:07:24,321 - TimeTracker - INFO - Начата новая сессия активности: App='cursor.exe', Title='README.md - Tracker33 - Cursor'
+2025-06-03 13:07:24,425 - TimeTracker - INFO - Начинаем отправку данных. В очереди 1 записей активности.
+2025-06-03 13:07:24,425 - TimeTracker - INFO - Найден токен авторизации длиной 228 символов.
+2025-06-03 13:07:24,425 - TimeTracker - INFO - Используется user_id: 3
+2025-06-03 13:07:24,426 - TimeTracker - INFO - URL API из секции Credentials: http://147.45.153.16:8000/api/
+2025-06-03 13:07:24,426 - TimeTracker - INFO - URL для отправки активностей: http://147.45.153.16:8000/api/activities/
+2025-06-03 13:07:24,426 - TimeTracker - INFO - Вычисленная длительность: 5.00286 секунд
+2025-06-03 13:07:24,426 - TimeTracker - INFO - Для приложения chrome.exe выбран ID=160
+2025-06-03 13:07:24,426 - TimeTracker - INFO - Отправка активности: start_time=2025-06-03T10:07:19.315139Z, end_time=2025-06-03T10:07:24.317999Z, длительность=5.00286 секунд
+2025-06-03 13:07:24,427 - TimeTracker - INFO - Отправка 1 записей активности на сервер.
+2025-06-03 13:07:24,427 - TimeTracker - INFO - Отправляем пайлоад: {'application': 160, 'title': 'Sequential Thinking | Smithery - Google Chrome', 'start_time': '2025-06-03T10:07:19.315139Z', 'end_time': '2025-06-03T10:07:24.317999Z', 'is_productive': True, 'app_name': 'chrome.exe', 'keyboard_presses': 2}
+2025-06-03 13:07:24,490 - TimeTracker - INFO - Ответ сервера: код=201, тело={"id":1859,"user":3,"application":161,"start_time":"2025-06-03T13:07:19.315139+03:00","end_time":"2025-06-03T13:07:24.317999+03:00","duration":"00:00:05.002860","keyboard_presses":2}
+2025-06-03 13:07:24,490 - TimeTracker - INFO - Успешно отправлено: 201 - {"id":1859,"user":3,"application":161,"start_time":"2025-06-03T13:07:19.315139+03:00","end_time":"2025-06-03T13:07:24.317999+03:00","duration":"00:00:05.002860","keyboard_presses":2}
+2025-06-03 13:07:24,491 - TimeTracker - INFO - Ответ сервера в JSON: {'id': 1859, 'user': 3, 'application': 161, 'start_time': '2025-06-03T13:07:19.315139+03:00', 'end_time': '2025-06-03T13:07:24.317999+03:00', 'duration': '00:00:05.002860', 'keyboard_presses': 2}
+2025-06-03 13:07:24,491 - TimeTracker - INFO - Успешно отправлено 1 из 1 записей активности.
+2025-06-03 13:07:29,315 - TimeTracker - INFO - Изменилось активное окно: cursor.exe -> cursor.exe
+2025-06-03 13:07:29,315 - TimeTracker - INFO - Завершена сессия активности: App='cursor.exe', Title='README.md - Tracker33 - Cursor, Duration=5s, Keyboard=0 нажатий. В очереди: 1
+2025-06-03 13:07:29,317 - TimeTracker - INFO - В очереди есть активности, запускаем немедленную отправку данных
+2025-06-03 13:07:29,319 - TimeTracker - INFO - Начата новая сессия активности: App='cursor.exe', Title='mcp.json - Tracker33 - Cursor'
+2025-06-03 13:07:29,421 - TimeTracker - INFO - Начинаем отправку данных. В очереди 1 записей активности.
+2025-06-03 13:07:29,421 - TimeTracker - INFO - Найден токен авторизации длиной 228 символов.
+2025-06-03 13:07:29,422 - TimeTracker - INFO - Используется user_id: 3
+2025-06-03 13:07:29,422 - TimeTracker - INFO - URL API из секции Credentials: http://147.45.153.16:8000/api/
+2025-06-03 13:07:29,422 - TimeTracker - INFO - URL для отправки активностей: http://147.45.153.16:8000/api/activities/
+2025-06-03 13:07:29,422 - TimeTracker - INFO - Вычисленная длительность: 4.996303 секунд
+2025-06-03 13:07:29,423 - TimeTracker - INFO - Для приложения cursor.exe выбран ID=162
+2025-06-03 13:07:29,423 - TimeTracker - INFO - Отправка активности: start_time=2025-06-03T10:07:24.319259Z, end_time=2025-06-03T10:07:29.315562Z, длительность=4.996303 секунд
+2025-06-03 13:07:29,423 - TimeTracker - INFO - Отправка 1 записей активности на сервер.
+2025-06-03 13:07:29,423 - TimeTracker - INFO - Отправляем пайлоад: {'application': 162, 'title': 'README.md - Tracker33 - Cursor', 'start_time': '2025-06-03T10:07:24.319259Z', 'end_time': '2025-06-03T10:07:29.315562Z', 'is_productive': True, 'app_name': 'cursor.exe', 'keyboard_presses': 0}
+2025-06-03 13:07:29,486 - TimeTracker - INFO - Ответ сервера: код=201, тело={"id":1860,"user":3,"application":163,"start_time":"2025-06-03T13:07:24.319259+03:00","end_time":"2025-06-03T13:07:29.315562+03:00","duration":"00:00:04.996303","keyboard_presses":0}
+2025-06-03 13:07:29,486 - TimeTracker - INFO - Успешно отправлено: 201 - {"id":1860,"user":3,"application":163,"start_time":"2025-06-03T13:07:24.319259+03:00","end_time":"2025-06-03T13:07:29.315562+03:00","duration":"00:00:04.996303","keyboard_presses":0}
+2025-06-03 13:07:29,486 - TimeTracker - INFO - Ответ сервера в JSON: {'id': 1860, 'user': 3, 'application': 163, 'start_time': '2025-06-03T13:07:24.319259+03:00', 'end_time': '2025-06-03T13:07:29.315562+03:00', 'duration': '00:00:04.996303', 'keyboard_presses': 0}
+2025-06-03 13:07:29,487 - TimeTracker - INFO - Успешно отправлено 1 из 1 записей активности.

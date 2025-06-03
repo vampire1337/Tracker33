@@ -21,7 +21,8 @@ from .views import (
     ExportStatisticsAPIView,
     DailyActivityAPIView,
     TimeDistributionAPIView,
-    DashboardAPIView
+    DashboardAPIView,
+    ToggleProductiveAPIView
 )
 
 # API router
@@ -40,6 +41,7 @@ api_urlpatterns = [
     path('daily-activity/', DailyActivityAPIView.as_view(), name='daily-activity-api'),
     path('time-distribution/', TimeDistributionAPIView.as_view(), name='time-distribution-api'),
     path('dashboard/', DashboardAPIView.as_view(), name='dashboard-api'),
+    path('toggle-productive/', ToggleProductiveAPIView.as_view(), name='toggle-productive-api'),
 ]
 
 # Web interface
