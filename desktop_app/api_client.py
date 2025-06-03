@@ -264,52 +264,67 @@ class APIClient:
         return headers
 
     def send_activity(self, activity_data: Dict) -> bool:
-        """Отправка данных об активности"""
-        try:
-            headers = self.get_headers()
-            if not headers:
-                logger.warning("Нет действительного токена для отправки активности")
-                return False
-                
-            logger.info(f"Заголовки для запроса: {headers}")
+        """Отправка данных активности на сервер"""
+        
+        if not self.is_token_valid():
+            logger.warning("Токен недействителен, не можем отправить активность")
+            return False
             
-            # Нормализуем URL для отправки активности
+        try:
+            # Формируем URL для активностей правильно
             activities_url = f"{self.base_url}"
-            if not activities_url.endswith('/api/activities/'):
+            
+            # Убираем возможные дублирования /api
+            if '/api/api' in activities_url:
+                activities_url = activities_url.replace('/api/api', '/api')
+            
+            # Добавляем /activities/ если его нет
+            if not activities_url.endswith('/activities/'):
                 if not activities_url.endswith('/'):
                     activities_url += '/'
-                if not activities_url.endswith('api/'):
-                    activities_url += 'api/'
-                if not activities_url.endswith('activities/'):
-                    activities_url += 'activities/'
+                activities_url += 'activities/'
             
-            # Модифицируем данные: вместо ID приложения будем отправлять имя процесса
-            modified_activity_data = activity_data.copy()
+            logger.info(f"Отправка активности по URL: {activities_url}")
+            logger.debug(f"Данные активности: {activity_data}")
             
-            # Если в данных есть числовой ID приложения, заменяем его на строковые данные
-            if 'application' in modified_activity_data and isinstance(modified_activity_data['application'], int):
-                # Удаляем ID приложения и используем вместо этого строковые значения
-                app_id = modified_activity_data.pop('application')
-                app_name = modified_activity_data.get('app_name', '')
-                process_name = app_name  # Используем app_name как запасное значение
-                
-                # Записываем информацию об использованном app_name и process_name
-                logger.info(f"Используем строковые данные вместо ID={app_id}: process_name={process_name}, app_name={app_name}")
-                
-                # Устанавливаем поле process_name для идентификации приложения на сервере
-                modified_activity_data['process_name'] = process_name
-            
-            logger.info(f"Отправка активности на URL: {activities_url}")
-            logger.info(f"Модифицированные данные активности: {modified_activity_data}")
+            headers = self.get_headers()
             
             response = self.session.post(
                 activities_url,
-                json=modified_activity_data,
+                json=activity_data,
                 headers=headers,
-                timeout=(10, 30)  # 10 секунд на соединение, 30 на ответ
+                timeout=(10, 30)
             )
-            logger.info(f"Ответ сервера: {response.status_code} {response.text}")
-            return response.status_code in [200, 201]
+            
+            logger.info(f"Ответ сервера на отправку активности: {response.status_code}")
+            
+            if response.status_code in [200, 201]:
+                logger.info("Активность успешно отправлена на сервер")
+                return True
+            elif response.status_code == 401:
+                logger.warning("Получен ответ 401 (Unauthorized), пытаемся обновить токен")
+                if self.refresh_auth_token():
+                    # Повторяем запрос с новым токеном
+                    headers = self.get_headers()
+                    response = self.session.post(
+                        activities_url,
+                        json=activity_data,
+                        headers=headers,
+                        timeout=(10, 30)
+                    )
+                    if response.status_code in [200, 201]:
+                        logger.info("Активность успешно отправлена после обновления токена")
+                        return True
+                    else:
+                        logger.error(f"Не удалось отправить активность даже после обновления токена: {response.status_code} - {response.text}")
+                        return False
+                else:
+                    logger.error("Не удалось обновить токен после получения 401")
+                    return False
+            else:
+                logger.error(f"Ошибка отправки активности: {response.status_code} - {response.text}")
+                return False
+                
         except requests.exceptions.Timeout:
             logger.error("Таймаут при отправке активности")
             return False
@@ -317,7 +332,7 @@ class APIClient:
             logger.error(f"Ошибка соединения при отправке активности: {e}")
             return False
         except Exception as e:
-            logger.error(f"Ошибка отправки активности: {e}")
+            logger.error(f"Неожиданная ошибка при отправке активности: {e}")
             return False
 
     def get_user_info(self) -> Optional[Dict]:

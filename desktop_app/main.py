@@ -878,9 +878,12 @@ class TimeTrackerApp(QMainWindow):
     def setup_activity_listeners_and_tracking_timer(self):
         """Настройка слушателей и основного таймера трекинга"""
         try:
-            # Проверяем, установлены ли библиотеки pynput, psutil
-            if 'keyboard' not in sys.modules or 'mouse' not in sys.modules:
-                logger.warning("Библиотеки pynput не установлены. Отслеживание клавиатуры и мыши отключено.")
+            # Принудительно импортируем библиотеки pynput
+            try:
+                from pynput import keyboard, mouse
+                logger.info("Библиотеки pynput успешно импортированы")
+            except ImportError as e:
+                logger.error(f"Библиотеки pynput не установлены: {e}")
                 return
                 
             # Инициализируем счетчики активности, если их нет
@@ -898,6 +901,7 @@ class TimeTrackerApp(QMainWindow):
                     on_press=lambda key: self.on_keyboard_press(key),
                     on_release=None
                 )
+                logger.info("Слушатель клавиатуры создан успешно")
             except Exception as e:
                 logger.error(f"Ошибка при создании слушателя клавиатуры: {e}")
                 self.keyboard_listener = None
@@ -909,6 +913,7 @@ class TimeTrackerApp(QMainWindow):
                     on_click=lambda x, y, button, pressed: self.on_mouse_click(x, y, button, pressed),
                     on_scroll=None
                 )
+                logger.info("Слушатель мыши создан успешно")
             except Exception as e:
                 logger.error(f"Ошибка при создании слушателя мыши: {e}")
                 self.mouse_listener = None
@@ -938,12 +943,13 @@ class TimeTrackerApp(QMainWindow):
             self.tracking_timer.timeout.connect(self.update_tracking)
             self.tracking_timer.start(update_interval_seconds * 1000)  # Преобразуем секунды в миллисекунды
             
-            # Запускаем таймер отправки данных каждые 30 секунд
+            # Запускаем таймер отправки данных каждые 10 секунд для быстрой синхронизации
+            send_interval_seconds = self.config.getint('Settings', 'send_interval_seconds', fallback=10)
             self.sending_timer = QTimer(self)
             self.sending_timer.timeout.connect(self.send_activity_data)
-            self.sending_timer.start(30000)  # 30 секунд
+            self.sending_timer.start(send_interval_seconds * 1000)  # Используем настройку из конфигурации
             
-            logger.info(f"Настройка слушателей и таймеров завершена успешно. Интервал обновления: {update_interval_seconds} сек.")
+            logger.info(f"Настройка слушателей и таймеров завершена успешно. Интервал обновления: {update_interval_seconds} сек, отправка данных: {send_interval_seconds} сек.")
         except Exception as e:
             logger.error(f"Ошибка при настройке слушателей активности: {e}", exc_info=True)
             
@@ -953,16 +959,22 @@ class TimeTrackerApp(QMainWindow):
             # Проверяем состояние простоя
             self.check_idle_state()
             
+            # Логируем текущее состояние для отладки
+            logger.debug(f"update_tracking: is_idle={self.is_idle}, tracking_paused={getattr(self, 'tracking_paused', 'не установлено')}")
+            
             # Если мы не в режиме простоя и не на паузе, проверяем активное окно
-            if not self.is_idle and not self.tracking_paused:
+            if not self.is_idle and not getattr(self, 'tracking_paused', False):
                 active_window_info = self.get_active_window_info()
                 
                 if active_window_info:
                     app_name = active_window_info.get('app_name', '')
                     window_title = active_window_info.get('window_title', '')
                     
+                    logger.debug(f"Активное окно: {app_name} - {window_title[:50]}{'...' if len(window_title) > 50 else ''}")
+                    
                     # Пропускаем пустые имена и системные процессы
                     if not app_name or app_name.lower() in ['system', 'system idle process'] or app_name.isdigit():
+                        logger.debug(f"Пропускаем системное приложение: {app_name}")
                         return
                     
                     # Проверяем, входит ли процесс в список игнорируемых
@@ -970,6 +982,7 @@ class TimeTrackerApp(QMainWindow):
                         app_name_lower = app_name.lower()
                         for ignored_proc in self.ignored_processes:
                             if ignored_proc.lower() == app_name_lower:
+                                logger.debug(f"Пропускаем игнорируемое приложение: {app_name}")
                                 return
                     
                     # Если у нас уже есть активная сессия
@@ -977,15 +990,22 @@ class TimeTrackerApp(QMainWindow):
                         # Если приложение или заголовок изменились, завершаем текущую сессию
                         if (self.current_activity_data['app_name'] != app_name or 
                             self.current_activity_data['window_title'] != window_title):
-                            logger.debug(f"Изменилось активное окно: {app_name} ({window_title})")
+                            logger.info(f"Изменилось активное окно: {self.current_activity_data['app_name']} -> {app_name}")
                             self.end_current_activity_session(event_type="switch")
                             # Начинаем новую сессию
                             is_useful = self.is_app_useful(app_name)
                             self.start_new_activity_session(app_name, window_title, is_useful)
+                        else:
+                            logger.debug(f"Продолжается сессия для {app_name}, клавиатурных нажатий: {self.keyboard_press_count}")
                     else:
                         # Если нет активной сессии, начинаем новую
+                        logger.info(f"Начинаем новую сессию для {app_name}")
                         is_useful = self.is_app_useful(app_name)
                         self.start_new_activity_session(app_name, window_title, is_useful)
+                else:
+                    logger.debug("Не удалось получить информацию об активном окне")
+            else:
+                logger.debug(f"Отслеживание приостановлено: is_idle={self.is_idle}, tracking_paused={getattr(self, 'tracking_paused', False)}")
         except Exception as e:
             logger.error(f"Ошибка в функции update_tracking: {e}", exc_info=True)
             
@@ -1976,24 +1996,29 @@ class TimeTrackerApp(QMainWindow):
         try:
             # Проверяем, не находится ли пользователь в состоянии простоя
             if self.is_idle:
-                logger.info("Попытка начать сессию активности, но пользователь неактивен.")
+                logger.debug("Попытка начать сессию активности, но пользователь неактивен.")
                 return False
                 
-            # Проверяем, включено ли отслеживание для этого приложения
+            # Нормализуем имя приложения для поиска в конфигурации
             app_name_lower = app_name.lower()
-            if app_name_lower in self.tracked_applications_config:
-                is_tracked = self.tracked_applications_config[app_name_lower]
-                if not is_tracked:
-                    logger.info(f"Приложение {app_name} находится в списке неотслеживаемых.")
-                    return False
             
-            # Если статус полезности не указан, проверяем его в конфигурации
+            # Автоматически добавляем новые приложения в конфигурацию как отслеживаемые
+            if app_name_lower not in self.tracked_applications_config:
+                # По умолчанию новые приложения отслеживаются и считаются полезными
+                self.tracked_applications_config[app_name_lower] = True
+                
+                # Добавляем в секцию конфигурации
+                if not self.config.has_section('Applications'):
+                    self.config.add_section('Applications')
+                self.config.set('Applications', app_name_lower, 'True')
+                
+                # Сохраняем конфигурацию
+                self._save_config()
+                logger.info(f"Новое приложение {app_name} автоматически добавлено в отслеживаемые как полезное")
+            
+            # Получаем статус полезности из конфигурации
             if is_useful is None:
-                if app_name_lower in self.tracked_applications_config:
-                    is_useful = self.tracked_applications_config[app_name_lower]
-                else:
-                    # По умолчанию считаем приложение неполезным
-                    is_useful = False
+                is_useful = self.tracked_applications_config.get(app_name_lower, True)  # По умолчанию полезное
             
             # Создаем запись об активности
             start_time = time.time()
@@ -2013,8 +2038,7 @@ class TimeTrackerApp(QMainWindow):
             # Запоминаем время начала активности
             self.activity_start_time = start_time
             
-            # Сбрасываем счетчик нажатий клавиш
-            self.keyboard_press_count = 0
+            # НЕ сбрасываем счетчик нажатий клавиш здесь, чтобы накопить активность
             
             # Обновляем интерфейс
             status_message = f"Начата сессия для '{app_name}'"
@@ -2050,12 +2074,11 @@ class TimeTrackerApp(QMainWindow):
         # Формируем запись для очереди
         activity_entry = self.current_activity_data.copy()
         
-        # Добавляем данные о клавиатурной активности
-        if 'keyboard_presses' not in activity_entry or activity_entry['keyboard_presses'] == 0:
-            activity_entry['keyboard_presses'] = self.keyboard_press_count
-            logger.info(f"Добавлено {self.keyboard_press_count} нажатий клавиш в активность")
-            # Сбрасываем счетчик после добавления в активность
-            self.keyboard_press_count = 0
+        # Добавляем текущее количество нажатий клавиш к сессии
+        current_keyboard_presses = self.keyboard_press_count
+        
+        # Добавляем клавиатурную активность к записи активности
+        activity_entry['keyboard_presses'] = current_keyboard_presses
         
         # Используем новый метод для получения UTC времени в формате ISO
         current_time_utc = self.get_utc_now_iso()
@@ -2074,8 +2097,11 @@ class TimeTrackerApp(QMainWindow):
             f"Завершена сессия активности: "
             f"App='{activity_entry['app_name']}', "
             f"Title='{activity_entry['window_title'][:30]}{'...' if len(activity_entry['window_title']) > 30 else ''}, "
-            f"Duration={duration_seconds}s. В очереди: {self.activity_queue.qsize()}"
+            f"Duration={duration_seconds}s, Keyboard={current_keyboard_presses} нажатий. В очереди: {self.activity_queue.qsize()}"
         )
+        
+        # Сбрасываем счетчик нажатий ТОЛЬКО после добавления в очередь
+        self.keyboard_press_count = 0
         
         # Обновление статус-бара и тултипа трея
         status_message = f"Сессия для '{activity_entry['app_name']}' завершена. В очереди: {self.activity_queue.qsize()}"
@@ -2092,8 +2118,10 @@ class TimeTrackerApp(QMainWindow):
         self.activity_start_time = None
         
         # Принудительно запускаем отправку данных, если размер очереди достиг определенного предела
-        if self.activity_queue.qsize() >= 3:
-            self.send_activity_data()
+        if self.activity_queue.qsize() >= 1:
+            logger.info("В очереди есть активности, запускаем немедленную отправку данных")
+            # Запускаем отправку данных в следующем цикле событий для избежания блокировки
+            QTimer.singleShot(100, self.send_activity_data)
             
         return activity_entry
         
