@@ -210,8 +210,8 @@
                                     Доля
                                 </th>
                                 <th>
-                                    <i class="fas fa-trending-up me-1"></i>
-                                    Тренд
+                                    <i class="fas fa-hourglass-half me-1"></i>
+                                    Часов всего
                                 </th>
                                 <th>
                                     <i class="fas fa-star me-1"></i>
@@ -229,7 +229,7 @@
                                         </div>
                                         <div>
                                             <strong>{{ app.name }}</strong>
-                                            {% if app.process_name %}
+                                            {% if app.process_name and app.process_name != app.name %}
                                                 <br><small class="text-muted">{{ app.process_name }}</small>
                                             {% endif %}
                                         </div>
@@ -251,22 +251,14 @@
                                     </div>
                                 </td>
                                 <td>
-                                    {% if app.is_new %}
-                                        <span class="badge bg-info">
-                                            <i class="fas fa-plus me-1"></i>
-                                            Новое
-                                        </span>
-                                    {% else %}
-                                        <span class="badge {{ app.trend_class }}">
-                                            {% if app.trend > 0 %}
-                                                <i class="fas fa-arrow-up me-1"></i>+{{ app.trend }}%
-                                            {% elif app.trend < 0 %}
-                                                <i class="fas fa-arrow-down me-1"></i>{{ app.trend }}%
-                                            {% else %}
-                                                <i class="fas fa-minus me-1"></i>0%
-                                            {% endif %}
-                                        </span>
-                                    {% endif %}
+                                    <span class="badge bg-info">
+                                        <i class="fas fa-clock me-1"></i>
+                                        {% if app.total_seconds %}
+                                            {% widthratio app.total_seconds 3600 1 %}ч
+                                        {% else %}
+                                            0ч
+                                        {% endif %}
+                                    </span>
                                 </td>
                                 <td>
                                     <div class="form-check form-switch">

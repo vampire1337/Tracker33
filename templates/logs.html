@@ -48,23 +48,58 @@
                     <table class="table table-striped">
                         <thead>
                             <tr>
-                                <th>Время</th>
+                                <th>Время начала</th>
+                                <th>Время окончания</th>
                                 <th>Длительность</th>
                                 <th>Приложение</th>
                                 <th>Нажатий клавиш</th>
+                                <th>Продуктивность</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for activity in activities %}
                             <tr>
-                                <td>{{ activity.start_time|date:"Y-m-d H:i:s" }}</td>
-                                <td>{{ activity.duration|default:"00:00:00" }}</td>
-                                <td>{{ activity.application.name }}</td>
+                                <td>{{ activity.start_time|date:"d.m.Y H:i:s" }}</td>
+                                <td>
+                                    {% if activity.end_time %}
+                                        {{ activity.end_time|date:"d.m.Y H:i:s" }}
+                                    {% else %}
+                                        <span class="text-muted">В процессе</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if activity.formatted_duration %}
+                                        {{ activity.formatted_duration }}
+                                    {% else %}
+                                        <span class="text-muted">00:00:00</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="badge {% if activity.application.is_productive %}bg-success{% else %}bg-secondary{% endif %} me-1">
+                                        {% if activity.application.is_productive %}
+                                            <i class="fas fa-check"></i>
+                                        {% else %}
+                                            <i class="fas fa-minus"></i>
+                                        {% endif %}
+                                    </span>
+                                    {{ activity.application.name }}
+                                </td>
                                 <td>{{ activity.keyboard_presses|default:"0" }}</td>
+                                <td>
+                                    {% if activity.application.is_productive %}
+                                        <span class="text-success fw-bold">
+                                            <i class="fas fa-check me-1"></i>Да
+                                        </span>
+                                    {% else %}
+                                        <span class="text-muted">
+                                            <i class="fas fa-minus me-1"></i>Нет
+                                        </span>
+                                    {% endif %}
+                                </td>
                             </tr>
                             {% empty %}
                             <tr>
-                                <td colspan="4" class="text-center">Нет данных</td>
+                                <td colspan="6" class="text-center">Нет данных</td>
                             </tr>
                             {% endfor %}
                         </tbody>

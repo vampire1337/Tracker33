@@ -18,11 +18,6 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
-from rest_framework_simplejwt.views import (
-    TokenObtainPairView,
-    TokenRefreshView,
-    TokenVerifyView,
-)
 from django.views.generic import RedirectView
 from django.contrib.auth import views as auth_views
 from users import views as user_views
@@ -43,9 +38,6 @@ class CustomLoginView(auth_views.LoginView):
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('admin-panel/', include('admin_panel.urls', namespace='admin_panel')),
-    path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
-    path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
-    path('api/token/verify/', TokenVerifyView.as_view(), name='token_verify'),
     path('api/', include('tracking.urls')),
     path('', include('tracking.urls')),
     path('register/', user_views.SignUpView.as_view(), name='register'),

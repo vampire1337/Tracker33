@@ -197,9 +197,16 @@ def format_duration(total_seconds: int) -> str:
     if not total_seconds:
         return "00:00:00"
     
-    hours, remainder = divmod(int(total_seconds), 3600)
+    # Убеждаемся что у нас целое число секунд
+    total_seconds = int(float(total_seconds))
+    
+    # Если отрицательное время, возвращаем 0
+    if total_seconds < 0:
+        return "00:00:00"
+    
+    hours, remainder = divmod(total_seconds, 3600)
     minutes, seconds = divmod(remainder, 60)
-    return f"{hours}:{minutes:02d}:{seconds:02d}"
+    return f"{hours:02d}:{minutes:02d}:{seconds:02d}"
 
 
 def calculate_productivity_stats(applications_data: List[Dict]) -> Dict:

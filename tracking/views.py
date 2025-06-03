@@ -634,6 +634,23 @@ class LogsView(LoginRequiredMixin, ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         
+        # Форматируем длительность для каждой активности
+        activities = context['activities']
+        for activity in activities:
+            if activity.duration:
+                total_seconds = int(activity.duration.total_seconds())
+                hours, remainder = divmod(total_seconds, 3600)
+                minutes, seconds = divmod(remainder, 60)
+                activity.formatted_duration = f"{hours:02d}:{minutes:02d}:{seconds:02d}"
+            elif activity.start_time and activity.end_time:
+                duration = activity.end_time - activity.start_time
+                total_seconds = int(duration.total_seconds())
+                hours, remainder = divmod(total_seconds, 3600)
+                minutes, seconds = divmod(remainder, 60)
+                activity.formatted_duration = f"{hours:02d}:{minutes:02d}:{seconds:02d}"
+            else:
+                activity.formatted_duration = "00:00:00"
+        
         # Получаем клавиатурную активность
         keyboard_queryset = KeyboardActivity.objects.filter(user=self.request.user)
         
@@ -652,10 +669,13 @@ class LogsView(LoginRequiredMixin, ListView):
         
         context['keyboard_activities'] = keyboard_queryset.select_related('application').order_by('-timestamp')[:20]
         
-        # Добавляем список приложений для выпадающего списка
-        context['applications'] = Application.objects.filter(
+        # Добавляем список приложений для выпадающего списка (только пользовательские)
+        all_apps = Application.objects.filter(
             useractivity__user=self.request.user
         ).distinct()
+        
+        # Фильтруем системные процессы
+        context['applications'] = filter_user_applications(all_apps)
         
         return context
 

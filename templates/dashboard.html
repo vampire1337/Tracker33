@@ -216,44 +216,37 @@
                             </tr>
                         </thead>
                         <tbody>
-                            {% regroup today_stats.apps by name as app_list %}
-                            {% for app_group in app_list %}
+                            {% for app in today_stats.apps|slice:":10" %}
                             <tr>
                                 <td>
-                                    {% with app=app_group.list.0 %}
-                                        <span class="badge {% if app.is_productive %}bg-success{% else %}bg-secondary{% endif %} me-1">
-                                            {% if app.is_productive %}
-                                                <i class="fas fa-check"></i>
-                                            {% else %}
-                                                <i class="fas fa-minus"></i>
-                                            {% endif %}
-                                        </span>
-                                        {{ app_group.grouper }}
-                                    {% endwith %}
+                                    <span class="badge {% if app.is_productive %}bg-success{% else %}bg-secondary{% endif %} me-1">
+                                        {% if app.is_productive %}
+                                            <i class="fas fa-check"></i>
+                                        {% else %}
+                                            <i class="fas fa-minus"></i>
+                                        {% endif %}
+                                    </span>
+                                    {{ app.name }}
                                 </td>
                                 <td>
-                                    {% with app=app_group.list.0 %}
-                                        <strong>
-                                            {% if app.formatted_time %}
-                                                {{ app.formatted_time }}
-                                            {% else %}
-                                                00:00:00
-                                            {% endif %}
-                                        </strong>
-                                    {% endwith %}
+                                    <strong>
+                                        {% if app.formatted_time %}
+                                            {{ app.formatted_time }}
+                                        {% else %}
+                                            00:00:00
+                                        {% endif %}
+                                    </strong>
                                 </td>
                                 <td>
                                     <div class="progress" style="height: 20px;">
-                                        {% with app=app_group.list.0 %}
-                                            <div class="progress-bar {% if app.is_productive %}bg-success{% else %}bg-secondary{% endif %}" 
-                                                 role="progressbar" 
-                                                 style="width: {{ app.percentage|default:0 }}%;" 
-                                                 aria-valuenow="{{ app.percentage|default:0 }}" 
-                                                 aria-valuemin="0" 
-                                                 aria-valuemax="100">
-                                                {{ app.percentage|default:0 }}%
-                                            </div>
-                                        {% endwith %}
+                                        <div class="progress-bar {% if app.is_productive %}bg-success{% else %}bg-secondary{% endif %}" 
+                                             role="progressbar" 
+                                             style="width: {{ app.percentage|default:0 }}%;" 
+                                             aria-valuenow="{{ app.percentage|default:0 }}" 
+                                             aria-valuemin="0" 
+                                             aria-valuemax="100">
+                                            {{ app.percentage|default:0 }}%
+                                        </div>
                                     </div>
                                 </td>
                             </tr>
@@ -278,7 +271,7 @@
     <div class="col-md-12">
         <div class="card bg-light">
             <div class="card-header">
-                <h3 class="card-title">
+                <h3 class="card-title text-dark">
                     <i class="fas fa-lightbulb me-2 text-warning"></i>
                     Умные выводы
                 </h3>
@@ -288,7 +281,7 @@
                     <div class="col-md-4">
                         <div class="text-center">
                             <i class="fas fa-clock fa-3x text-primary mb-2"></i>
-                            <h5>Пик активности</h5>
+                            <h5 class="text-dark">Пик активности</h5>
                             <p class="text-muted">
                                 {% if today_stats.peak_hour %}
                                     {{ today_stats.peak_hour }}:00
@@ -301,12 +294,12 @@
                     <div class="col-md-4">
                         <div class="text-center">
                             <i class="fas fa-chart-line fa-3x text-success mb-2"></i>
-                            <h5>Тренд продуктивности</h5>
+                            <h5 class="text-dark">Время работы сегодня</h5>
                             <p class="text-muted">
-                                {% if today_stats.productivity_trend %}
-                                    {{ today_stats.productivity_trend }}
+                                {% if today_stats.formatted_time %}
+                                    {{ today_stats.formatted_time }}
                                 {% else %}
-                                    Соберем данные за несколько дней
+                                    00:00:00
                                 {% endif %}
                             </p>
                         </div>
@@ -314,12 +307,12 @@
                     <div class="col-md-4">
                         <div class="text-center">
                             <i class="fas fa-target fa-3x text-info mb-2"></i>
-                            <h5>Рекомендация</h5>
+                            <h5 class="text-dark">Активных приложений</h5>
                             <p class="text-muted">
-                                {% if today_stats.recommendation %}
-                                    {{ today_stats.recommendation }}
+                                {% if today_stats.apps %}
+                                    {{ today_stats.apps|length }}
                                 {% else %}
-                                    Отметьте продуктивные приложения в статистике
+                                    0
                                 {% endif %}
                             </p>
                         </div>
@@ -447,7 +440,7 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">
+                <h5 class="modal-title text-dark">
                     <i class="fas fa-target me-2"></i>
                     Установить цели
                 </h5>
@@ -456,15 +449,15 @@
             <div class="modal-body">
                 <form id="goalForm">
                     <div class="mb-3">
-                        <label class="form-label">Цель рабочего времени (часы в день)</label>
+                        <label class="form-label text-dark">Цель рабочего времени (часы в день)</label>
                         <input type="number" class="form-control" id="workTimeGoal" value="8" min="1" max="16">
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Цель продуктивности (%)</label>
+                        <label class="form-label text-dark">Цель продуктивности (%)</label>
                         <input type="number" class="form-control" id="productivityGoal" value="75" min="1" max="100">
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Цель активности (нажатий клавиш)</label>
+                        <label class="form-label text-dark">Цель активности (нажатий клавиш)</label>
                         <input type="number" class="form-control" id="activityGoal" value="5000" min="100" max="50000">
                     </div>
                 </form>
