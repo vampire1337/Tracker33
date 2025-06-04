@@ -8,431 +8,178 @@
 
 **Разработка серверной части**
 
-Начал я с создания Django проекта и настройки базовой архитектуры. Первым делом настроил модели данных, которые стали основой всей системы:
+Начал я с создания Django проекта и настройки базовой архитектуры. Первым и самым важным решением стала разработка моделей данных, которые определили всю дальнейшую логику системы.
 
-```python
-# tracking/models.py
-class Application(models.Model):
-    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='tracked_apps', null=True, blank=True)
-    name = models.CharField(max_length=255, verbose_name='Название приложения')
-    process_name = models.CharField(max_length=255, verbose_name='Имя процесса')
-    is_active = models.BooleanField(default=True, verbose_name='Активно')
-    is_productive = models.BooleanField(default=False, verbose_name='Полезное приложение')
-    created_at = models.DateTimeField(default=timezone.now)
-    updated_at = models.DateTimeField(auto_now=True)
+При проектировании моделей я столкнулся с интересным вопросом: как правильно структурировать данные об активности пользователя? Изначально хотел создать единую модель для всех типов активности, но быстро понял, что это приведет к избыточности и сложности запросов. В итоге разделил данные на несколько связанных моделей: Application для управления приложениями, UserActivity для записи сессий активности, и вспомогательные модели для детализации.
 
-    class Meta:
-        unique_together = ('user', 'process_name')
-        indexes = [
-            models.Index(fields=['user', 'is_active']),
-            models.Index(fields=['user', 'is_productive']),
-        ]
-    
-class UserActivity(models.Model):
-    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, verbose_name='Пользователь')
-    application = models.ForeignKey(Application, on_delete=models.CASCADE, verbose_name='Приложение')
-    start_time = models.DateTimeField(verbose_name='Время начала')
-    end_time = models.DateTimeField(verbose_name='Время окончания')
-    duration = models.DurationField(verbose_name='Длительность', null=True, blank=True)
-    keyboard_presses = models.IntegerField(default=0, verbose_name='Количество нажатий клавиш')
-    
-    def save(self, *args, **kwargs):
-        # Автоматически вычисляем duration при сохранении
-        if self.start_time and self.end_time and (self.duration is None):
-            self.duration = self.end_time - self.start_time
-        super().save(*args, **kwargs)
-        
-        # Автоматическая очистка кэша для обновления статистики
-        from django.core.cache import cache
-        cache.delete(f'user_activity_{self.user.id}')
-        cache.delete(f'dashboard_{self.user.id}_{timezone.now().date()}')
-```
+Основные модели системы включают пользователей с расширенным профилем, приложения с настройками продуктивности, записи активности с временными метками и количеством нажатий клавиш. Особое внимание я уделил автоматическому вычислению продолжительности сессий и созданию индексов для оптимизации запросов по пользователю и времени.
 
-При разработке я столкнулся с интересной проблемой: как эффективно хранить и обрабатывать большие объемы данных активности. Решение пришло через использование индексов в базе данных и **системы кэширования Django** для наиболее часто запрашиваемых данных.
+**Система кэширования и оптимизация**
 
-**Система кэширования**
+Одним из самых важных технических решений стала реализация многоуровневого кэширования. В процессе тестирования обнаружилось, что запросы к статистике выполняются достаточно медленно при большом объеме данных. Пришлось внедрить кэширование на нескольких уровнях: кэш Django для API responses, кэш вычисленной статистики и кэш сессий пользователей.
 
-Реализовал многоуровневое кэширование для оптимизации производительности:
+Интересным вызовом стала задача автоматической инвалидации кэша при изменении данных. Решение через Django signals оказалось элегантным способом поддерживать кэш в актуальном состоянии без усложнения бизнес-логики.
 
-```python
-# tracking/views.py - Пример кэширования дашборда
-@method_decorator(cache_page(60), name='dispatch')  # Кэш на 1 минуту
-class DashboardView(TemplateView):
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        user = self.request.user
-        today = timezone.now().date()
-        
-        # Кэшируем статистику за день
-        cache_key = f'dashboard_{user.id}_{today}'
-        today_stats = cache.get(cache_key)
-        
-        if not today_stats:
-            today_stats = self.calculate_today_statistics(user)
-            cache.set(cache_key, today_stats, 3600)  # Кэш на час
-            
-        context['today_stats'] = today_stats
-        return context
-```
+**Веб-интерфейс с современным дизайном**
 
-**Веб-интерфейс с Bootstrap**
+Создание веб-интерфейса стало для меня открытием в области UX/UI дизайна. Первоначально я планировал простой список таблиц с данными, но в процессе работы понял важность визуализации для понимания паттернов активности.
 
-Создал современный веб-интерфейс с использованием Bootstrap 5:
+Bootstrap 5 оказался отличным выбором для быстрого создания responsive дизайна. Особенно полезными стали компоненты карточек для метрик и система сетки для адаптивной верстки. Добавление иконок Font Awesome значительно улучшило визуальное восприятие интерфейса.
 
-```html
-<!-- templates/dashboard.html -->
-<div class="card bg-gradient-primary text-white">
-    <div class="card-body">
-        <h2 class="card-title">
-            <i class="fas fa-chart-line me-2"></i>
-            Добро пожаловать в Tracker33
-        </h2>
-        <p class="card-text">
-            Система отслеживания времени и анализа продуктивности
-        </p>
-    </div>
-</div>
-
-<!-- Метрики в картах -->
-<div class="row">
-    <div class="col-md-3">
-        <div class="card bg-primary text-white">
-            <div class="card-body text-center">
-                <i class="fas fa-clock fa-2x mb-2"></i>
-                <h5>Общее время</h5>
-                <p style="font-size: 24px;">{{ today_stats.formatted_time }}</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card bg-success text-white">
-            <div class="card-body text-center">
-                <i class="fas fa-keyboard fa-2x mb-2"></i>
-                <h5>Активность</h5>
-                <p style="font-size: 24px;">{{ today_stats.keystrokes }}</p>
-            </div>
-        </div>
-    </div>
-</div>
-```
+Создание системы "умных выводов" потребовало разработки алгоритмов анализа данных. Система автоматически определяет пики активности, вычисляет средние показатели и выявляет аномалии в поведении пользователя. Это добавило интеллектуальности в обычный time tracking.
 
 **REST API Architecture**
 
-Для API я выбрал следующую структуру:
+При проектировании API я следовал принципам RESTful дизайна, что обеспечило интуитивную структуру endpoints. API разделен на четыре основных группы: аутентификация (login/logout), управление приложениями, работа с данными активности, и получение статистики.
 
-```
-/api/
-├── auth/
-│   ├── login/          # POST - получение токена
-│   ├── logout/         # POST - отзыв токена  
-│   └── user/          # GET - информация о пользователе
-├── applications/
-│   ├── /              # GET, POST - список приложений
-│   ├── {id}/          # GET, PUT, DELETE - конкретное приложение
-│   └── discovered/    # GET - обнаруженные приложения
-├── activities/
-│   ├── /              # GET, POST - активности
-│   ├── bulk/          # POST - массовая загрузка
-│   └── current/       # GET - текущая активность
-└── statistics/
-    ├── dashboard/     # GET - данные для дашборда
-    ├── summary/       # GET - суммарная статистика
-    └── productivity/  # GET - анализ продуктивности
-```
+Особенно важным решением стала реализация bulk-операций для отправки данных активности. Это значительно снизило нагрузку на сервер и улучшило производительность клиентского приложения. Token-based аутентификация оказалась оптимальным выбором для десктопного клиента.
 
-Особое внимание я уделил производительности API. Реализовал кэширование на уровне Django и оптимизировал запросы к базе данных:
+**Десктопное приложение на PyQt5**
 
-```python
-# tracking/views.py
-@method_decorator(cache_page(CACHE_TTL), name='dispatch')
-class DashboardView(APIView):
-    def get(self, request):
-        # Кэшированное получение статистики
-        stats = cache.get_or_set(
-            f'dashboard_{request.user.id}',
-            lambda: self.calculate_statistics(request.user),
-            timeout=CACHE_TTL
-        )
-        return Response(stats)
-```
+Разработка клиентского приложения потребовала глубокого изучения системного программирования. Основная сложность заключалась в необходимости мониторить активность пользователя без заметного влияния на производительность системы.
 
-**Десктопное приложение**
+Ключевым архитектурным решением стало создание единого окна без вкладок. Это решение противоречило привычным паттернам GUI, но оказалось очень удачным с точки зрения пользовательского опыта. Вся важная информация доступна сразу, не требуя навигации между разделами.
 
-Разработка клиентского приложения оказалась самой сложной частью проекта. Основные вызовы:
+Интерфейс построен по принципу секционирования: статус подключения в верхней части, информация о текущей активности в центре, список приложений внизу. Цветовая индикация (зеленый для продуктивных приложений, красный для отвлекающих) делает систему интуитивно понятной.
 
-1. **Архитектура интерфейса без вкладок**
-   Вместо традиционного табличного интерфейса я выбрал единое окно с секциями:
+**Системный трей и фоновая работа**
 
-```python
-# desktop_app/main.py - Метод init_ui()
-def init_ui(self):
-    """Инициализация пользовательского интерфейса"""
-    self.setWindowTitle('Time Tracker PRO') 
-    self.setGeometry(100, 100, 800, 600)
+Интеграция с системным треем потребовала изучения специфики разных операционных систем. Windows, Linux и macOS по-разному обрабатывают приложения в трее, и пришлось предусмотреть эти различия.
 
-    central_widget = QWidget()
-    self.setCentralWidget(central_widget)
-    layout = QVBoxLayout(central_widget)
+Контекстное меню трея включает основные функции: показать/скрыть главное окно, открыть веб-интерфейс, выход из приложения. Такой минималистичный подход обеспечивает быстрый доступ к нужным функциям без перегрузки интерфейса.
 
-    # Секция статуса подключения
-    self.connection_status = QLabel("Статус подключения: Проверка...")
-    self.connection_status.setStyleSheet("QLabel { color: gray; }")
-    layout.addWidget(self.connection_status)
+**Мониторинг системной активности**
 
-    # Кнопка веб-интерфейса
-    web_button = QPushButton("Открыть веб-интерфейс")
-    web_button.clicked.connect(self.open_web_interface)
-    layout.addWidget(web_button)
+Самой технически сложной частью стала реализация мониторинга активности. Комбинация библиотек psutil для мониторинга процессов, pynput для отслеживания клавиатуры и мыши, и win32api для работы с Windows API создала мощную систему наблюдения.
 
-    # Секция текущей активности
-    activity_group = QWidget()
-    activity_layout = QVBoxLayout(activity_group)
-    
-    self.current_app_label = QLabel("Нет активности")
-    self.current_window_title_label = QLabel("")
-    self.current_activity_time_label = QLabel("")
-    self.keyboard_activity_label = QLabel("Клавиатурная активность: 0 нажатий")
-    
-    activity_layout.addWidget(self.current_app_label)
-    activity_layout.addWidget(self.current_window_title_label)
-    activity_layout.addWidget(self.current_activity_time_label)
-    activity_layout.addWidget(self.keyboard_activity_label)
-    
-    # Список отслеживаемых приложений
-    self.app_list = QListWidget()
-    layout.addWidget(self.app_list)
-```
+Алгоритм работы следующий: каждые 5 секунд система проверяет активное окно, определяет соответствующий процесс, отслеживает клавиатурную и мышиную активность. При смене окна завершается текущая сессия и начинается новая. Данные накапливаются локально и периодически отправляются на сервер.
 
-2. **Мониторинг системной активности**
-   Использовал комбинацию библиотек для полного отслеживания:
+Критически важным оказался вопрос приватности. Система собирает только метаданные - названия приложений, количество нажатий клавиш, время активности, но не записывает содержимое вводимого текста или делает скриншоты. Такой подход обеспечивает баланс между полнотой данных и уважением к приватности пользователя.
 
-```python
-# Мониторинг активного окна (Windows)
-def get_active_window_info(self):
-    try:
-        if platform.system() == "Windows":
-            import win32gui
-            import win32process
-            hwnd = win32gui.GetForegroundWindow()
-            window_title = win32gui.GetWindowText(hwnd)
-            pid = win32process.GetWindowThreadProcessId(hwnd)[1]
-            process = psutil.Process(pid)
-            return process.name(), window_title
-    except Exception as e:
-        logger.error(f"Ошибка получения активного окна: {e}")
-        return None, None
+**Автоматическая синхронизация**
 
-# Отслеживание клавиатуры
-def on_keyboard_press(self, key):
-    if self.is_tracking_active:
-        self.keyboard_activity_count += 1
-        self.last_activity_time = time.time()
-        
-# Отслеживание мыши        
-def on_mouse_move(self, x, y):
-    current_time = time.time()
-    if current_time - self.last_mouse_time > 1.0:  # Фильтрация
-        self.mouse_activity_count += 1
-        self.last_activity_time = current_time
-```
+Разработка надежной системы синхронизации данных между клиентом и сервером стала отдельным вызовом. Приложение должно работать даже при временном отсутствии интернета, накапливая данные локально и отправляя их при восстановлении соединения.
 
-3. **Системный трей и фоновая работа**
-   Реализовал полную интеграцию с системным треем:
+Реализованная система очередей с повторными попытками отправки обеспечивает высокую надежность сбора данных. Каждые 30 секунд клиент пытается синхронизироваться с сервером, но при неудаче данные не теряются, а ожидают следующей попытки.
 
-```python
-def init_tray_icon(self):
-    """Инициализация иконки в трее"""
-    self.tray_icon = QSystemTrayIcon(self)
-    self.tray_icon.setIcon(QIcon(str(get_base_path() / 'icon.png')))
-    
-    # Контекстное меню трея
-    tray_menu = QMenu()
-    
-    show_action = QAction("Показать/скрыть", self)
-    show_action.triggered.connect(self.toggle_window_visibility)
-    tray_menu.addAction(show_action)
-    
-    web_action = QAction("Открыть веб-интерфейс", self)
-    web_action.triggered.connect(self.open_web_interface)
-    tray_menu.addAction(web_action)
-    
-    exit_action = QAction("Выйти", self)
-    exit_action.triggered.connect(self.safe_exit)
-    tray_menu.addAction(exit_action)
-    
-    self.tray_icon.setContextMenu(tray_menu)
-    self.tray_icon.show()
-```
-
-4. **Автоматическая синхронизация с сервером**
-   Каждые 30 секунд данные отправляются на сервер:
-
-```python
-def send_activity_data(self):
-    """Отправка накопленных данных на сервер"""
-    try:
-        if not self.pending_activities:
-            return
-        
-        # Подготавливаем данные для отправки
-        activities_to_send = []
-        for activity in self.pending_activities:
-            activity_data = {
-                'application': activity['app_name'],
-                'window_title': activity.get('window_title', ''),
-                'start_time': activity['start_time'],
-                'end_time': activity['end_time'],
-                'keyboard_presses': activity.get('keyboard_presses', 0)
-            }
-            activities_to_send.append(activity_data)
-        
-        # Отправляем данные через API
-        response = self.api_client.send_activities(activities_to_send)
-        
-        if response and response.status_code == 201:
-            logger.info(f"Отправлено {len(activities_to_send)} активностей")
-            self.pending_activities.clear()
-        else:
-            logger.warning("Ошибка отправки данных, повторим позже")
-            
-    except Exception as e:
-        logger.error(f"Ошибка при отправке данных: {e}")
-```
-
-5. **Цветовая индикация продуктивности**
-   Приложения окрашиваются в зависимости от продуктивности:
-
-```python
-def update_ui_status(self, status_text):
-    """Обновляет статус в UI с цветовой индикацией"""
-    self.current_app_label.setText(status_text)
-    
-    if self.current_activity_data:
-        is_useful = self.current_activity_data.get('is_useful')
-        
-        # Цветовая индикация
-        if is_useful is True:
-            self.current_app_label.setStyleSheet("QLabel { color: green; font-weight: bold; }")
-        elif is_useful is False:
-            self.current_app_label.setStyleSheet("QLabel { color: red; font-weight: bold; }")
-        else:
-            self.current_app_label.setStyleSheet("QLabel { color: black; }")
-```
+Использование потоков (QThread) решило проблему блокировки пользовательского интерфейса во время сетевых операций. Длительные операции выполняются в фоновом потоке, а основной поток остается отзывчивым для взаимодействия с пользователем.
 
 **Конфигурация и настройки**
 
-Создал гибкую систему конфигурации, которая сохраняет настройки в разных форматах:
+Система конфигурации построена на INI-файлах, что обеспечивает простоту настройки и читаемость параметров. Основные секции включают настройки сервера (URL, токен), параметры отслеживания (интервалы, пороги активности), предустановки приложений.
 
-```ini
-# config.ini
-[SERVER]
-url = http://127.0.0.1:8001
-username = heist
-token = a19366333060fee61ffa29b65e6775f2d91d18a0
+Особенно полезной оказалась возможность предварительной настройки продуктивности приложений через конфигурационный файл. Это позволяет администраторам подготовить оптимальные настройки для своих команд без необходимости ручной настройки каждым пользователем.
 
-[TRACKING]
-interval = 5
-idle_threshold = 300
-auto_start = true
+**Веб-интерфейс и аналитический дашборд**
 
-[APPLICATIONS]
-chrome.exe = true
-code.exe = true
-```
+Самой сложной и интересной частью проекта стал веб-интерфейс для анализа данных. Я создал полноценный аналитический дашборд, который предоставляет пользователю глубокие инсайты о его продуктивности.
 
-#### 2.1.2 Представление интерфейсов программы
+**Рисунок 4. Диаграмма последовательности аутентификации**
 
-**Главное окно приложения**
-
-![Главное окно Tracker33](images_diploma/main_window.png)
-
-Главное окно приложения имеет **единую структуру без вкладок** и состоит из следующих секций:
-
-1. **Секция статуса подключения** — показывает состояние соединения с сервером
-2. **Кнопка веб-интерфейса** — быстрый доступ к веб-дашборду
-3. **Секция текущей активности** — отображает информацию о текущем отслеживаемом приложении:
-   - Название активного приложения
-   - Заголовок окна
-   - Время активности
-   - Количество нажатий клавиш
-4. **Секция отслеживаемых приложений** — список всех обнаруженных приложений с возможностью настройки продуктивности
-5. **Кнопка настроек** — доступ к конфигурации системы
-
-**Особенности интерфейса:**
-- Минималистичный дизайн без перегруженности вкладками
-- Вся ключевая информация видна сразу
-- Цветовая индикация продуктивных (зеленые) и непродуктивных (красные) приложений
-- Возможность работы в системном трее
-
-**Системный трей**
-
-Приложение работает в системном трее с контекстным меню:
-
-```
-┌─────────────────────────────────────┐
-│ Time Tracker PRO                    │
-├─────────────────────────────────────┤
-│ 🔍 Показать/скрыть                  │
-│ 🌐 Открыть веб-интерфейс            │
-│ ─────────────────────────────────   │
-│ ❌ Выйти                            │
-└─────────────────────────────────────┘
-```
-
-**Интерфейс управления приложениями**
-
-Список приложений в главном окне:
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│ Отслеживаемые приложения:                                   │
-├─────────────────────────────────────────────────────────────┤
-│ ✅ Google Chrome         [Продуктивное: ☑]                 │
-│ ✅ Visual Studio Code    [Продуктивное: ☑]                 │
-│ ✅ Steam                 [Продуктивное: ☐]                 │
-│ ✅ Notepad++            [Продуктивное: ☑]                 │
-└─────────────────────────────────────────────────────────────┘
-```
-
-**Веб-интерфейс дашборда**
-
-Создал полноценный responsive веб-интерфейс для просмотр детальной статистики:
-
-**Основные метрики на дашборде:**
-- 🕐 **Общее время** — суммарное время активности за день
-- ⌨️ **Активность** — количество нажатий клавиш
-- ⭐ **Продуктивность** — процент времени в продуктивных приложениях  
-- 📱 **Приложения** — количество использованных приложений
-
-**Графики и аналитика:**
-- График активности по часам (показывает интенсивность работы)
-- Список последних действий в реальном времени
-- Топ используемых приложений
-- Детальная статистика с временными диапазонами
-
-```html
-<!-- Пример структуры веб-дашборда -->
-<div class="dashboard-container">
-    <div class="hero-section">
-        <h2>Добро пожаловать в Tracker33</h2>
-        <p>Система отслеживания времени и анализа продуктивности</p>
-    </div>
+```mermaid
+sequenceDiagram
+    participant C as Десктопный клиент
+    participant S as Django сервер
+    participant DB as База данных
     
-    <div class="metrics-cards">
-        <div class="card total-time">Общее время: 06:42:15</div>
-        <div class="card activity">Активность: 1,247 нажатий</div>
-        <div class="card productivity">Продуктивность: 78%</div>
-        <div class="card apps">Приложения: 12</div>
-    </div>
+    C->>S: POST /api/auth/login/
+    Note over C,S: {имя_пользователя, пароль}
     
-    <div class="charts-section">
-        <canvas id="activityChart">График по часам</canvas>
-        <div class="recent-activity">Последние действия</div>
-    </div>
-</div>
+    S->>DB: Проверка пользователя
+    DB-->>S: Данные пользователя
+    
+    S->>S: Генерация токена
+    S->>DB: Сохранение токена
+    
+    S-->>C: {токен, информация_пользователя}
+    Note over S,C: Успешная аутентификация
+    
+    C->>S: GET /api/applications/
+    Note over C,S: Authorization: Token <токен>
+    
+    S->>S: Валидация токена
+    S->>DB: Получение приложений
+    DB-->>S: Список приложений
+    S-->>C: JSON список приложений
 ```
 
-**Диаграмма активности по времени**
+Главная страница дашборда включает в себя несколько ключевых компонентов:
+
+**Метрики в карточках**: Четыре основные метрики представлены в наглядном виде - общее время работы, клавиатурная активность, процент продуктивности и количество использованных приложений. Эти показатели дают быстрое представление о рабочем дне.
+
+**График активности по часам**: Интерактивный график показывает интенсивность работы в течение дня, помогая выявить пики и спады продуктивности. Это оказалось одной из самых полезных функций для понимания личных ритмов работы.
+
+**Умные выводы**: Система автоматически анализирует данные и предоставляет инсайты - определяет пик активности, подсчитывает эффективное рабочее время, выявляет паттерны поведения.
+
+**Система целей и достижений**: Особенно интересным решением стало добавление элементов геймификации. Пользователь может устанавливать цели по времени работы, продуктивности и активности, а система отслеживает прогресс с помощью наглядных прогресс-баров.
+
+**Рисунок 5. Схема отправки данных активности**
+
+```mermaid
+sequenceDiagram
+    participant T as Трекер активности
+    participant Q as Локальная очередь
+    participant A as API клиент
+    participant S as Сервер
+    
+    loop Каждые 5 секунд
+        T->>T: Мониторинг активности
+        T->>Q: Сохранение данных локально
+    end
+    
+    loop Каждые 30 секунд
+        Q->>A: Пакет данных активности
+        A->>S: POST /api/activities/bulk/
+        S-->>A: Статус отправки
+        
+        alt Успешная отправка
+            A->>Q: Очистка отправленных данных
+        else Ошибка
+            A->>Q: Пометка для повторной отправки
+        end
+    end
+```
+
+**Страница детальной статистики**
+
+Вторая страница веб-интерфейса посвящена углубленному анализу данных. Здесь пользователь может выбирать различные временные периоды (7, 14, 30, 90 дней) и получать детальную аналитику.
+
+Особенно важным компонентом стала **карта активности** - тепловая карта, показывающая интенсивность работы по дням недели и времени. Такая визуализация помогает выявить оптимальные часы для работы и планировать расписание более эффективно.
+
+**Рисунок 6. Алгоритм процесса отслеживания активности**
+
+```mermaid
+flowchart TD
+    A[Запуск приложения] --> B[Инициализация мониторинга]
+    B --> C[Проверка активного окна]
+    C --> D{Окно изменилось?}
+    
+    D -->|Да| E[Завершение текущей сессии]
+    D -->|Нет| F[Проверка активности пользователя]
+    
+    E --> G[Создание новой сессии]
+    G --> H[Определение приложения]
+    
+    F --> I{Пользователь активен?}
+    I -->|Да| J[Увеличение счетчика активности]
+    I -->|Нет| K[Отметка простоя]
+    
+    H --> L[Сохранение в локальную БД]
+    J --> L
+    K --> L
+    
+    L --> M[Ожидание 5 секунд]
+    M --> C
+    
+    style A fill:#e8f5e8
+    style E fill:#fff3e0
+    style G fill:#fff3e0
+    style L fill:#f3e5f5
+```
+
+Детальный список приложений позволяет пользователю настраивать категории продуктивности для каждого обнаруженного приложения. Эта функция оказалась критически важной, поскольку понятие "продуктивности" сильно зависит от характера работы пользователя.
+
+**Рисунок 7. Диаграмма активности по времени (пример рабочего дня)**
 
 ```mermaid
 gantt
@@ -453,6 +200,8 @@ gantt
     section Встречи
     Командная планерка    :active, meeting, 16:30, 17:30
 ```
+
+Процесс создания веб-интерфейса научил меня важности пользовательского опыта. Первоначальные версии были перегружены информацией, но в итоге я пришел к минималистичному дизайну, где каждый элемент имеет четкое назначение и ценность для пользователя.
 
 ### 2.2 Тестирование и отладка
 
@@ -663,75 +412,119 @@ def get_process_name(self, window_handle):
 
 **Установка системы:**
 
-1. **Серверная часть:**
+**ВАЖНО**: Обнаружены критические ошибки в первоначальных инструкциях. Используйте исправленные инструкции ниже.
+
+1. **Автоматическая настройка (рекомендуется):**
 ```bash
-# Клонирование репозитория
-git clone https://github.com/company/tracker33.git
-cd tracker33
-
-# Установка зависимостей
-pip install -r requirements.txt
-
-# Настройка базы данных
-python manage.py migrate
-
-# Создание суперпользователя
-python manage.py createsuperuser
-
-# Запуск сервера
-python manage.py runserver 0.0.0.0:8001
+# Запуск полной настройки одной командой
+setup_tracker33.bat
 ```
 
-2. **Клиентское приложение:**
+Этот скрипт автоматически:
+- Создает виртуальное окружение Python
+- Устанавливает все зависимости (Django, PyQt5, psutil, etc.)
+- Настраивает базу данных SQLite
+- Создает администратора (admin/admin) и тестового пользователя (heist/1234567vampire)
+- Генерирует API токены
+- Обновляет конфигурацию клиента
+
+2. **Запуск сервера:**
 ```bash
-# Переход в папку клиента
+# Простой запуск
+start_server.bat
+
+# Сервер будет доступен по адресу:
+# http://127.0.0.1:8001/ - веб-интерфейс
+# http://127.0.0.1:8001/admin/ - панель администратора
+```
+
+3. **Запуск клиентского приложения:**
+```bash
+# Автоматический запуск с проверками
+desktop_app\start_client.bat
+
+# Или ручной запуск:
 cd desktop_app
-
-# Установка зависимостей
-pip install -r requirements.txt
-
-# Настройка config.ini
-[SERVER]
-url = http://your-server.com:8001
-username = your_username
-
-# Запуск приложения
 python main.py
 ```
+
+**ИСПРАВЛЕННЫЕ API endpoints:**
+- ✅ `POST /api/token/` - Получение токена аутентификации
+- ✅ `GET /api/applications/` - Список отслеживаемых приложений
+- ✅ `POST /api/activities/` - Отправка данных активности
+- ✅ `GET /api/dashboard/` - Данные для дашборда
+- ❌ `GET /api/` - НЕ РАБОТАЕТ (редирект на главную)
 
 **Руководство для сотрудников:**
 
 1. **Первый запуск:**
-   - Запустить приложение Tracker33
-   - Ввести логин и пароль, полученные от администратора
+   - Скачать клиент с `http://server-address:8001/static/TimeTracker.exe`
+   - Либо использовать `desktop_app\start_client.bat` на настроенной системе
+   - Ввести учетные данные: heist / 1234567vampire
    - Нажать "Начать отслеживание"
 
 2. **Ежедневное использование:**
    - Приложение запускается автоматически при включении компьютера
-   - Работает в фоне, не требует вмешательства пользователя
-   - Иконка в системном трее показывает статус отслеживания
+   - Работает в фоне, автоматически отслеживает активность каждые 30 секунд
+   - Иконка в системном трее показывает статус подключения к серверу
+   - Цветная индикация: зеленый (подключен), красный (ошибка), желтый (синхронизация)
 
 3. **Просмотр статистики:**
-   - Двойной клик по иконке в трее
-   - Переход на вкладку "Статистика"
-   - Или открытие веб-интерфейса по адресу сервера
+   - Двойной клик по иконке в трее открывает клиентское окно
+   - Переход в веб-интерфейс: кнопка "Открыть веб-интерфейс"
+   - Прямой доступ: `http://server-address:8001/dashboard/`
 
 **Руководство для администраторов:**
 
 1. **Управление пользователями:**
-   - Вход в админ-панель: http://server:8001/admin/
+   - Вход в админ-панель: `http://server-address:8001/admin/`
+   - Логин: admin / admin (изменить в продакшене!)
    - Создание новых пользователей в разделе "Пользователи"
-   - Настройка прав доступа и ролей
+   - Генерация API токенов для каждого пользователя
 
 2. **Настройка приложений:**
-   - Раздел "Приложения" → просмотр обнаруженных приложений
+   - Раздел "Applications" в админке
+   - Просмотр автоматически обнаруженных приложений
    - Отметка приложений как "продуктивные" или "непродуктивные"
-   - Группировка похожих приложений
+   - Группировка похожих приложений (например, разные браузеры)
 
 3. **Мониторинг системы:**
-   - Раздел "Активности" → просмотр всех записей
-   - Экспорт данных в CSV/Excel
-   - Настройка автоматических отчетов
+   - Раздел "User activities" - просмотр всех записей активности
+   - Экспорт данных через веб-интерфейс в CSV формате
+   - Просмотр логов в папке `logs/`
+   - Мониторинг производительности через дашборд
+
+**Устранение проблем подключения клиента:**
+
+Если клиент не подключается к серверу:
+
+1. **Проверить сервер:**
+   ```bash
+   # Убедиться что сервер запущен
+   netstat -an | findstr 8001
+   
+   # Проверить веб-интерфейс в браузере
+   http://127.0.0.1:8001/
+   ```
+
+2. **Проверить конфигурацию клиента:**
+   ```ini
+   # desktop_app/config.ini должен содержать:
+   [API]
+   base_url = http://127.0.0.1:8001/api
+   token = (автоматически заполняется)
+   
+   [Server]
+   username = heist
+   password = 1234567vampire
+   ```
+
+3. **Диагностика API:**
+   ```bash
+   # Тест API подключения
+   cd desktop_app
+   python test_full_client.py
+   ```
 
 #### 2.4.2 Возможные сценарии использования системы
 
@@ -859,98 +652,150 @@ python main.py
 
 ### Приложение А. ER-диаграмма базы данных
 
-```plantuml
-@startuml
-entity "CustomUser" as user {
-  + id : INTEGER
-  --
-  username : VARCHAR(255)
-  email : VARCHAR(255)  
-  department : VARCHAR(100)
-  position : VARCHAR(100)
-  is_active_tracking : BOOLEAN
-}
+**Рисунок 8. ER-диаграмма базы данных**
 
-entity "Application" as app {
-  + id : INTEGER
-  --
-  user_id : INTEGER
-  name : VARCHAR(255)
-  process_name : VARCHAR(255)
-  is_active : BOOLEAN
-  is_productive : BOOLEAN
-  created_at : DATETIME
-  updated_at : DATETIME
-}
-
-entity "UserActivity" as activity {
-  + id : INTEGER
-  --
-  user_id : INTEGER
-  application_id : INTEGER
-  start_time : DATETIME
-  end_time : DATETIME
-  duration : DURATION
-  keyboard_presses : INTEGER
-}
-
-entity "TimeLog" as timelog {
-  + id : INTEGER
-  --
-  user_id : INTEGER
-  start_time : DATETIME
-  end_time : DATETIME
-  description : TEXT
-  created_at : DATETIME
-  updated_at : DATETIME
-}
-
-user ||--o{ app
-user ||--o{ activity
-user ||--o{ timelog
-app ||--o{ activity
-@enduml
+```mermaid
+erDiagram
+    ПОЛЬЗОВАТЕЛЬ ||--o{ ПРИЛОЖЕНИЕ : "отслеживает"
+    ПОЛЬЗОВАТЕЛЬ ||--o{ АКТИВНОСТЬ_ПОЛЬЗОВАТЕЛЯ : "имеет"
+    ПОЛЬЗОВАТЕЛЬ ||--o{ ЖУРНАЛ_ВРЕМЕНИ : "создает"
+    ПРИЛОЖЕНИЕ ||--o{ АКТИВНОСТЬ_ПОЛЬЗОВАТЕЛЯ : "регистрирует"
+    
+    ПОЛЬЗОВАТЕЛЬ {
+        int id PK
+        string имя_пользователя
+        string электронная_почта
+        string отдел
+        string должность
+        boolean активное_отслеживание
+        datetime дата_создания
+        datetime дата_обновления
+    }
+    
+    ПРИЛОЖЕНИЕ {
+        int id PK
+        int id_пользователя FK
+        string название
+        string имя_процесса
+        boolean активно
+        boolean продуктивное
+        datetime дата_создания
+        datetime дата_обновления
+    }
+    
+    АКТИВНОСТЬ_ПОЛЬЗОВАТЕЛЯ {
+        int id PK
+        int id_пользователя FK
+        int id_приложения FK
+        datetime время_начала
+        datetime время_окончания
+        duration продолжительность
+        int нажатия_клавиш
+    }
+    
+    ЖУРНАЛ_ВРЕМЕНИ {
+        int id PK
+        int id_пользователя FK
+        datetime время_начала
+        datetime время_окончания
+        text описание
+        datetime дата_создания
+        datetime дата_обновления
+    }
 ```
 
 ### Приложение Б. Схема API endpoints
 
-```
-POST /api/auth/login/
-{
-  "username": "string",
-  "password": "string"
-}
-→ {"token": "string", "user": {...}}
+**Рисунок 9. Схема API endpoints**
 
-GET /api/applications/
-Authorization: Token <token>
-→ [{"id": 1, "name": "Chrome", "is_productive": true}, ...]
-
-POST /api/activities/bulk/
-Authorization: Token <token>
-{
-  "activities": [
-    {
-      "application": "chrome.exe",
-      "start_time": "2025-01-15T10:00:00Z",
-      "end_time": "2025-01-15T11:00:00Z",
-      "keyboard_presses": 150
-    }
-  ]
-}
-→ {"created": 1, "updated": 0, "errors": []}
-
-GET /api/statistics/dashboard/
-Authorization: Token <token>
-→ {
-  "today_hours": 6.5,
-  "productivity_percent": 75,
-  "top_apps": [...],
-  "hourly_breakdown": [...]
-}
+```mermaid
+graph LR
+    subgraph "API аутентификации"
+        A1[POST /api/auth/login/]
+        A2[POST /api/auth/logout/]
+        A3[GET /api/auth/user/]
+    end
+    
+    subgraph "API приложений"
+        B1[GET /api/applications/]
+        B2[POST /api/applications/]
+        B3[PUT /api/applications/{id}/]
+        B4[GET /api/applications/discovered/]
+    end
+    
+    subgraph "API активности"
+        C1[GET /api/activities/]
+        C2[POST /api/activities/]
+        C3[POST /api/activities/bulk/]
+        C4[GET /api/activities/current/]
+    end
+    
+    subgraph "API статистики"
+        D1[GET /api/statistics/dashboard/]
+        D2[GET /api/statistics/summary/]
+        D3[GET /api/statistics/productivity/]
+    end
+    
+    style A1 fill:#ffcdd2
+    style A2 fill:#ffcdd2
+    style A3 fill:#ffcdd2
+    style B1 fill:#c8e6c9
+    style B2 fill:#c8e6c9
+    style B3 fill:#c8e6c9
+    style B4 fill:#c8e6c9
+    style C1 fill:#bbdefb
+    style C2 fill:#bbdefb
+    style C3 fill:#bbdefb
+    style C4 fill:#bbdefb
+    style D1 fill:#fff9c4
+    style D2 fill:#fff9c4
+    style D3 fill:#fff9c4
 ```
 
 ### Приложение В. Конфигурационные файлы
+
+**Рисунок 10. Диаграмма развертывания системы**
+
+```mermaid
+graph TB
+    subgraph "Клиентская машина"
+        subgraph "Десктопное приложение"
+            DA[Клиент Tracker33]
+            DB[Локальная SQLite]
+            DC[Файлы конфигурации]
+        end
+    end
+    
+    subgraph "Серверная машина"
+        subgraph "Веб-сервер"
+            WS[Django приложение]
+            API[REST API]
+            ADMIN[Панель администратора]
+        end
+        
+        subgraph "Сервер базы данных"
+            PG[SQLite/PostgreSQL]
+        end
+        
+        subgraph "Статические файлы"
+            STATIC[CSS/JS/Изображения]
+        end
+    end
+    
+    DA -->|HTTPS| API
+    DA -->|Конфигурация| DC
+    DA -->|Кэш| DB
+    
+    API --> PG
+    WS --> PG
+    ADMIN --> PG
+    WS --> STATIC
+    
+    style DA fill:#e3f2fd
+    style WS fill:#e8f5e8
+    style PG fill:#fff3e0
+    style API fill:#fce4ec
+```
 
 **config.ini (клиент):**
 ```ini

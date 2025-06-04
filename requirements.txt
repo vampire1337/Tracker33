@@ -1,6 +1,6 @@
 Django==5.0.1
 djangorestframework==3.14.0
-PyQt6==6.6.1
+PyQt5==6.6.1
 psutil==5.9.6
 pynput==1.7.6
 pygetwindow==0.0.9
