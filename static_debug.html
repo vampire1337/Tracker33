@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест Canvas</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>Тест Canvas с Bootstrap</h1>
+        
+        <!-- Точно такая же структура как в statistics.html -->
+        <div class="row mt-4">
+            <div class="col-md-6">
+                <div class="card h-100">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h3 class="card-title">
+                            <i class="fas fa-chart-line me-2"></i>
+                            Активность по дням
+                        </h3>
+                        <div class="text-muted">
+                            <small>
+                                <i class="fas fa-info-circle me-1"></i>
+                                Динамика рабочего времени
+                            </small>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="dailyActivityChart" style="max-height: 300px; border: 2px solid red;"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card h-100">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h3 class="card-title">
+                            <i class="fas fa-chart-pie me-2"></i>
+                            Распределение времени
+                        </h3>
+                        <div class="text-muted">
+                            <small>
+                                <i class="fas fa-info-circle me-1"></i>
+                                Топ-5 приложений
+                            </small>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="applicationPieChart" style="max-height: 300px; border: 2px solid blue;"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        console.log('=== ТЕСТ НАЧИНАЕТСЯ ===');
+        
+        // Проверяем наличие элементов
+        const dailyCtx = document.getElementById('dailyActivityChart');
+        const pieCtx = document.getElementById('applicationPieChart');
+        
+        console.log('dailyActivityChart найден:', !!dailyCtx);
+        console.log('applicationPieChart найден:', !!pieCtx);
+        
+        if (dailyCtx) {
+            console.log('dailyActivityChart размеры:', dailyCtx.offsetWidth, 'x', dailyCtx.offsetHeight);
+        }
+        
+        if (pieCtx) {
+            console.log('applicationPieChart размеры:', pieCtx.offsetWidth, 'x', pieCtx.offsetHeight);
+        }
+        
+        // Тестовые данные как в реальном шаблоне
+        const dailyData = [
+            {date: '29.05', hours: 0, productive_hours: 0},
+            {date: '30.05', hours: 0, productive_hours: 0},
+            {date: '31.05', hours: 0, productive_hours: 0},
+            {date: '01.06', hours: 0, productive_hours: 0},
+            {date: '02.06', hours: 0, productive_hours: 0},
+            {date: '03.06', hours: 0, productive_hours: 0},
+            {date: '04.06', hours: 0.4, productive_hours: 0.1}
+        ];
+        
+        const pieData = [
+            {name: 'Cursor', percentage: 37.9, is_productive: false},
+            {name: 'Timetracker (1)', percentage: 28.0, is_productive: false},
+            {name: 'Openwith', percentage: 18.8, is_productive: false},
+            {name: '1', percentage: 13.1, is_productive: false},
+            {name: 'Telegram', percentage: 2.2, is_productive: false}
+        ];
+        
+        console.log('Данные для графиков готовы');
+        
+        // Создаем графики
+        if (dailyCtx) {
+            try {
+                const dailyChart = new Chart(dailyCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: dailyData.map(d => d.date),
+                        datasets: [{
+                            label: 'Общее время (часы)',
+                            data: dailyData.map(d => d.hours),
+                            backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                            borderColor: 'rgba(54, 162, 235, 1)',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false
+                    }
+                });
+                console.log('✅ График активности создан успешно');
+            } catch (error) {
+                console.error('❌ Ошибка создания графика активности:', error);
+            }
+        }
+        
+        if (pieCtx) {
+            try {
+                const pieChart = new Chart(pieCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: pieData.map(d => d.name),
+                        datasets: [{
+                            data: pieData.map(d => d.percentage),
+                            backgroundColor: [
+                                'rgba(255, 99, 132, 0.8)',
+                                'rgba(54, 162, 235, 0.8)',
+                                'rgba(255, 205, 86, 0.8)',
+                                'rgba(75, 192, 192, 0.8)',
+                                'rgba(153, 102, 255, 0.8)'
+                            ]
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false
+                    }
+                });
+                console.log('✅ Круговая диаграмма создана успешно');
+            } catch (error) {
+                console.error('❌ Ошибка создания круговой диаграммы:', error);
+            }
+        }
+    </script>
+</body>
+</html> 

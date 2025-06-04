@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Тест Canvas</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <h1>Тест Canvas</h1>
+    
+    <h2>Canvas 1 - График активности</h2>
+    <canvas id="dailyActivityChart" width="400" height="200" style="border: 1px solid red;"></canvas>
+    
+    <h2>Canvas 2 - Круговая диаграмма</h2>
+    <canvas id="applicationPieChart" width="400" height="200" style="border: 1px solid blue;"></canvas>
+    
+    <script>
+        console.log('Тест начинается...');
+        
+        // Проверяем наличие элементов
+        const dailyCtx = document.getElementById('dailyActivityChart');
+        const pieCtx = document.getElementById('applicationPieChart');
+        
+        console.log('dailyActivityChart найден:', !!dailyCtx);
+        console.log('applicationPieChart найден:', !!pieCtx);
+        
+        if (dailyCtx) {
+            // Простой тест графика
+            const chart1 = new Chart(dailyCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Пн', 'Вт', 'Ср', 'Чт', 'Пт'],
+                    datasets: [{
+                        label: 'Тестовые данные',
+                        data: [1, 2, 3, 4, 5],
+                        backgroundColor: 'rgba(75, 192, 192, 0.6)'
+                    }]
+                }
+            });
+            console.log('График 1 создан');
+        }
+        
+        if (pieCtx) {
+            // Простой тест круговой диаграммы
+            const chart2 = new Chart(pieCtx, {
+                type: 'pie',
+                data: {
+                    labels: ['App1', 'App2', 'App3'],
+                    datasets: [{
+                        data: [30, 50, 20],
+                        backgroundColor: ['#ff6384', '#36a2eb', '#ffce56']
+                    }]
+                }
+            });
+            console.log('График 2 создан');
+        }
+    </script>
+</body>
+</html> 

@@ -38,7 +38,9 @@ class CustomLoginView(auth_views.LoginView):
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('admin-panel/', include('admin_panel.urls', namespace='admin_panel')),
-    path('api/', include('tracking.urls')),
+    # API роуты - ТОЛЬКО API!
+    path('api/', include('tracking.api_urls')),
+    # Веб роуты - ТОЛЬКО веб-страницы!
     path('', include('tracking.urls')),
     path('register/', user_views.SignUpView.as_view(), name='register'),
     path('login/', CustomLoginView.as_view(), name='login'),

@@ -89,6 +89,12 @@ class UserDetailView(LoginRequiredMixin, SuperUserRequiredMixin, DetailView):
             activity_count=Count('useractivity')
         ).order_by('-activity_count').distinct()
         
+        # Правильный подсчет общего количества нажатий клавиш
+        total_keyboard_presses = UserActivity.objects.filter(user=user).aggregate(
+            total_presses=Sum('keyboard_presses')
+        )['total_presses'] or 0
+        context['total_keyboard_presses'] = total_keyboard_presses
+        
         return context
 
 # Редактирование пользователя

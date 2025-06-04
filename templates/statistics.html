@@ -114,7 +114,8 @@
     </div>
 </div>
 
-<!-- Графики -->
+<!-- Графики (временно скрыты) -->
+<!--
 <div class="row mt-4">
     <div class="col-md-6">
         <div class="card h-100">
@@ -131,7 +132,7 @@
                 </div>
             </div>
             <div class="card-body">
-                <canvas id="dailyActivityChart" style="max-height: 300px;"></canvas>
+                <canvas id="dailyActivityChart" width="400" height="300" style="max-height: 300px; max-width: 100%;"></canvas>
             </div>
         </div>
     </div>
@@ -150,13 +151,15 @@
                 </div>
             </div>
             <div class="card-body">
-                <canvas id="applicationPieChart" style="max-height: 300px;"></canvas>
+                <canvas id="applicationPieChart" width="400" height="300" style="max-height: 300px; max-width: 100%;"></canvas>
             </div>
         </div>
     </div>
 </div>
+-->
 
-<!-- Хитмапа активности по дням и часам -->
+<!-- Хитмапа активности по дням и часам (временно скрыта) -->
+<!--
 <div class="row mt-4">
     <div class="col-md-12">
         <div class="card">
@@ -175,6 +178,7 @@
         </div>
     </div>
 </div>
+-->
 
 <!-- Таблица приложений -->
 <div class="row mt-4">
@@ -348,85 +352,25 @@
 <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('Загрузка страницы статистики...');
+    console.log('Страница статистики загружена');
+
+    // Временно отключены графики - только функционал переключения продуктивности
+    /*
+    // === ГРАФИКИ ВРЕМЕННО ОТКЛЮЧЕНЫ ===
     
-    // Данные для графика активности по дням
+    // Данные для графиков
     const dailyData = [
         {% for day in daily_data %}
             {
                 date: '{{ day.date|date:"d.m" }}',
                 hours: {{ day.hours|default:0 }},
-                productive_hours: {{ day.productive_hours|default:0 }}
+                minutes: {{ day.minutes|default:0 }}
             }{% if not forloop.last %},{% endif %}
         {% empty %}
-            // Если нет данных, создаем пустые данные для 7 дней
-            {% for i in "0123456" %}
-                {date: 'День {{ forloop.counter }}', hours: 0, productive_hours: 0}{% if not forloop.last %},{% endif %}
-            {% endfor %}
+            {date: 'Нет данных', hours: 0, minutes: 0}
         {% endfor %}
     ];
     
-    console.log('Данные по дням:', dailyData);
-    
-    // График активности по дням
-    const dailyCtx = document.getElementById('dailyActivityChart');
-    if (dailyCtx) {
-        const dailyChart = new Chart(dailyCtx, {
-            type: 'bar',
-            data: {
-                labels: dailyData.map(d => d.date),
-                datasets: [{
-                    label: 'Общее время (часы)',
-                    data: dailyData.map(d => d.hours),
-                    backgroundColor: 'rgba(54, 162, 235, 0.6)',
-                    borderColor: 'rgba(54, 162, 235, 1)',
-                    borderWidth: 1
-                }, {
-                    label: 'Продуктивное время (часы)',
-                    data: dailyData.map(d => d.productive_hours),
-                    backgroundColor: 'rgba(75, 192, 192, 0.6)',
-                    borderColor: 'rgba(75, 192, 192, 1)',
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'top'
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                return `${context.dataset.label}: ${context.parsed.y.toFixed(1)} ч`;
-                            }
-                        }
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        title: {
-                            display: true,
-                            text: 'Часы'
-                        }
-                    },
-                    x: {
-                        title: {
-                            display: true,
-                            text: 'Дата'
-                        }
-                    }
-                }
-            }
-        });
-        console.log('График активности по дням создан');
-    } else {
-        console.error('Элемент dailyActivityChart не найден!');
-    }
-
-    // Данные для круговой диаграммы
     const pieData = [
         {% for app in apps|slice:":5" %}
             {
@@ -438,29 +382,95 @@ document.addEventListener('DOMContentLoaded', function() {
             {name: 'Нет данных', percentage: 100, is_productive: false}
         {% endfor %}
     ];
-    
-    console.log('Данные для круговой диаграммы:', pieData);
 
-    // Круговая диаграмма
-    const pieCtx = document.getElementById('applicationPieChart');
-    if (pieCtx) {
-        const pieChart = new Chart(pieCtx, {
+    console.log('Данные для графиков:', {dailyData, pieData});
+
+    // График активности по дням
+    const dailyChartCtx = document.getElementById('dailyActivityChart');
+    if (dailyChartCtx) {
+        const dailyChart = new Chart(dailyChartCtx, {
+            type: 'line',
+            data: {
+                labels: dailyData.map(item => item.date),
+                datasets: [{
+                    label: 'Часы работы',
+                    data: dailyData.map(item => item.hours),
+                    borderColor: '#007bff',
+                    backgroundColor: 'rgba(0, 123, 255, 0.1)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.3,
+                    pointBackgroundColor: '#007bff',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2,
+                    pointRadius: 4,
+                    pointHoverRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Часы'
+                        },
+                        grid: {
+                            color: 'rgba(0,0,0,0.1)'
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Дата'
+                        },
+                        grid: {
+                            color: 'rgba(0,0,0,0.1)'
+                        }
+                    }
+                },
+                interaction: {
+                    intersect: false,
+                    mode: 'index'
+                }
+            }
+        });
+        console.log('График активности по дням создан');
+    } else {
+        console.error('Элемент dailyActivityChart не найден!');
+    }
+
+    // Круговая диаграмма приложений
+    const pieChartCtx = document.getElementById('applicationPieChart');
+    if (pieChartCtx) {
+        // Фильтруем данные с нулевыми значениями
+        const filteredPieData = pieData.filter(item => item.percentage > 0);
+        
+        const pieChart = new Chart(pieChartCtx, {
             type: 'doughnut',
             data: {
-                labels: pieData.map(d => d.name),
+                labels: filteredPieData.map(item => item.name),
                 datasets: [{
-                    data: pieData.map(d => d.percentage),
-                    backgroundColor: pieData.map(d => 
-                        d.is_productive ? 
-                        'rgba(75, 192, 192, 0.8)' : 
-                        'rgba(255, 99, 132, 0.8)'
-                    ),
-                    borderColor: pieData.map(d => 
-                        d.is_productive ? 
-                        'rgba(75, 192, 192, 1)' : 
-                        'rgba(255, 99, 132, 1)'
-                    ),
-                    borderWidth: 2
+                    data: filteredPieData.map(item => item.percentage),
+                    backgroundColor: [
+                        '#FF6384',
+                        '#36A2EB', 
+                        '#FFCE56',
+                        '#4BC0C0',
+                        '#9966FF',
+                        '#FF9F40',
+                        '#FF6384',
+                        '#C9CBCF'
+                    ],
+                    borderWidth: 2,
+                    borderColor: '#fff'
                 }]
             },
             options: {
@@ -470,25 +480,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     legend: {
                         position: 'bottom',
                         labels: {
-                            generateLabels: function(chart) {
-                                const data = chart.data;
-                                if (data.labels.length && data.datasets.length) {
-                                    return data.labels.map((label, i) => {
-                                        const dataset = data.datasets[0];
-                                        const value = dataset.data[i];
-                                        const isProductive = pieData[i].is_productive;
-                                        return {
-                                            text: `${label} (${value}%)`,
-                                            fillStyle: dataset.backgroundColor[i],
-                                            strokeStyle: dataset.borderColor[i],
-                                            lineWidth: dataset.borderWidth,
-                                            hidden: false,
-                                            index: i
-                                        };
-                                    });
-                                }
-                                return [];
-                            }
+                            padding: 20,
+                            usePointStyle: true
                         }
                     },
                     tooltip: {
@@ -512,6 +505,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Хитмапа активности (простая реализация с D3)
     createActivityHeatmap();
+    
+    === КОНЕЦ ОТКЛЮЧЕННЫХ ГРАФИКОВ ===
+    */
 
     // Обработчик переключения продуктивности приложений
     document.querySelectorAll('.toggle-productive').forEach(function(toggle) {
@@ -566,6 +562,9 @@ document.addEventListener('DOMContentLoaded', function() {
     
     console.log('Статистика полностью загружена');
 });
+
+/*
+// === ФУНКЦИИ ДЛЯ ГРАФИКОВ - ВРЕМЕННО ОТКЛЮЧЕНЫ ===
 
 // Функция создания хитмапы активности
 function createActivityHeatmap() {
@@ -637,6 +636,9 @@ function createActivityHeatmap() {
         
     console.log('Хитмапа создана');
 }
+
+=== КОНЕЦ ОТКЛЮЧЕННЫХ ФУНКЦИЙ ===
+*/
 
 // Функция для показа уведомлений
 function showNotification(message, type) {

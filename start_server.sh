@@ -78,7 +78,7 @@ python manage.py collectstatic --noinput
 
 # Запуск сервера
 echo "Starting Django server..."
-echo "You can access the server at: http://127.0.0.1:8001/"
-echo "Admin interface: http://127.0.0.1:8001/admin/"
+echo "You can access the server at: http://0.0.0.0:8001/"
+echo "Admin interface: http://0.0.0.0:8001/admin/"
 echo "Login credentials: admin / admin"
-python manage.py runserver 127.0.0.1:8001 
+python manage.py runserver 0.0.0.0:8001 

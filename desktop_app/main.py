@@ -322,39 +322,37 @@ class _LegacyAPIClient:
         return next(iter(self.app_cache.values()), None)
 
     def send_activities(self, activities):
-        """Отправка данных активности на сервер"""
+        """Отправляет список активностей на сервер"""
         try:
-            if not self.token:
-                logger.warning("Токен отсутствует для отправки активности")
+            url = f"{self.base_url}/activities/"
+            headers = {'Content-Type': 'application/json'}
+            
+            # Отправляем каждую активность отдельно
+            for activity in activities:
+                response = requests.post(url, json=activity, headers=headers, timeout=30)
+                if response.status_code not in [200, 201]:
+                    print(f"Ошибка отправки активности: {response.status_code} - {response.text}")
                 return False
                 
-            # Формируем URL для отправки активности правильно
-            if self.base_url.endswith('/api') or self.base_url.endswith('/api/'):
-                activities_url = f"{self.base_url.rstrip('/')}/activities/"
-            else:
-                activities_url = f"{self.base_url.rstrip('/')}/api/activities/"
-            
-            headers = {
-                'Authorization': f'Token {self.token}',
-                'Content-Type': 'application/json'
-            }
-            
-            response = requests.post(
-                activities_url,
-                json=activities,
-                headers=headers,
-                timeout=10
-            )
-            
-            if response.status_code in [200, 201]:
-                logger.info(f"Успешно отправлено {len(activities)} активностей")
-                return True
-            else:
-                logger.error(f"Ошибка отправки активности: {response.status_code} - {response.text}")
-                return False
+            return True
         except Exception as e:
-            logger.error(f"Ошибка при отправке активности: {e}")
+            print(f"Ошибка при отправке активностей: {e}")
             return False
+
+    def get_tracked_applications(self):
+        """Получает список отслеживаемых приложений с сервера"""
+        try:
+            url = f"{self.base_url}/applications/"
+            response = requests.get(url, timeout=10)
+            
+            if response.status_code == 200:
+                return response.json()
+            else:
+                print(f"Ошибка получения приложений: {response.status_code} - {response.text}")
+                return []
+        except Exception as e:
+            print(f"Ошибка при получении списка приложений: {e}")
+            return []
 
 
 class LoginDialog(QDialog):
@@ -380,7 +378,8 @@ class LoginDialog(QDialog):
         if self.parent() and hasattr(self.parent(), 'api_base_url'):
             self.server_url.setText(self.parent().api_base_url)
         else:
-            self.server_url.setText("http://localhost:8000")
+            # ИСПРАВЛЕНО: Правильный порт для сервера
+            self.server_url.setText("http://127.0.0.1:8001")
             
         form_layout.addRow("URL сервера:", self.server_url)
         
@@ -465,7 +464,7 @@ class LoginDialog(QDialog):
             self.server_url.setText(server_url)
         
         # Создаем APIClient с таймаутом
-        self.api_client = APIClient(server_url)
+        self.api_client = _LegacyAPIClient(server_url)
         
         try:
             # Отключаем кнопки на время авторизации
@@ -503,7 +502,7 @@ class LoginDialog(QDialog):
                     # Отключаем демо-режим после успешной авторизации
                     if not config.has_section('Settings'):
                         config.add_section('Settings')
-                    config.set('Settings', 'demo_mode', 'False')
+                    config.set('Settings', 'demo_mode', 'false')
                     
                     # Сохраняем конфигурацию
                     parent_app._save_config(config)
@@ -673,7 +672,7 @@ class TimeTrackerApp(QMainWindow):
                 self._save_config()
                 
             # Создаем экземпляр APIClient
-            self.api_client = APIClient(base_url)
+            self.api_client = _LegacyAPIClient(base_url)
             
             # Сохраняем базовый URL для использования в других методах
             self.api_base_url = base_url
@@ -1537,9 +1536,37 @@ class TimeTrackerApp(QMainWindow):
             auth_token = None
             token_is_valid = False
             
-            # Пытаемся загрузить токен из конфигурации
+            # Получаем токен авторизации из конфигурации с приоритетом секции Credentials
+            auth_token = None
+            
+            # Сначала ищем в секции Credentials (основное место)
             if self.config.has_section('Credentials') and self.config.has_option('Credentials', 'auth_token'):
-                auth_token = self.config.get('Credentials', 'auth_token')
+                auth_token = self.config.get('Credentials', 'auth_token').strip()
+                if auth_token:
+                    logger.info(f"Найден токен авторизации в секции Credentials длиной {len(auth_token)} символов.")
+                else:
+                    logger.warning("Токен авторизации пустой в секции Credentials.")
+            
+            # Если не найден в Credentials, ищем в других секциях (для совместимости)
+            if not auth_token:
+                logger.warning("Токен не найден в секции Credentials, проверяем другие секции...")
+                for section_name in ['Server', 'API']:
+                    if self.config.has_section(section_name):
+                        for option_name in ['token', 'auth_token']:
+                            if self.config.has_option(section_name, option_name):
+                                backup_token = self.config.get(section_name, option_name).strip()
+                                if backup_token:
+                                    auth_token = backup_token
+                                    logger.info(f"Токен найден в секции {section_name}")
+                                    # Копируем токен в основную секцию Credentials
+                                    if not self.config.has_section('Credentials'):
+                                        self.config.add_section('Credentials')
+                                    self.config.set('Credentials', 'auth_token', auth_token)
+                                    self._save_config()
+                                    logger.info("Токен скопирован в секцию Credentials")
+                                    break
+                    if auth_token:
+                        break
                 
             # Проверяем действительность токена
             if auth_token:
@@ -1555,28 +1582,25 @@ class TimeTrackerApp(QMainWindow):
                             self._save_config()
                             logger.info(f"Исправлен URL с дублированием /api: {self.api_base_url}")
                             
-                    # Проверяем токен, делая запрос к серверу
-                    verify_url = f"{self.api_base_url}verify-token/"
+                    # ИСПРАВЛЕНО: Проверяем токен через существующий endpoint applications
+                    verify_url = f"{self.api_base_url}applications/"
                     # Убедимся, что URL не содержит дублирования /api
                     if '/api/api/' in verify_url:
                         verify_url = verify_url.replace('/api/api/', '/api/')
                         
-                    headers = {'Authorization': f'Bearer {auth_token}'}
+                    # ИСПРАВЛЕНО: Используем правильный формат токена для Django
+                    headers = {'Authorization': f'Token {auth_token}'}
                     response = requests.get(verify_url, headers=headers, timeout=5)
                     
                     if response.status_code == 200:
                         token_is_valid = True
-                        # Проверяем, получен ли user_id и сохраняем его
-                        if 'user_id' in response.json():
-                            self.user_id = response.json()['user_id']
-                            if not self.config.has_section('Credentials'):
-                                self.config.add_section('Credentials')
-                            self.config.set('Credentials', 'user_id', str(self.user_id))
-                            self._save_config(self.config)
+                        logger.info("Токен действителен, авторизация не требуется")
+                        # Обновляем заголовки сессии
+                        self.session.headers.update({'Authorization': f'Token {auth_token}'})
                     else:
                         logger.warning(f"Токен недействителен, код ответа: {response.status_code}")
                 except Exception as e:
-                    logger.warning(f"Загруженный токен истек, требуется повторная авторизация")
+                    logger.warning(f"Ошибка проверки токена: {e}, требуется повторная авторизация")
                     token_is_valid = False
                     
             # Если токен не найден или недействителен, показываем диалог авторизации
@@ -1596,7 +1620,8 @@ class TimeTrackerApp(QMainWindow):
                         new_auth_token = self.config.get('Credentials', 'auth_token')
                         if not hasattr(self, 'session') or self.session is None:
                             self.session = requests.Session()
-                        self.session.headers.update({'Authorization': f'Bearer {new_auth_token}'})
+                        # ИСПРАВЛЕНО: Используем правильный формат токена для Django
+                        self.session.headers.update({'Authorization': f'Token {new_auth_token}'})
                         logger.info("Вход выполнен успешно через диалог.")
                     
                     # Перезапускаем таймер отправки данных, если интервал мог измениться
@@ -2427,22 +2452,27 @@ class TimeTrackerApp(QMainWindow):
             
             if not auth_token:
                 logger.warning("Отсутствует токен авторизации. Переключение в демо-режим.")
-                # Включаем демо-режим
-                if not self.config.has_section('Settings'):
-                    self.config.add_section('Settings')
-                self.config.set('Settings', 'demo_mode', 'True')
-                self._save_config(self.config)
+                # ВРЕМЕННО ОТКЛЮЧЕНО: включаем демо-режим
+                # if not self.config.has_section('Settings'):
+                #     self.config.add_section('Settings')
+                # self.config.set('Settings', 'demo_mode', 'True')
+                # self._save_config(self.config)
+                # return
+                
+                # Вместо включения demo_mode показываем диалог авторизации
+                logger.info("Запрашиваем авторизацию пользователя")
+                QTimer.singleShot(0, self.show_login_dialog_if_needed)
                 return
             
             # Заголовки для запроса
             headers = {
                 'Content-Type': 'application/json',
-                'Authorization': f'Bearer {auth_token}'
+                'Authorization': f'Token {auth_token}'
             }
             logger.debug(f"Заголовки запроса: {headers}")
             
             # Обновляем заголовки сессии
-            self.session.headers.update({'Authorization': f'Bearer {auth_token}'})
+            self.session.headers.update({'Authorization': f'Token {auth_token}'})
             
             # Собираем пакет данных для отправки
             max_batch_size = self.config.getint('Settings', 'max_send_batch_size', fallback=20)
@@ -2555,11 +2585,17 @@ class TimeTrackerApp(QMainWindow):
                     
                     # Добавляем количество нажатий клавиш в пайлоад
                     keyboard_presses = activity_dict.get('keyboard_presses', 0)
-                    if keyboard_presses == 0 and self.keyboard_press_count > 0:
-                        keyboard_presses = self.keyboard_press_count
-                        # Сбрасываем счетчик после отправки
-                        logger.info(f"Отправляем клавиатурную активность: {self.keyboard_press_count} нажатий")
+                    
+                    # Используем общий счетчик для всех активностей в текущей отправке
+                    if not hasattr(self, '_current_send_keyboard_count'):
+                        self._current_send_keyboard_count = self.keyboard_press_count
+                        # Сбрасываем основной счетчик только ОДИН раз за отправку
                         self.keyboard_press_count = 0
+                        logger.info(f"Сброс счетчика клавиатуры: {self._current_send_keyboard_count} нажатий для отправки")
+                    
+                    # Присваиваем сохраненное значение всем активностям в этой отправке
+                    if keyboard_presses == 0 and self._current_send_keyboard_count > 0:
+                        keyboard_presses = self._current_send_keyboard_count
                         
                     api_payload = {
                         'application': app_id,  # Используем правильный ID приложения
@@ -2662,6 +2698,10 @@ class TimeTrackerApp(QMainWindow):
                 if response.status_code == 200 or response.status_code == 201:
                     logger.info(f"Успешно отправлено {success_count} из {len(activities_to_send_payload)} записей активности.")
                     self.status_bar.showMessage(f"Отправлено {success_count} из {len(activities_to_send_payload)} записей активности.")
+                    
+                    # Сбрасываем временный счетчик клавиатуры после успешной отправки
+                    if hasattr(self, '_current_send_keyboard_count'):
+                        delattr(self, '_current_send_keyboard_count')
                 elif response.status_code == 401:
                     logger.warning("Токен недействителен, требуется повторная авторизация.")
                     # Удаляем устаревший токен из секций Credentials, Server, API и DEFAULT
@@ -2676,7 +2716,7 @@ class TimeTrackerApp(QMainWindow):
                     # Включаем демо-режим до повторной авторизации
                     if not self.config.has_section('Settings'):
                         self.config.add_section('Settings')
-                    self.config.set('Settings', 'demo_mode', 'True')
+                    # self.config.set('Settings', 'demo_mode', 'True')  # ВРЕМЕННО ОТКЛЮЧЕНО
                     # Сохраняем конфигурацию и очищаем заголовок авторизации
                     self._save_config(self.config)
                     self.session.headers.pop('Authorization', None)
@@ -2755,7 +2795,7 @@ class TimeTrackerApp(QMainWindow):
                 
         try:
             # Проверяем соединение напрямую через запрос
-            headers = {'Authorization': f'Bearer {auth_token}'} if auth_token else {}
+            headers = {'Authorization': f'Token {auth_token}'} if auth_token else {}
             logger.debug(f"Заголовки запроса проверки соединения: {headers}")
             
             # Пробуем сначала обратиться к корневому URL API для проверки базового соединения
@@ -3290,7 +3330,7 @@ class TimeTrackerApp(QMainWindow):
                 
         try:
             # Проверяем соединение напрямую через запрос
-            headers = {'Authorization': f'Bearer {auth_token}'} if auth_token else {}
+            headers = {'Authorization': f'Token {auth_token}'} if auth_token else {}
             logger.debug(f"Заголовки запроса проверки соединения: {headers}")
             
             # Пробуем сначала обратиться к корневому URL API для проверки базового соединения
