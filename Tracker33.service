@@ -7,7 +7,7 @@ User=root
 Group=root
 WorkingDirectory=/home/Tracker33
 Environment="PATH=/home/Tracker33/venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
-ExecStart=/home/Tracker33/venv/bin/python /home/Tracker33/manage.py runserver 0.0.0.0:8000
+ExecStart=/home/Tracker33/venv/bin/python /home/Tracker33/manage.py runserver 0.0.0.0:8001
 Restart=on-failure
 RestartSec=5s
 

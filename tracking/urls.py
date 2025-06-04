@@ -25,11 +25,7 @@ from .views import (
     toggle_productive,
     create_activity,
     list_applications,
-    get_statistics,
-    get_user_profile,
-    generate_qr_token,
-    authenticate_qr_token,
-    qr_auth_status
+    get_user_profile
 )
 
 # API router
@@ -53,9 +49,6 @@ api_urlpatterns = [
     path('activities/', create_activity, name='api_create_activity'),
     path('applications/', list_applications, name='api_list_applications'),
     path('user-profile/', get_user_profile, name='api_user_profile'),
-    path('qr/generate/', generate_qr_token, name='api_qr_generate'),
-    path('qr/authenticate/', authenticate_qr_token, name='api_qr_authenticate'),
-    path('qr/status/', qr_auth_status, name='api_qr_status'),
 ]
 
 # Web interface
@@ -68,7 +61,6 @@ web_urlpatterns = [
     path('timelogs/create/', TimeLogCreateView.as_view(), name='timelog-create'),
     path('timelogs/<int:pk>/update/', TimeLogUpdateView.as_view(), name='timelog-update'),
     path('timelogs/<int:pk>/delete/', TimeLogDeleteView.as_view(), name='timelog-delete'),
-    path('qr-connect/', TemplateView.as_view(template_name='qr_connect.html'), name='qr_connect'),
 ]
 
 # Combine all URL patterns
