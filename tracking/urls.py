@@ -1,7 +1,7 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from rest_framework.authtoken.views import obtain_auth_token
-from django.views.generic import RedirectView
+from django.views.generic import RedirectView, TemplateView
 from .views import (
     ApplicationViewSet,
     UserActivityViewSet,
@@ -22,7 +22,14 @@ from .views import (
     DailyActivityAPIView,
     TimeDistributionAPIView,
     DashboardAPIView,
-    toggle_productive
+    toggle_productive,
+    create_activity,
+    list_applications,
+    get_statistics,
+    get_user_profile,
+    generate_qr_token,
+    authenticate_qr_token,
+    qr_auth_status
 )
 
 # API router
@@ -43,6 +50,12 @@ api_urlpatterns = [
     path('time-distribution/', TimeDistributionAPIView.as_view(), name='time-distribution-api'),
     path('dashboard/', DashboardAPIView.as_view(), name='dashboard-api'),
     path('toggle-productive/', toggle_productive, name='toggle-productive-api'),
+    path('activities/', create_activity, name='api_create_activity'),
+    path('applications/', list_applications, name='api_list_applications'),
+    path('user-profile/', get_user_profile, name='api_user_profile'),
+    path('qr/generate/', generate_qr_token, name='api_qr_generate'),
+    path('qr/authenticate/', authenticate_qr_token, name='api_qr_authenticate'),
+    path('qr/status/', qr_auth_status, name='api_qr_status'),
 ]
 
 # Web interface
@@ -55,6 +68,7 @@ web_urlpatterns = [
     path('timelogs/create/', TimeLogCreateView.as_view(), name='timelog-create'),
     path('timelogs/<int:pk>/update/', TimeLogUpdateView.as_view(), name='timelog-update'),
     path('timelogs/<int:pk>/delete/', TimeLogDeleteView.as_view(), name='timelog-delete'),
+    path('qr-connect/', TemplateView.as_view(template_name='qr_connect.html'), name='qr_connect'),
 ]
 
 # Combine all URL patterns

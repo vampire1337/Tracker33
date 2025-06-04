@@ -1,0 +1,13 @@
+{
+  "server_url": "http://localhost:8080",
+  "api_url": "http://localhost:8080/api",
+  "username": "",
+  "password": "",
+  "auth_token": "",
+  "user_id": null,
+  "update_interval": 60,
+  "auto_start": false,
+  "minimize_to_tray": true,
+  "qr_auth_enabled": true,
+  "camera_index": 0
+}

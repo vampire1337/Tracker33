@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+{% load static %}
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
@@ -24,7 +25,15 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     
     <!-- Favicon -->
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⏱️</text></svg>">
+    <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}">
+    <link rel="icon" type="image/png" href="{% static 'favicon.png' %}">
+    <link rel="apple-touch-icon" href="{% static 'tracker33_icon_128.png' %}">
+    
+    <!-- Meta tags для PWA -->
+    <meta name="theme-color" content="#1abcff">
+    <meta name="msapplication-TileColor" content="#1abcff">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     
     <!-- Custom Styles -->
     <style>
@@ -195,7 +204,7 @@
                         </li>
                         {% if user.is_staff %}
                         <li class="nav-item">
-                            <a class="nav-link" href="/admin/">
+                            <a class="nav-link" href="{% url 'admin_panel:dashboard' %}">
                                 <i class="fas fa-cog me-1"></i>
                                 Админ
                             </a>
@@ -211,15 +220,6 @@
                                 {{ user.username }}
                             </a>
                             <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" href="#">
-                                    <i class="fas fa-user-edit me-2"></i>
-                                    Профиль
-                                </a></li>
-                                <li><a class="dropdown-item" href="#">
-                                    <i class="fas fa-cog me-2"></i>
-                                    Настройки
-                                </a></li>
-                                <li><hr class="dropdown-divider"></li>
                                 <li><a class="dropdown-item" href="{% url 'logout' %}">
                                     <i class="fas fa-sign-out-alt me-2"></i>
                                     Выйти

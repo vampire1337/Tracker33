@@ -55,9 +55,7 @@
         <div class="card bg-primary text-white">
             <div class="card-body text-center">
                 <i class="fas fa-keyboard fa-2x mb-2"></i>
-                <h4>
-                    {% for activity in activities %}{{ activity.keyboard_presses|add:0 }}{% endfor %}
-                </h4>
+                <h4>{{ total_keyboard_presses|default:0 }}</h4>
                 <small>Всего нажатий</small>
             </div>
         </div>

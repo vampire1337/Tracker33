@@ -2,15 +2,15 @@
 
 
 a = Analysis(
-    ['C:\\Users\\mihai\\Heist_master_PC\\Documents\\GitHub\\Tracker33\\desktop_app\\main.py'],
+    ['desktop_app\\modern_client.py'],
     pathex=[],
     binaries=[],
-    datas=[('C:\\Users\\mihai\\Heist_master_PC\\Documents\\GitHub\\Tracker33\\desktop_app\\config.ini', '.')],
-    hiddenimports=['PyQt5.QtCore', 'PyQt5.QtGui', 'PyQt5.QtWidgets', 'PyQt5.QtNetwork', 'pynput', 'pynput.keyboard', 'pynput.mouse', 'psutil', 'requests', 'win32gui', 'win32process', 'win32con', 'win32api'],
+    datas=[],
+    hiddenimports=['cv2', 'pyzbar', 'pyzbar.pyzbar', 'qrcode', 'qrcode.image.pil', 'PIL', 'PIL.Image', 'numpy', 'PyQt6.QtCore', 'PyQt6.QtGui', 'PyQt6.QtWidgets', 'requests', 'aiohttp', 'psutil', 'pynput', 'json', 'threading', 'queue', 'datetime', 'platform', 'logging'],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
-    excludes=['tkinter', 'matplotlib'],
+    excludes=[],
     noarchive=False,
     optimize=0,
 )
@@ -35,5 +35,4 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon=['C:\\Users\\mihai\\Heist_master_PC\\Documents\\GitHub\\Tracker33\\desktop_app\\icon.ico'],
 )

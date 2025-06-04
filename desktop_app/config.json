@@ -1,0 +1,10 @@
+{
+  "server_url": "http://127.0.0.1:8001",
+  "username": "heist",
+  "password": "1234567vampire",
+  "check_interval": 5,
+  "idle_threshold": 300,
+  "autostart": false,
+  "minimize_to_tray": true,
+  "log_level": "INFO"
+}

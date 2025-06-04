@@ -122,6 +122,21 @@ class ActivityListView(LoginRequiredMixin, SuperUserRequiredMixin, ListView):
     
     def get_queryset(self):
         return UserActivity.objects.select_related('user', 'application').order_by('-start_time')
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        # Получаем все активности для подсчета общих метрик
+        all_activities = UserActivity.objects.all()
+        
+        # Подсчитываем общее количество нажатий клавиш
+        total_keyboard_presses = all_activities.aggregate(
+            total_presses=Sum('keyboard_presses')
+        )['total_presses'] or 0
+        
+        context['total_keyboard_presses'] = total_keyboard_presses
+        
+        return context
 
 # Просмотр логов
 class LogsView(LoginRequiredMixin, SuperUserRequiredMixin, TemplateView):

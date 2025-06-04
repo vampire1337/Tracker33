@@ -4,7 +4,8 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.utils import timezone
 from datetime import timedelta, datetime, time
-from .models import Application, UserActivity, KeyboardActivity, TimeLog
+from .models import Application, UserActivity, KeyboardActivity, TimeLog, QRToken
+from users.models import CustomUser
 from .serializers import (
     ApplicationSerializer, 
     UserActivitySerializer, 
@@ -44,6 +45,8 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 import json
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import AllowAny
 
 # Настройка логирования
 logger = logging.getLogger('tracking.error')
@@ -1384,3 +1387,295 @@ def toggle_productive(request):
         return JsonResponse({'success': False, 'error': 'Internal server error'})
 
 # Конец новых API_views
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def generate_qr_token(request):
+    """Генерирует QR токен для подключения клиента"""
+    try:
+        # Создаем анонимный QR токен
+        qr_token = QRToken.generate_token(expires_minutes=10)
+        
+        # Генерируем QR код
+        import qrcode
+        import io
+        import base64
+        
+        # Данные для QR кода
+        qr_data = {
+            'token': qr_token.token,
+            'server_url': request.build_absolute_uri('/'),
+            'api_url': request.build_absolute_uri('/api/'),
+            'expires_at': qr_token.expires_at.isoformat()
+        }
+        
+        # Создаем QR код
+        qr = qrcode.QRCode(
+            version=1,
+            error_correction=qrcode.constants.ERROR_CORRECT_L,
+            box_size=10,
+            border=4,
+        )
+        qr.add_data(json.dumps(qr_data))
+        qr.make(fit=True)
+        
+        # Генерируем изображение
+        qr_img = qr.make_image(fill_color="black", back_color="white")
+        
+        # Конвертируем в base64
+        buffer = io.BytesIO()
+        qr_img.save(buffer, format='PNG')
+        qr_image_base64 = base64.b64encode(buffer.getvalue()).decode()
+        
+        return Response({
+            'success': True,
+            'token': qr_token.token,
+            'qr_image': f"data:image/png;base64,{qr_image_base64}",
+            'expires_at': qr_token.expires_at,
+            'expires_in_minutes': 10
+        })
+        
+    except Exception as e:
+        logger.error(f"Ошибка генерации QR токена: {e}")
+        return Response({
+            'success': False,
+            'error': str(e)
+        }, status=500)
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def authenticate_qr_token(request):
+    """Аутентификация через QR токен"""
+    try:
+        token = request.data.get('token')
+        username = request.data.get('username', '')
+        
+        if not token:
+            return Response({
+                'success': False,
+                'error': 'Токен обязателен'
+            }, status=400)
+        
+        # Находим QR токен
+        try:
+            qr_token = QRToken.objects.get(token=token)
+        except QRToken.DoesNotExist:
+            return Response({
+                'success': False,
+                'error': 'Недействительный токен'
+            }, status=400)
+        
+        # Проверяем валидность
+        if not qr_token.is_valid():
+            return Response({
+                'success': False,
+                'error': 'Токен истек или уже использован'
+            }, status=400)
+        
+        # Создаем пользователя если нужно
+        if username:
+            user, created = CustomUser.objects.get_or_create(
+                username=username,
+                defaults={'first_name': username}
+            )
+        else:
+            # Создаем анонимного пользователя
+            user, created = CustomUser.objects.get_or_create(
+                username=f'qr_user_{qr_token.token[:8]}',
+                defaults={'first_name': f'QR User {qr_token.token[:8]}'}
+            )
+        
+        # Связываем токен с пользователем
+        qr_token.user = user
+        qr_token.use_token()
+        
+        # Создаем API токен
+        from rest_framework.authtoken.models import Token
+        api_token, created = Token.objects.get_or_create(user=user)
+        
+        return Response({
+            'success': True,
+            'auth_token': api_token.key,
+            'user_id': user.id,
+            'username': user.username,
+            'message': 'Аутентификация успешна'
+        })
+        
+    except Exception as e:
+        logger.error(f"Ошибка QR аутентификации: {e}")
+        return Response({
+            'success': False,
+            'error': str(e)
+        }, status=500)
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def qr_auth_status(request):
+    """Проверяет статус QR токена"""
+    token = request.GET.get('token')
+    
+    if not token:
+        return Response({
+            'success': False,
+            'error': 'Токен обязателен'
+        }, status=400)
+    
+    try:
+        qr_token = QRToken.objects.get(token=token)
+        
+        return Response({
+            'success': True,
+            'is_used': qr_token.is_used,
+            'is_valid': qr_token.is_valid(),
+            'expires_at': qr_token.expires_at,
+            'user': qr_token.user.username if qr_token.user else None
+        })
+        
+    except QRToken.DoesNotExist:
+        return Response({
+            'success': False,
+            'error': 'Токен не найден'
+        }, status=404)
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def obtain_auth_token(request):
+    """Получение токена аутентификации"""
+    from rest_framework.authtoken.models import Token
+    from django.contrib.auth import authenticate
+    
+    username = request.data.get('username')
+    password = request.data.get('password')
+    
+    if not username or not password:
+        return Response({
+            'success': False,
+            'error': 'Имя пользователя и пароль обязательны'
+        }, status=400)
+    
+    user = authenticate(username=username, password=password)
+    
+    if user:
+        token, created = Token.objects.get_or_create(user=user)
+        return Response({
+            'success': True,
+            'token': token.key,
+            'user_id': user.id,
+            'username': user.username
+        })
+    else:
+        return Response({
+            'success': False,
+            'error': 'Неверные учетные данные'
+        }, status=400)
+
+@api_view(['POST'])
+@permission_classes([permissions.IsAuthenticated])
+def create_activity(request):
+    """Создание записи активности"""
+    try:
+        data = request.data.copy()
+        data['user'] = request.user.id
+        
+        serializer = UserActivitySerializer(data=data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({
+                'success': True,
+                'data': serializer.data
+            })
+        else:
+            return Response({
+                'success': False,
+                'errors': serializer.errors
+            }, status=400)
+            
+    except Exception as e:
+        logger.error(f"Ошибка создания активности: {e}")
+        return Response({
+            'success': False,
+            'error': str(e)
+        }, status=500)
+
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated])
+def list_applications(request):
+    """Получение списка приложений пользователя"""
+    try:
+        applications = Application.objects.filter(user=request.user)
+        serializer = ApplicationSerializer(applications, many=True)
+        
+        return Response({
+            'success': True,
+            'data': serializer.data
+        })
+        
+    except Exception as e:
+        logger.error(f"Ошибка получения приложений: {e}")
+        return Response({
+            'success': False,
+            'error': str(e)
+        }, status=500)
+
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated])
+def get_statistics(request):
+    """Получение статистики пользователя"""
+    try:
+        days = int(request.GET.get('days', 7))
+        today = timezone.now().date()
+        start_date = today - timedelta(days=days-1)
+        
+        activities = UserActivity.objects.filter(
+            user=request.user,
+            start_time__date__gte=start_date,
+            start_time__date__lte=today
+        )
+        
+        total_seconds = 0
+        for activity in activities:
+            if activity.duration:
+                total_seconds += activity.duration.total_seconds()
+        
+        return Response({
+            'success': True,
+            'data': {
+                'total_time': format_duration(total_seconds),
+                'total_seconds': total_seconds,
+                'activities_count': activities.count(),
+                'period_days': days
+            }
+        })
+        
+    except Exception as e:
+        logger.error(f"Ошибка получения статистики: {e}")
+        return Response({
+            'success': False,
+            'error': str(e)
+        }, status=500)
+
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated])
+def get_user_profile(request):
+    """Получение профиля пользователя"""
+    try:
+        user = request.user
+        
+        return Response({
+            'success': True,
+            'data': {
+                'id': user.id,
+                'username': user.username,
+                'email': user.email,
+                'first_name': user.first_name,
+                'last_name': user.last_name,
+                'date_joined': user.date_joined
+            }
+        })
+        
+    except Exception as e:
+        logger.error(f"Ошибка получения профиля: {e}")
+        return Response({
+            'success': False,
+            'error': str(e)
+        }, status=500)

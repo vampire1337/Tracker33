@@ -1,6 +1,7 @@
 from django.db import models
 from users.models import CustomUser
 from django.utils import timezone
+import secrets
 
 class Application(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='tracked_apps', null=True, blank=True)
@@ -115,3 +116,49 @@ class TimeLog(models.Model):
             hours = duration.total_seconds() / 3600
             return f"{round(hours, 2)} hours"
         return "N/A"
+
+class QRToken(models.Model):
+    """Временные токены для QR-аутентификации"""
+    token = models.CharField(max_length=64, unique=True, verbose_name='Токен')
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, null=True, blank=True, verbose_name='Пользователь')
+    created_at = models.DateTimeField(default=timezone.now, verbose_name='Создан')
+    expires_at = models.DateTimeField(verbose_name='Истекает')
+    is_used = models.BooleanField(default=False, verbose_name='Использован')
+    client_info = models.JSONField(default=dict, blank=True, verbose_name='Информация о клиенте')
+    
+    class Meta:
+        verbose_name = 'QR Токен'
+        verbose_name_plural = 'QR Токены'
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['token']),
+            models.Index(fields=['expires_at']),
+            models.Index(fields=['is_used']),
+        ]
+    
+    def __str__(self):
+        return f"QR Token {self.token[:8]}... - {self.user.username if self.user else 'Анонимный'}"
+    
+    @classmethod
+    def generate_token(cls, user=None, expires_minutes=10):
+        """Генерирует новый QR токен"""
+        token = secrets.token_urlsafe(32)
+        expires_at = timezone.now() + timezone.timedelta(minutes=expires_minutes)
+        
+        return cls.objects.create(
+            token=token,
+            user=user,
+            expires_at=expires_at
+        )
+    
+    def is_valid(self):
+        """Проверяет действительность токена"""
+        return (
+            not self.is_used and 
+            timezone.now() < self.expires_at
+        )
+    
+    def use_token(self):
+        """Отмечает токен как использованный"""
+        self.is_used = True
+        self.save()

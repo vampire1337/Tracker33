@@ -1,0 +1,312 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Подключить клиент - Tracker33{% endblock %}
+
+{% block extra_css %}
+<style>
+.qr-container {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 20px;
+    padding: 2rem;
+    color: white;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+}
+
+.qr-code {
+    background: white;
+    padding: 20px;
+    border-radius: 15px;
+    display: inline-block;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.countdown {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #ffd700;
+}
+
+.status-indicator {
+    padding: 10px 20px;
+    border-radius: 10px;
+    font-weight: bold;
+    margin: 10px 0;
+}
+
+.status-waiting {
+    background: #17a2b8;
+    color: white;
+}
+
+.status-success {
+    background: #28a745;
+    color: white;
+}
+
+.status-expired {
+    background: #dc3545;
+    color: white;
+}
+
+.instruction-step {
+    background: rgba(255,255,255,0.1);
+    padding: 15px;
+    border-radius: 10px;
+    margin: 10px 0;
+    border-left: 4px solid #ffd700;
+}
+
+.btn-modern {
+    background: linear-gradient(45deg, #ff6b6b, #feca57);
+    border: none;
+    padding: 12px 30px;
+    border-radius: 25px;
+    font-weight: bold;
+    color: white;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    transition: transform 0.3s ease;
+}
+
+.btn-modern:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+
+.client-info {
+    background: rgba(255,255,255,0.1);
+    padding: 20px;
+    border-radius: 10px;
+    margin: 20px 0;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            
+            <!-- Заголовок -->
+            <div class="text-center mb-4">
+                <h1 class="display-4">🔗 Подключить Desktop клиент</h1>
+                <p class="lead">Сканируйте QR-код в приложении для мгновенного подключения</p>
+            </div>
+
+            <!-- QR код контейнер -->
+            <div class="qr-container text-center">
+                
+                <!-- Статус -->
+                <div id="status" class="status-indicator status-waiting">
+                    🔄 Ожидание подключения клиента...
+                </div>
+
+                <!-- Таймер -->
+                <div class="countdown mb-3">
+                    ⏱️ Осталось: <span id="countdown">10:00</span>
+                </div>
+
+                <!-- QR код -->
+                <div id="qr-container" class="mb-4">
+                    <div class="qr-code">
+                        <img id="qr-image" src="" alt="QR код" style="max-width: 300px;">
+                    </div>
+                </div>
+
+                <!-- Информация о токене -->
+                <div class="client-info">
+                    <h5>📱 Информация о подключении</h5>
+                    <p><strong>Токен:</strong> <code id="token-display">Генерируется...</code></p>
+                    <p><strong>Истекает:</strong> <span id="expires-display">Через 10 минут</span></p>
+                    <p><strong>Статус:</strong> <span id="token-status">Активен</span></p>
+                </div>
+
+                <!-- Кнопки управления -->
+                <div class="mt-4">
+                    <button id="refresh-btn" class="btn btn-modern me-3">
+                        🔄 Обновить QR-код
+                    </button>
+                    <button id="download-btn" class="btn btn-outline-light">
+                        📥 Скачать клиент
+                    </button>
+                </div>
+
+            </div>
+
+            <!-- Инструкции -->
+            <div class="mt-4">
+                <h3>📋 Инструкция по подключению</h3>
+                
+                <div class="instruction-step">
+                    <h5>1️⃣ Скачайте Desktop клиент</h5>
+                    <p>Загрузите последнюю версию клиента Tracker33 с нашего сервера</p>
+                </div>
+
+                <div class="instruction-step">
+                    <h5>2️⃣ Запустите приложение</h5>
+                    <p>Откройте Tracker33.exe и выберите "Подключение через QR-код"</p>
+                </div>
+
+                <div class="instruction-step">
+                    <h5>3️⃣ Сканируйте QR-код</h5>
+                    <p>Наведите камеру на QR-код выше. Подключение произойдет автоматически</p>
+                </div>
+
+                <div class="instruction-step">
+                    <h5>4️⃣ Начните мониторинг</h5>
+                    <p>После успешного подключения клиент начнет отслеживать вашу активность</p>
+                </div>
+            </div>
+
+            <!-- Альтернативные способы -->
+            <div class="mt-4">
+                <h3>🔧 Альтернативные способы подключения</h3>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title">🔢 PIN-код</h5>
+                                <p class="card-text">Если нет камеры, используйте PIN-код: <strong id="pin-code">Генерируется...</strong></p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title">⚙️ Ручная настройка</h5>
+                                <p class="card-text">Введите настройки вручную в клиенте</p>
+                                <button class="btn btn-outline-primary">Показать настройки</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+let qrToken = null;
+let countdownInterval = null;
+let statusCheckInterval = null;
+
+// Генерация QR кода
+async function generateQR() {
+    try {
+        const response = await fetch('/api/qr/generate/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        });
+
+        const data = await response.json();
+        
+        if (data.success) {
+            qrToken = data;
+            
+            // Отображаем QR код
+            document.getElementById('qr-image').src = data.qr_image;
+            document.getElementById('token-display').textContent = data.token.substring(0, 12) + '...';
+            document.getElementById('expires-display').textContent = new Date(data.expires_at).toLocaleString();
+            
+            // Генерируем PIN код (первые 6 цифр токена)
+            const pinCode = data.token.replace(/[^0-9]/g, '').substring(0, 6) || '123456';
+            document.getElementById('pin-code').textContent = pinCode;
+            
+            // Запускаем таймер
+            startCountdown(data.expires_at);
+            
+            // Проверяем статус
+            startStatusCheck();
+            
+        } else {
+            console.error('Ошибка генерации QR:', data.error);
+        }
+    } catch (error) {
+        console.error('Ошибка:', error);
+    }
+}
+
+// Таймер обратного отсчета
+function startCountdown(expiresAt) {
+    if (countdownInterval) clearInterval(countdownInterval);
+    
+    countdownInterval = setInterval(() => {
+        const now = new Date();
+        const expires = new Date(expiresAt);
+        const diff = expires - now;
+        
+        if (diff <= 0) {
+            document.getElementById('countdown').textContent = '00:00';
+            document.getElementById('status').className = 'status-indicator status-expired';
+            document.getElementById('status').textContent = '⏰ QR-код истек';
+            clearInterval(countdownInterval);
+            return;
+        }
+        
+        const minutes = Math.floor(diff / 60000);
+        const seconds = Math.floor((diff % 60000) / 1000);
+        document.getElementById('countdown').textContent = 
+            `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    }, 1000);
+}
+
+// Проверка статуса подключения
+function startStatusCheck() {
+    if (statusCheckInterval) clearInterval(statusCheckInterval);
+    
+    statusCheckInterval = setInterval(async () => {
+        if (!qrToken) return;
+        
+        try {
+            const response = await fetch(`/api/qr/status/?token=${qrToken.token}`);
+            const data = await response.json();
+            
+            if (data.success && data.is_used) {
+                document.getElementById('status').className = 'status-indicator status-success';
+                document.getElementById('status').textContent = `✅ Клиент подключен как ${data.user}`;
+                document.getElementById('token-status').textContent = 'Использован';
+                clearInterval(statusCheckInterval);
+                clearInterval(countdownInterval);
+                
+                // Показываем успешное подключение
+                setTimeout(() => {
+                    window.location.href = '/dashboard/';
+                }, 3000);
+            }
+        } catch (error) {
+            console.error('Ошибка проверки статуса:', error);
+        }
+    }, 2000);
+}
+
+// Получение CSRF токена
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+// Обработчики событий
+document.getElementById('refresh-btn').addEventListener('click', generateQR);
+document.getElementById('download-btn').addEventListener('click', () => {
+    window.open('/accounts/download-tracker/', '_blank');
+});
+
+// Автогенерация при загрузке
+document.addEventListener('DOMContentLoaded', generateQR);
+</script>
+{% endblock %} 

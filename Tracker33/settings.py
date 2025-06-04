@@ -121,6 +121,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'allauth',
     'allauth.account',
+    'widget_tweaks',
     
     'users',
     'tracking',
