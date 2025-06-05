@@ -173,6 +173,10 @@ class StatisticsView(LoginRequiredMixin, TemplateView):
                         
                 def __str__(self):
                     return self.name
+                    
+                def get_display_name(self):
+                    """Метод для совместимости с шаблонами"""
+                    return self.name
             apps.append(AppMock(app_data))
         
         # ОТЛАДКА: Проверяем что передаем в контекст
@@ -608,6 +612,10 @@ class DashboardView(LoginRequiredMixin, TemplateView):
                         setattr(self, key, value)
                         
                 def __str__(self):
+                    return self.name
+                    
+                def get_display_name(self):
+                    """Метод для совместимости с шаблонами"""
                     return self.name
             apps.append(AppMock(app_data))
         

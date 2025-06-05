@@ -174,7 +174,7 @@
                                             <i class="fas fa-minus"></i>
                                         {% endif %}
                                     </span>
-                                    {{ activity.application.name }}
+                                    {{ activity.application.get_display_name }}
                                 </td>
                                 <td>
                                     {% if activity.duration %}

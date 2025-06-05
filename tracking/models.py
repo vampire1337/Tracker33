@@ -24,7 +24,37 @@ class Application(models.Model):
         ]
 
     def __str__(self):
-        return f"{self.name} ({self.process_name})"
+        # Если name выглядит как ID или число, используем process_name
+        if self.name and not self.name.isdigit():
+            return f"{self.name}"
+        elif self.process_name:
+            # Удаляем расширение .exe для красивого отображения
+            display_name = self.process_name.replace('.exe', '')
+            return display_name
+        else:
+            return f"Приложение #{self.id}"
+
+    def get_display_name(self):
+        """Возвращает читаемое название приложения для отображения в UI"""
+        # Если name выглядит как ID или число, используем process_name
+        if self.name and not self.name.isdigit():
+            return self.name
+        elif self.process_name:
+            # Удаляем расширение .exe и улучшаем отображение
+            display_name = self.process_name.replace('.exe', '')
+            # Приводим к более читаемому виду
+            if display_name.lower() == 'chrome':
+                return 'Google Chrome'
+            elif display_name.lower() == 'firefox':
+                return 'Mozilla Firefox'
+            elif display_name.lower() == 'msedge':
+                return 'Microsoft Edge'
+            elif display_name.lower() == 'cursor':
+                return 'Cursor'
+            else:
+                return display_name.title()
+        else:
+            return f"Неизвестное приложение #{self.id}"
 
 class UserActivity(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, verbose_name='Пользователь')

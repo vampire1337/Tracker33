@@ -232,7 +232,7 @@
                                             <i class="fas fa-desktop text-primary"></i>
                                         </div>
                                         <div>
-                                            <strong>{{ app.name }}</strong>
+                                            <strong>{{ app.get_display_name }}</strong>
                                             {% if app.process_name and app.process_name != app.name %}
                                                 <br><small class="text-muted">{{ app.process_name }}</small>
                                             {% endif %}

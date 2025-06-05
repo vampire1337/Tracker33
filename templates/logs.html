@@ -24,7 +24,7 @@
                         <select class="form-select" id="application" name="application">
                             <option value="">Все приложения</option>
                             {% for app in applications %}
-                                <option value="{{ app.id }}" {% if request.GET.application == app.id|stringformat:"s" %}selected{% endif %}>{{ app.name }}</option>
+                                <option value="{{ app.id }}" {% if request.GET.application == app.id|stringformat:"s" %}selected{% endif %}>{{ app.get_display_name }}</option>
                             {% endfor %}
                         </select>
                     </div>

@@ -27,4 +27,9 @@ class CustomUser(AbstractUser):
         verbose_name_plural = 'Пользователи'
 
     def __str__(self):
-        return f"{self.username} - {self.position}"
+        if self.position:
+            return f"{self.username} - {self.position}"
+        elif self.first_name and self.last_name:
+            return f"{self.username} ({self.first_name} {self.last_name})"
+        else:
+            return self.username
