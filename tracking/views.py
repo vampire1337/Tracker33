@@ -619,34 +619,38 @@ class DashboardView(LoginRequiredMixin, TemplateView):
         for i, app in enumerate(apps[:5]):  # Показываем первые 5
             print(f"  App {i}: name='{app.name}', process_name='{getattr(app, 'process_name', 'None')}', percentage={getattr(app, 'percentage', 0)}")
         
-        # Создаем почасовую статистику для графика (исключая системные процессы)
+        # Создаем активность по часам - ОПТИМИЗИРОВАНО: один запрос вместо 24
         hourly_activity = []
+        
+        # Получаем все активности за сегодня одним запросом
+        today_start = timezone.make_aware(datetime.combine(today, time.min))
+        today_end = timezone.make_aware(datetime.combine(today, time.max))
+        
+        activities_today = activities.filter(
+            start_time__gte=today_start,
+            start_time__lte=today_end
+        ).values('start_time', 'duration', 'application__process_name')
+        
+        # Создаем массив для 24 часов
+        hours_data = {hour: 0 for hour in range(24)}
+        
+        # Обрабатываем все активности за один проход
+        for activity in activities_today:
+            # Пропускаем системные процессы
+            if is_system_process(activity['application__process_name']):
+                continue
+                
+            hour = activity['start_time'].hour
+            if activity['duration']:
+                hours_data[hour] += activity['duration'].total_seconds()
+        
+        # Формируем результат для графика
         for hour in range(24):
-            start_hour = timezone.make_aware(datetime.combine(today, time(hour=hour, minute=0)))
-            end_hour = timezone.make_aware(datetime.combine(today, time(hour=hour + 1 if hour < 23 else 23, minute=59, second=59)))
-            
-            hour_activities = activities.filter(
-                start_time__gte=start_hour,
-                start_time__lt=end_hour
-            )
-            
-            hour_seconds = 0
-            for activity in hour_activities:
-                # Пропускаем системные процессы
-                if is_system_process(activity.application.process_name):
-                    continue
-                    
-                if activity.duration:
-                    hour_seconds += activity.duration.total_seconds()
-                elif activity.start_time and activity.end_time:
-                    duration = activity.end_time - activity.start_time
-                    hour_seconds += duration.total_seconds()
-            
-            hour_minutes = round(hour_seconds / 60, 0)
+            hour_minutes = round(hours_data[hour] / 60, 0)
             hourly_activity.append({
                 'hour': hour,
                 'minutes': hour_minutes,
-                'seconds': hour_seconds
+                'seconds': hours_data[hour]
             })
         
         # Рассчитываем продуктивность
@@ -1361,28 +1365,36 @@ class DashboardAPIView(APIView):
         
         # Рассчитываем активность по часам
         hourly_activity = []
+        
+        # Получаем все активности за сегодня одним запросом
+        today_start = timezone.make_aware(datetime.combine(today, time.min))
+        today_end = timezone.make_aware(datetime.combine(today, time.max))
+        
+        activities_today = today_activities.filter(
+            start_time__gte=today_start,
+            start_time__lte=today_end
+        ).values('start_time', 'duration', 'application__process_name')
+        
+        # Создаем массив для 24 часов
+        hours_data = {hour: 0 for hour in range(24)}
+        
+        # Обрабатываем все активности за один проход
+        for activity in activities_today:
+            # Пропускаем системные процессы
+            if is_system_process(activity['application__process_name']):
+                continue
+                
+            hour = activity['start_time'].hour
+            if activity['duration']:
+                hours_data[hour] += activity['duration'].total_seconds()
+        
+        # Формируем результат для графика
         for hour in range(24):
-            hour_start = timezone.datetime.combine(today, time(hour, 0))
-            hour_end = timezone.datetime.combine(today, time(hour, 59, 59))
-            hour_start = timezone.make_aware(hour_start)
-            hour_end = timezone.make_aware(hour_end)
-            
-            hour_activities = today_activities.filter(
-                start_time__gte=hour_start,
-                start_time__lte=hour_end
-            )
-            
-            hour_seconds = 0
-            for activity in hour_activities:
-                if activity.duration:
-                    hour_seconds += activity.duration.total_seconds()
-                elif activity.start_time and activity.end_time:
-                    duration = activity.end_time - activity.start_time
-                    hour_seconds += duration.total_seconds()
-            
+            hour_minutes = round(hours_data[hour] / 60, 0)
             hourly_activity.append({
                 'hour': hour,
-                'minutes': int(hour_seconds / 60)
+                'minutes': hour_minutes,
+                'seconds': hours_data[hour]
             })
         
         # Форматируем общее время
