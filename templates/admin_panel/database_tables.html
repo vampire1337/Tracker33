@@ -2,37 +2,26 @@
 
 {% block admin_content %}
 <h1 class="admin-title">
-    <i class="fas fa-database me-3"></i>Прямой просмотр базы данных
+    <i class="fas fa-database me-3"></i>Просмотр базы данных
 </h1>
 
-<!-- СЕРЬЕЗНОЕ ПРЕДУПРЕЖДЕНИЕ -->
-<div class="alert alert-danger border-danger">
+<!-- Информационное описание -->
+<div class="alert alert-info border-info">
     <div class="d-flex align-items-center mb-2">
-        <i class="fas fa-exclamation-triangle fa-2x me-3"></i>
+        <i class="fas fa-info-circle fa-2x me-3"></i>
         <div>
-            <h5 class="alert-heading mb-1">⚠️ ВНИМАНИЕ! ТОЛЬКО ДЛЯ ЭКСПЕРТОВ ⚠️</h5>
+            <h5 class="alert-heading mb-1">📊 Диагностика системы</h5>
             <p class="mb-0">
-                Этот раздел предназначен только для опытных администраторов, которые понимают структуру базы данных. 
-                <strong>Здесь отображаются сырые данные системы.</strong>
+                Здесь можно просматривать данные системы для диагностики и анализа работы.
             </p>
         </div>
     </div>
     <hr>
     <ul class="mb-0">
-        <li><strong>НЕ ИЗМЕНЯЙТЕ</strong> данные напрямую в базе!</li>
-        <li><strong>НЕ ДЕЛИТЕСЬ</strong> скриншотами - здесь могут быть пароли!</li>
-        <li><strong>ИСПОЛЬЗУЙТЕ</strong> только для диагностики проблем!</li>
+        <li><strong>Просматривайте</strong> данные для анализа работы системы</li>
+        <li><strong>Используйте</strong> для диагностики проблем и мониторинга</li>
+        <li><strong>Данные обновляются</strong> в реальном времени</li>
     </ul>
-</div>
-
-<!-- Объяснение раздела -->
-<div class="section-description">
-    <h6><i class="fas fa-info-circle me-2"></i>Для чего это нужно?</h6>
-    <p>
-        База данных хранит всю информацию системы в виде таблиц. Здесь можно посмотреть сырые данные 
-        для диагностики проблем, которые не видны в обычном интерфейсе. Например, проверить, 
-        правильно ли записываются данные от клиентов или есть ли дублирующиеся записи.
-    </p>
 </div>
 
 <div class="row">

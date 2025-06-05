@@ -123,23 +123,15 @@
 <!-- График активности по часам -->
 <div class="row mt-4">
     <div class="col-md-6">
-        <!-- График библиотеки временно не нужны -->
-        <!-- <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> -->
-        
-        <!-- Заглушка вместо графика -->
         <div class="card h-100">
             <div class="card-header">
                 <h3 class="card-title">
-                    <i class="fas fa-info-circle me-2"></i>
-                    Системная информация
+                    <i class="fas fa-chart-bar me-2"></i>
+                    Активность по часам
                 </h3>
             </div>
-            <div class="card-body d-flex align-items-center justify-content-center">
-                <div class="text-center">
-                    <i class="fas fa-cogs fa-3x text-muted mb-3"></i>
-                    <h5 class="text-muted">Графики временно отключены</h5>
-                    <p class="text-muted">Система работает в упрощенном режиме</p>
-                </div>
+            <div class="card-body">
+                <canvas id="hourlyChart" width="400" height="200"></canvas>
             </div>
         </div>
     </div>
@@ -484,86 +476,39 @@
 {% endblock %}
 
 {% block extra_js %}
-<!-- График библиотеки временно не нужны -->
-<!-- <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
-// Базовый JavaScript для дашборда без графиков
+// JavaScript для дашборда с графиками
 document.addEventListener('DOMContentLoaded', function() {
     console.log('Дашборд загружен');
     
-    // Обновление времени каждую секунду
-    function updateCurrentTime() {
-        const now = new Date();
-        const timeString = now.toLocaleTimeString('ru-RU', {
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit'
-        });
-        const dateString = now.toLocaleDateString('ru-RU', {
-            weekday: 'long',
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-        });
+    // Создание графика активности по часам
+    const ctx = document.getElementById('hourlyChart');
+    if (ctx) {
+        // Данные для графика активности по часам
+        const hourlyData = [
+            {% for hour_data in hourly_activity %}
+                {{ hour_data.minutes|default:0 }}{% if not forloop.last %},{% endif %}
+            {% endfor %}
+        ];
         
-        // Обновляем элементы, если они есть
-        const timeElement = document.getElementById('current-time');
-        const dateElement = document.getElementById('current-date');
+        const hourLabels = [
+            {% for hour_data in hourly_activity %}
+                '{{ hour_data.hour }}:00'{% if not forloop.last %},{% endif %}
+            {% endfor %}
+        ];
         
-        if (timeElement) timeElement.textContent = timeString;
-        if (dateElement) dateElement.textContent = dateString;
-    }
-    
-    // Запускаем обновление времени
-    updateCurrentTime();
-    setInterval(updateCurrentTime, 1000);
-    
-    /*
-    // === ГРАФИК АКТИВНОСТИ - ВРЕМЕННО ОТКЛЮЧЕН ===
-    
-    // Данные для графика активности по часам
-    const hourlyData = [
-        {% for hour_data in hourly_activity %}
-            {{ hour_data.minutes|default:0 }}{% if not forloop.last %},{% endif %}
-        {% endfor %}
-    ];
-    
-    console.log('Данные активности по часам:', hourlyData);
-    
-    // Создание графика
-    const ctx = document.getElementById('activityChart');
-    if (!ctx) {
-        console.error('График activityChart не найден!');
-    } else {
-        // Генерируем метки времени (каждые 2 часа)
-        const timeLabels = [];
-        for (let i = 0; i < 24; i += 2) {
-            timeLabels.push(`${i}:00`);
-        }
-        
-        // Группируем данные по 2 часа
-        const groupedData = [];
-        for (let i = 0; i < 24; i += 2) {
-            const sum = (hourlyData[i] || 0) + (hourlyData[i + 1] || 0);
-            groupedData.push(sum);
-        }
-        
-        console.log('Сгруппированные данные:', groupedData);
-        console.log('Метки времени:', timeLabels);
-        
-        const activityChart = new Chart(ctx, {
-            type: 'line',
+        new Chart(ctx, {
+            type: 'bar',
             data: {
-                labels: timeLabels,
+                labels: hourLabels,
                 datasets: [{
                     label: 'Минуты активности',
-                    data: groupedData,
-                    borderColor: '#007bff',
-                    backgroundColor: 'rgba(0, 123, 255, 0.1)',
-                    borderWidth: 2,
-                    fill: true,
-                    tension: 0.3
+                    data: hourlyData,
+                    backgroundColor: 'rgba(0, 123, 255, 0.8)',
+                    borderColor: 'rgba(0, 123, 255, 1)',
+                    borderWidth: 1
                 }]
             },
             options: {
@@ -585,25 +530,47 @@ document.addEventListener('DOMContentLoaded', function() {
                     x: {
                         title: {
                             display: true,
-                            text: 'Время'
+                            text: 'Час дня'
                         }
                     }
                 }
             }
         });
-        
-        console.log('График активности создан');
     }
     
-    === КОНЕЦ ОТКЛЮЧЕННОГО ГРАФИКА ===
-    */
+    // Обновление времени каждую секунду
+    function updateCurrentTime() {
+        const now = new Date();
+        const timeString = now.toLocaleTimeString('ru-RU', {
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit'
+        });
+        
+        const timeElement = document.getElementById('current-time');
+        if (timeElement) timeElement.textContent = timeString;
+    }
     
-    console.log('Дашборд инициализирован без графиков');
+    updateCurrentTime();
+    setInterval(updateCurrentTime, 1000);
 });
 
-// Функция установки цели (заглушка)
+// Функция установки цели
 function showGoalSetter() {
-    alert('Функция установки целей будет добавлена в следующей версии');
+    const goalModal = new bootstrap.Modal(document.getElementById('goalModal'));
+    goalModal.show();
+}
+
+function saveGoals() {
+    const workTime = document.getElementById('workTimeGoal').value;
+    const productivity = document.getElementById('productivityGoal').value;
+    const activity = document.getElementById('activityGoal').value;
+    
+    // Здесь можно добавить сохранение в localStorage или отправку на сервер
+    alert(`Цели сохранены: ${workTime}ч работы, ${productivity}% продуктивности, ${activity} нажатий клавиш`);
+    
+    const goalModal = bootstrap.Modal.getInstance(document.getElementById('goalModal'));
+    goalModal.hide();
 }
 </script>
 {% endblock %} 

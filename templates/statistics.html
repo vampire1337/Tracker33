@@ -114,8 +114,7 @@
     </div>
 </div>
 
-<!-- Графики (временно скрыты) -->
-<!--
+<!-- Графики -->
 <div class="row mt-4">
     <div class="col-md-6">
         <div class="card h-100">
@@ -156,7 +155,6 @@
         </div>
     </div>
 </div>
--->
 
 <!-- Хитмапа активности по дням и часам (временно скрыта) -->
 <!--
@@ -354,10 +352,6 @@
 document.addEventListener('DOMContentLoaded', function() {
     console.log('Страница статистики загружена');
 
-    // Временно отключены графики - только функционал переключения продуктивности
-    /*
-    // === ГРАФИКИ ВРЕМЕННО ОТКЛЮЧЕНЫ ===
-    
     // Данные для графиков
     const dailyData = [
         {% for day in daily_data %}
@@ -503,12 +497,6 @@ document.addEventListener('DOMContentLoaded', function() {
         console.error('Элемент applicationPieChart не найден!');
     }
 
-    // Хитмапа активности (простая реализация с D3)
-    createActivityHeatmap();
-    
-    === КОНЕЦ ОТКЛЮЧЕННЫХ ГРАФИКОВ ===
-    */
-
     // Обработчик переключения продуктивности приложений
     document.querySelectorAll('.toggle-productive').forEach(function(toggle) {
         toggle.addEventListener('change', function() {
@@ -562,83 +550,6 @@ document.addEventListener('DOMContentLoaded', function() {
     
     console.log('Статистика полностью загружена');
 });
-
-/*
-// === ФУНКЦИИ ДЛЯ ГРАФИКОВ - ВРЕМЕННО ОТКЛЮЧЕНЫ ===
-
-// Функция создания хитмапы активности
-function createActivityHeatmap() {
-    console.log('Создание хитмапы активности...');
-    
-    const container = d3.select('#activityHeatmap');
-    if (container.empty()) {
-        console.error('Элемент activityHeatmap не найден!');
-        return;
-    }
-    
-    const width = container.node().getBoundingClientRect().width || 800;
-    const height = 150;
-    
-    const svg = container.append('svg')
-        .attr('width', width)
-        .attr('height', height);
-        
-    // Данные для хитмапы
-    const days = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
-    const hours = Array.from({length: 24}, (_, i) => i);
-    
-    const cellWidth = Math.max((width - 100) / 24, 10);
-    const cellHeight = Math.max((height - 40) / 7, 15);
-    
-    // Создаем ячейки
-    for (let day = 0; day < 7; day++) {
-        for (let hour = 0; hour < 24; hour++) {
-            // Генерируем случайную интенсивность для демонстрации
-            // В реальной реализации здесь будут данные из базы
-            const intensity = Math.random() * 0.8 + 0.1; // От 0.1 до 0.9
-            
-            svg.append('rect')
-                .attr('x', 50 + hour * cellWidth)
-                .attr('y', 20 + day * cellHeight)
-                .attr('width', Math.max(cellWidth - 1, 8))
-                .attr('height', Math.max(cellHeight - 1, 12))
-                .attr('fill', `rgba(54, 162, 235, ${intensity})`)
-                .attr('stroke', '#fff')
-                .attr('stroke-width', 1)
-                .append('title')
-                .text(`${days[day]} ${hour}:00 - Интенсивность: ${Math.round(intensity * 100)}%`);
-        }
-    }
-    
-    // Добавляем подписи дней
-    svg.selectAll('.day-label')
-        .data(days)
-        .enter()
-        .append('text')
-        .attr('class', 'day-label')
-        .attr('x', 10)
-        .attr('y', (d, i) => 35 + i * cellHeight)
-        .text(d => d)
-        .style('font-size', '12px')
-        .style('text-anchor', 'start');
-        
-    // Добавляем подписи часов (каждые 4 часа)
-    svg.selectAll('.hour-label')
-        .data([0, 4, 8, 12, 16, 20])
-        .enter()
-        .append('text')
-        .attr('class', 'hour-label')
-        .attr('x', d => 50 + d * cellWidth)
-        .attr('y', 15)
-        .text(d => `${d}:00`)
-        .style('font-size', '10px')
-        .style('text-anchor', 'start');
-        
-    console.log('Хитмапа создана');
-}
-
-=== КОНЕЦ ОТКЛЮЧЕННЫХ ФУНКЦИЙ ===
-*/
 
 // Функция для показа уведомлений
 function showNotification(message, type) {
