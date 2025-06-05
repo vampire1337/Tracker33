@@ -1,0 +1,17 @@
+2025-05-11 12:12:52,877 - INFO - Запуск приложения
+2025-05-11 12:12:53,222 - INFO - Модули успешно импортированы
+2025-05-11 12:12:53,222 - INFO - Инициализация приложения
+2025-05-11 12:12:53,236 - INFO - Конфигурация успешно загружена из C:\Users\mihai\Heist_master_PC\Documents\GitHub\Tracker33\desktop_app\config.ini
+2025-05-11 12:12:53,237 - INFO - Загружено 10 отслеживаемых приложений.
+2025-05-11 12:12:53,238 - INFO - Конфигурация успешно сохранена в C:\Users\mihai\Heist_master_PC\Documents\GitHub\Tracker33\desktop_app\config.ini
+2025-05-11 12:12:53,529 - ERROR - Ошибка при обновлении списка приложений: 'TimeTrackerApp' object has no attribute 'offline_mode'
+Traceback (most recent call last):
+  File "C:\Users\mihai\Heist_master_PC\Documents\GitHub\Tracker33\desktop_app\main.py", line 1132, in update_app_list
+    sync_result = self.sync_productive_apps_from_server()
+  File "C:\Users\mihai\Heist_master_PC\Documents\GitHub\Tracker33\desktop_app\main.py", line 2361, in sync_productive_apps_from_server
+    if self.offline_mode or not self.api_client:
+       ^^^^^^^^^^^^^^^^^
+AttributeError: 'TimeTrackerApp' object has no attribute 'offline_mode'
+2025-05-11 12:12:53,563 - INFO - Запущен поток отслеживания активности
+2025-05-11 12:12:53,684 - INFO - Приложение запущено и показано
+2025-05-11 12:12:54,685 - INFO - Начата новая сессия активности: App='python.exe', Title='Time Tracker PRO'

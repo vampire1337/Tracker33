@@ -10,32 +10,40 @@
 ## 🚀 БЫСТРЫЙ СТАРТ
 
 ### Шаг 1: Установка Python
+
 - Скачайте Python 3.8+ с официального сайта https://python.org/downloads/
 - При установке ОБЯЗАТЕЛЬНО поставьте галочку "Add Python to PATH"
 
 ### Шаг 2: Установка зависимостей
+
 Откройте командную строку в папке проекта и выполните:
+
 ```bash
 pip install -r requirements.txt
 ```
 
 ### Шаг 3: Инициализация базы данных
+
 ```bash
 python manage.py migrate
 ```
 
 ### Шаг 4: Создание администратора
+
 ```bash
 python manage.py createsuperuser
 ```
+
 Введите желаемые данные для входа в систему.
 
 ### Шаг 5: Запуск сервера
+
 ```bash
 python manage.py runserver 127.0.0.1:8001
 ```
 
 ### Шаг 6: Запуск клиента
+
 - Либо запустите `Tracker33.exe` из папки static/downloads/
 - Либо запустите: `python desktop_app/main.py`
 
@@ -60,6 +68,7 @@ Tracker33/
 ## ⚙️ НАСТРОЙКА СИСТЕМЫ
 
 ### Настройка Django (settings.py)
+
 Основные настройки находятся в `Tracker33/settings.py`:
 
 - `SECRET_KEY` - секретный ключ Django (смените на продакшене!)
@@ -68,6 +77,7 @@ Tracker33/
 - База данных по умолчанию: SQLite (для продакшена рекомендуется PostgreSQL)
 
 ### Настройка клиента (config.ini)
+
 В файле `desktop_app/config.ini`:
 
 ```ini
@@ -84,14 +94,17 @@ idle_threshold = 300000
 ## 👤 СОЗДАНИЕ ПОЛЬЗОВАТЕЛЕЙ
 
 ### Через админ-панель:
+
 1. Перейдите на http://127.0.0.1:8001/admin/
 2. Войдите под администратором
 3. Создайте нужных пользователей
 
 ### Через Django shell:
+
 ```bash
 python manage.py shell
 ```
+
 ```python
 from users.models import CustomUser
 user = CustomUser.objects.create_user(
@@ -104,12 +117,14 @@ user = CustomUser.objects.create_user(
 ## 📊 РАБОТА С СИСТЕМОЙ
 
 ### Web-интерфейс
+
 - **Главная страница**: http://127.0.0.1:8001/
 - **Статистика**: http://127.0.0.1:8001/statistics/
 - **Логи активности**: http://127.0.0.1:8001/logs/
 - **Админ-панель**: http://127.0.0.1:8001/admin/
 
 ### Desktop-клиент
+
 1. Запустите `Tracker33.exe`
 2. Введите логин/пароль от web-системы
 3. Клиент автоматически начнет отслеживание
@@ -118,16 +133,19 @@ user = CustomUser.objects.create_user(
 ## 🔧 API ЭНДПОИНТЫ
 
 ### Аутентификация
+
 - `POST /api/auth/token/` - получение токена
 - `POST /api/auth/register/` - регистрация пользователя
 
 ### Отслеживание
+
 - `GET /api/activities/` - список активностей
 - `POST /api/activities/` - создание активности
 - `GET /api/applications/` - список приложений
 - `POST /api/applications/` - создание приложения
 
 ### Статистика
+
 - `GET /api/statistics/` - общая статистика
 - `GET /api/daily-activity/` - активность по дням
 - `GET /api/time-distribution/` - распределение времени
@@ -136,31 +154,40 @@ user = CustomUser.objects.create_user(
 ## 🐛 УСТРАНЕНИЕ ПРОБЛЕМ
 
 ### Проблема: Клиент не подключается к серверу
-**Решение**: 
+
+**Решение**:
+
 1. Убедитесь, что сервер запущен: `python manage.py runserver 127.0.0.1:8001`
 2. Проверьте URL в config.ini
 3. Проверьте логин/пароль
 
 ### Проблема: Ошибка базы данных
+
 **Решение**:
+
 ```bash
 python manage.py migrate
 ```
 
 ### Проблема: Статические файлы не загружаются
+
 **Решение**:
+
 ```bash
 python manage.py collectstatic
 ```
 
 ### Проблема: Ошибки в клиенте
+
 **Решение**: Проверьте логи в папке:
+
 - Windows: `%APPDATA%/TimeTracker/logs/`
 - Linux/Mac: `~/.local/share/TimeTracker/logs/`
 
 ## 🔒 БЕЗОПАСНОСТЬ
 
 ### Для продакшена ОБЯЗАТЕЛЬНО:
+
 1. Смените `SECRET_KEY` в settings.py
 2. Установите `DEBUG = False`
 3. Настройте HTTPS
@@ -168,6 +195,7 @@ python manage.py collectstatic
 5. Регулярно обновляйте зависимости
 
 ### Рекомендации:
+
 - Используйте PostgreSQL вместо SQLite
 - Настройте резервное копирование БД
 - Ограничьте доступ к серверу через firewall
@@ -175,6 +203,7 @@ python manage.py collectstatic
 ## 📈 ПРОИЗВОДИТЕЛЬНОСТЬ
 
 ### Для больших нагрузок:
+
 1. Используйте Gunicorn + Nginx
 2. Настройте кэширование (Redis/Memcached)
 3. Оптимизируйте базу данных
@@ -183,17 +212,22 @@ python manage.py collectstatic
 ## 📝 ЛОГИРОВАНИЕ
 
 ### Сервер (Django):
+
 Логи сохраняются в:
+
 - Консоль (при DEBUG=True)
 - Системные логи (при DEBUG=False)
 
 ### Клиент:
+
 Логи сохраняются в:
+
 - `%APPDATA%/TimeTracker/logs/tracker.log`
 
 ## 🔄 ОБНОВЛЕНИЕ СИСТЕМЫ
 
 ### Обновление серверной части:
+
 1. Остановите сервер
 2. Обновите код
 3. Выполните: `python manage.py migrate`
@@ -201,6 +235,7 @@ python manage.py collectstatic
 5. Перезапустите сервер
 
 ### Обновление клиента:
+
 1. Замените `Tracker33.exe` на новую версию
 2. Перезапустите клиент
 
@@ -214,6 +249,7 @@ python manage.py collectstatic
 ## 📞 ТЕХНИЧЕСКАЯ ПОДДЕРЖКА
 
 При возникновении проблем:
+
 1. Проверьте логи клиента и сервера
 2. Убедитесь, что все зависимости установлены
 3. Проверьте сетевое подключение
@@ -223,9 +259,3 @@ python manage.py collectstatic
 
 Система разработана для внутреннего использования.
 Все права защищены.
-
----
-
-**Версия**: 1.0
-**Дата**: Декабрь 2024
-**Разработчик**: Ваша компания 
