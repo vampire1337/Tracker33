@@ -165,3 +165,13 @@ INFO 2025-06-05 05:52:45,316 logging 47796 47024 {"timestamp": "2025-06-05T05:52
 INFO 2025-06-05 05:54:13,393 logging 47796 47024 {"timestamp": "2025-06-05T05:54:13.393816", "view_name": "statistics", "response_time": 0.14514899253845215, "status_code": 200}
 INFO 2025-06-05 05:54:14,398 logging 47796 47024 {"timestamp": "2025-06-05T05:54:14.398220", "view_name": "landing", "response_time": 0.0027761459350585938, "status_code": 302}
 INFO 2025-06-05 05:54:14,525 logging 47796 47024 {"timestamp": "2025-06-05T05:54:14.525440", "view_name": "dashboard", "response_time": 0.12472867965698242, "status_code": 200}
+INFO 2025-06-05 05:56:49,903 logging 48716 34376 {"timestamp": "2025-06-05T05:56:49.903049", "view_name": "dashboard", "response_time": 0.02908611297607422, "status_code": 200}
+INFO 2025-06-05 05:56:56,538 logging 48716 34376 {"timestamp": "2025-06-05T05:56:56.538101", "view_name": "statistics", "response_time": 0.013736248016357422, "status_code": 200}
+INFO 2025-06-05 05:57:14,276 logging 48716 34376 {"timestamp": "2025-06-05T05:57:14.276575", "view_name": "dashboard", "response_time": 0.013086557388305664, "status_code": 200}
+INFO 2025-06-05 05:57:24,311 logging 48716 34376 {"timestamp": "2025-06-05T05:57:24.311358", "view_name": "logs", "response_time": 0.008418083190917969, "status_code": 200}
+INFO 2025-06-05 05:57:25,353 logging 48716 34376 {"timestamp": "2025-06-05T05:57:25.353353", "view_name": "admin_panel:dashboard", "response_time": 0.014166116714477539, "status_code": 200}
+INFO 2025-06-05 05:57:26,670 logging 48716 34376 {"timestamp": "2025-06-05T05:57:26.670809", "view_name": "dashboard", "response_time": 0.010973691940307617, "status_code": 200}
+INFO 2025-06-05 05:57:43,165 logging 48716 34376 {"timestamp": "2025-06-05T05:57:43.165034", "view_name": "statistics", "response_time": 0.013310432434082031, "status_code": 200}
+INFO 2025-06-05 05:58:28,050 logging 48716 34376 {"timestamp": "2025-06-05T05:58:28.050917", "view_name": "statistics", "response_time": 0.021725177764892578, "status_code": 200}
+INFO 2025-06-05 05:58:39,953 logging 48716 34376 {"timestamp": "2025-06-05T05:58:39.953140", "view_name": "statistics", "response_time": 0.011189699172973633, "status_code": 200}
+INFO 2025-06-05 05:58:48,588 logging 48716 34376 {"timestamp": "2025-06-05T05:58:48.588704", "view_name": "dashboard", "response_time": 0.011873006820678711, "status_code": 200}

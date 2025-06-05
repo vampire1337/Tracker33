@@ -131,7 +131,18 @@
                 </div>
             </div>
             <div class="card-body">
-                <canvas id="dailyActivityChart" width="400" height="300" style="max-height: 300px; max-width: 100%;"></canvas>
+                {% if daily_data %}
+                    <canvas id="dailyActivityChart" width="400" height="300" style="max-height: 300px; max-width: 100%;"></canvas>
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-chart-line fa-4x text-muted mb-3"></i>
+                        <h5 class="text-muted">Нет данных о активности</h5>
+                        <p class="text-muted">Данные появятся после установки и использования клиента трекинга</p>
+                        <a href="{% url 'download_tracker' %}" class="btn btn-primary">
+                            <i class="fas fa-download me-2"></i>Скачать клиент
+                        </a>
+                    </div>
+                {% endif %}
             </div>
         </div>
     </div>
@@ -150,7 +161,18 @@
                 </div>
             </div>
             <div class="card-body">
-                <canvas id="applicationPieChart" width="400" height="300" style="max-height: 300px; max-width: 100%;"></canvas>
+                {% if apps %}
+                    <canvas id="applicationPieChart" width="400" height="300" style="max-height: 300px; max-width: 100%;"></canvas>
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-chart-pie fa-4x text-muted mb-3"></i>
+                        <h5 class="text-muted">Нет данных о приложениях</h5>
+                        <p class="text-muted">График появится когда будут данные о используемых приложениях</p>
+                        <a href="{% url 'download_tracker' %}" class="btn btn-primary">
+                            <i class="fas fa-download me-2"></i>Скачать клиент
+                        </a>
+                    </div>
+                {% endif %}
             </div>
         </div>
     </div>
