@@ -317,95 +317,76 @@ class UserActivityViewSet(viewsets.ModelViewSet):
             # Логируем полученные данные для отладки
             print(f"Получены данные: app_name={app_name}, process_name={process_name}, keyboard_presses={keyboard_presses}")
             
-            # Пытаемся получить существующее приложение
-            application = None
+            # Получаем приложение из сериализатора (может быть None)
+            application = serializer.validated_data.get('application')
             
-            # ИСПРАВЛЕНИЕ: Проверяем, является ли process_name числом (это ошибка - ID вместо имени)
-            is_numeric_id = False
-            process_id = None
-            try:
-                if isinstance(process_name, int) or (isinstance(process_name, str) and process_name.isdigit()):
-                    is_numeric_id = True
-                    process_id = int(process_name)
-                    try:
-                        application = Application.objects.get(id=process_id, user=self.request.user)
-                        print(f"Найдено приложение по ID={process_id}: {application}")
-                        # ВАЖНО: Если нашли по ID, больше не ищем
-                    except Application.DoesNotExist:
-                        print(f"Приложение с ID={process_id} не найдено, будем создавать новое")
-                        is_numeric_id = False
-                        application = None
-            except (TypeError, ValueError, AttributeError) as e:
-                print(f"Ошибка при обработке process_name как ID: {e}")
-                is_numeric_id = False
-            
-            # Если приложение не найдено по ID, ищем по имени процесса
-            if not application and not is_numeric_id:
+            # Если приложение не передано или не найдено, пытаемся найти/создать его
+            if not application:
+                # ИСПРАВЛЕНИЕ: Проверяем, передан ли ID приложения как строка/число
+                application_id = None
                 try:
-                    # Нормализуем имя процесса для поиска дубликатов
-                    process_name_str = str(process_name) if process_name is not None else ""
+                    # Проверяем разные способы передачи ID приложения
+                    if isinstance(process_name, (int, str)) and str(process_name).isdigit():
+                        application_id = int(process_name)
+                    elif 'application' in request_data:
+                        app_field = request_data['application']
+                        if isinstance(app_field, (int, str)) and str(app_field).isdigit():
+                            application_id = int(app_field)
+                    
+                    # Если ID передан, пытаемся найти приложение
+                    if application_id:
+                        try:
+                            application = Application.objects.get(id=application_id, user=self.request.user)
+                            print(f"Найдено приложение по ID={application_id}: {application}")
+                        except Application.DoesNotExist:
+                            print(f"Приложение с ID={application_id} не найдено, создаем новое")
+                            # Создаем новое приложение с правильными данными
+                            application_name = app_name or f"Восстановленное приложение {application_id}"
+                            process_name_for_db = app_name or f"app_{application_id}.exe"
+                            
+                            application = Application.objects.create(
+                                user=self.request.user,
+                                name=application_name,
+                                process_name=process_name_for_db,
+                                is_productive=False  # По умолчанию не продуктивное
+                            )
+                            print(f"Создано новое приложение: {application}")
+                            
+                except (TypeError, ValueError, AttributeError) as e:
+                    print(f"Ошибка при обработке ID приложения: {e}")
+                
+                # Если до сих пор не нашли приложение, создаем по имени процесса
+                if not application:
+                    process_name_str = str(process_name) if process_name else ""
                     app_name_str = str(app_name) if app_name else ""
                     
-                    # ИСПРАВЛЕНИЕ: Используем глобальную функцию normalize_app_name из utils
                     if process_name_str:
-                        normalized_result = normalize_app_name(process_name_str)
-                        if normalized_result[0] is not None:  # Не системный процесс
-                            normalized_name, default_productive = normalized_result
-                            
-                            # Ищем приложение по нормализованному имени
-                            application = Application.objects.filter(
-                                user=self.request.user
-                            ).filter(
-                                models.Q(name__icontains=normalized_name) |
-                                models.Q(process_name__icontains=process_name_str)
-                            ).first()
-                            
-                        if application:
-                            print(f"Найдено существующее приложение: {application}")
-                except Exception as e:
-                    print(f"Ошибка при поиске приложения: {e}")
-            
-            # Если приложение всё еще не найдено, создаем новое
-            if not application:
-                # ИСПРАВЛЕНИЕ: Правильно определяем имя приложения
-                if is_numeric_id:
-                    # Если получили только ID, используем app_name или создаем базовое имя
-                    application_name = app_name or f"Приложение_{process_id}"
-                    process_name_for_db = app_name or f"app_{process_id}.exe"
-                else:
-                    # Нормализуем название через utils функцию
-                    process_name_str = str(process_name) if process_name else ""
-                    if process_name_str:
-                        normalized_result = normalize_app_name(process_name_str)
-                        if normalized_result[0] is not None:  # Не системный процесс
-                            normalized_name, default_productive = normalized_result
-                            application_name = normalized_name
-                            process_name_for_db = process_name_str
-                        else:
-                            # Системный процесс - не создаём активность
-                            print(f"Системный процесс {process_name_str} игнорируется")
-                            return
+                        # Пытаемся найти существующее приложение по имени процесса
+                        application = Application.objects.filter(
+                            user=self.request.user,
+                            process_name__icontains=process_name_str
+                        ).first()
+                        
+                        if not application:
+                            # Создаем новое приложение
+                            application_name = app_name_str or process_name_str
+                            application = Application.objects.create(
+                                user=self.request.user,
+                                name=application_name,
+                                process_name=process_name_str,
+                                is_productive=False
+                            )
+                            print(f"Создано новое приложение по имени: {application}")
                     else:
-                        application_name = app_name or "Неизвестное приложение"
-                        process_name_for_db = "unknown.exe"
-                
-                try:
-                    # Создаем новое приложение с правильным именем
-                    application = Application.objects.create(
-                        user=self.request.user,
-                        name=application_name,
-                        process_name=process_name_for_db
-                    )
-                    print(f"Создано новое приложение: {application} (name={application_name}, process_name={process_name_for_db})")
-                except Exception as e:
-                    print(f"Ошибка при создании приложения: {e}")
-                    # Fallback: создаем с уникальным именем 
-                    timestamp = timezone.now().timestamp()
-                    application = Application.objects.create(
-                        user=self.request.user,
-                        name=f"App_{self.request.user.id}_{timestamp}",
-                        process_name=process_name_for_db or "unknown"
-                    )
+                        # Создаем приложение с базовым именем
+                        timestamp = timezone.now().timestamp()
+                        application = Application.objects.create(
+                            user=self.request.user,
+                            name=f"Неизвестное приложение {timestamp}",
+                            process_name="unknown.exe",
+                            is_productive=False
+                        )
+                        print(f"Создано fallback приложение: {application}")
             
             # Проверяем и устанавливаем даты для активности
             start_time = request_data.get('start_time')
@@ -442,7 +423,10 @@ class UserActivityViewSet(viewsets.ModelViewSet):
             
         except Exception as e:
             print(f"Ошибка при создании активности: {e}")
-            raise ValidationError(detail=str(e))
+            # Логируем детальную ошибку, но возвращаем успешный ответ для клиента
+            import traceback
+            traceback.print_exc()
+            raise ValidationError(detail=f"Ошибка сохранения активности: {str(e)}")
 
     def update(self, request, *args, **kwargs):
         try:
