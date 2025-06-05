@@ -40,6 +40,30 @@ class UserActivitySerializer(serializers.ModelSerializer):
             if user and user.is_authenticated:
                 self.fields['application'].queryset = Application.objects.filter(user=user)
     
+    def to_internal_value(self, data):
+        """Переопределяем для обработки несуществующих ID приложений"""
+        # Сохраняем оригинальный ID приложения для дальнейшей обработки
+        original_app_id = data.get('application')
+        
+        try:
+            return super().to_internal_value(data)
+        except serializers.ValidationError as e:
+            # Проверяем, является ли ошибка связанной с несуществующим приложением
+            if 'application' in e.detail and original_app_id:
+                error_msg = str(e.detail['application'][0])
+                if 'Недопустимый первичный ключ' in error_msg or 'does not exist' in error_msg:
+                    # Убираем application из данных и помечаем для создания
+                    data_copy = data.copy()
+                    data_copy.pop('application', None)
+                    
+                    # Сохраняем ID для дальнейшего использования
+                    internal_data = super().to_internal_value(data_copy)
+                    internal_data['_missing_app_id'] = original_app_id
+                    return internal_data
+            
+            # Если это другая ошибка, пробрасываем дальше
+            raise
+    
     def validate_application(self, value):
         """Кастомная валидация для поля application"""
         if value is None:
@@ -53,6 +77,42 @@ class UserActivitySerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError("Приложение не принадлежит текущему пользователю")
         
         return value
+    
+    def create(self, validated_data):
+        """Переопределяем create для обработки _missing_app_id"""
+        # Убираем служебные поля
+        missing_app_id = validated_data.pop('_missing_app_id', None)
+        
+        # Если есть missing_app_id, но нет application, создаем приложение
+        if missing_app_id and not validated_data.get('application'):
+            user = validated_data['user']
+            if isinstance(user, int):
+                from django.contrib.auth import get_user_model
+                User = get_user_model()
+                user = User.objects.get(id=user)
+            
+            process_name = f"unknown_app_{missing_app_id}"
+            
+            # Проверяем существующее приложение
+            existing_app = Application.objects.filter(
+                user=user,
+                process_name=process_name
+            ).first()
+            
+            if existing_app:
+                validated_data['application'] = existing_app
+            else:
+                # Создаем новое приложение
+                new_app = Application.objects.create(
+                    user=user,
+                    name=f"Unknown Application {missing_app_id}",
+                    process_name=process_name,
+                    is_active=True,
+                    is_productive=False
+                )
+                validated_data['application'] = new_app
+        
+        return super().create(validated_data)
 
 class KeyboardActivitySerializer(serializers.ModelSerializer):
     class Meta:

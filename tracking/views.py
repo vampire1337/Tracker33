@@ -344,14 +344,25 @@ class UserActivityViewSet(viewsets.ModelViewSet):
                             application_name = app_name or f"Восстановленное приложение {application_id}"
                             process_name_for_db = app_name or f"app_{application_id}.exe"
                             
-                            application = Application.objects.create(
+                            # Проверяем, не существует ли уже приложение с таким process_name
+                            existing_app = Application.objects.filter(
                                 user=self.request.user,
-                                name=application_name,
-                                process_name=process_name_for_db,
-                                is_productive=False  # По умолчанию не продуктивное
-                            )
-                            print(f"Создано новое приложение: {application}")
+                                process_name=process_name_for_db
+                            ).first()
                             
+                            if existing_app:
+                                # Используем существующее приложение
+                                application = existing_app
+                                print(f"Найдено существующее приложение с process_name {process_name_for_db}: {application}")
+                            else:
+                                # Создаем новое приложение
+                                application = Application.objects.create(
+                                    user=self.request.user,
+                                    name=application_name,
+                                    process_name=process_name_for_db,
+                                    is_productive=False  # По умолчанию не продуктивное
+                                )
+                                print(f"Создано новое приложение: {application}")
                 except (TypeError, ValueError, AttributeError) as e:
                     print(f"Ошибка при обработке ID приложения: {e}")
                 
@@ -1464,14 +1475,70 @@ def create_activity(request):
         data = request.data.copy()
         data['user'] = request.user.id
         
-        serializer = UserActivitySerializer(data=data)
+        logger.info(f"create_activity called with data: {data}")
+        
+        serializer = UserActivitySerializer(data=data, context={'request': request})
+        logger.info(f"Serializer created, checking validity...")
+        
         if serializer.is_valid():
-            serializer.save()
+            logger.info(f"Serializer is valid")
+            # Проверяем, есть ли несуществующий ID приложения
+            validated_data = serializer.validated_data.copy()
+            missing_app_id = validated_data.pop('_missing_app_id', None)
+            
+            logger.info(f"Missing app ID: {missing_app_id}")
+            logger.info(f"Validated data: {validated_data}")
+            
+            if missing_app_id:
+                # Создаем новое приложение для несуществующего ID
+                logger.warning(f"Application with ID {missing_app_id} not found for user {request.user.id}. Creating new application.")
+                
+                process_name = f"unknown_app_{missing_app_id}"
+                logger.info(f"Looking for existing app with process_name: {process_name}")
+                
+                # Проверяем, не существует ли уже приложение с таким process_name
+                existing_app = Application.objects.filter(
+                    user=request.user,
+                    process_name=process_name
+                ).first()
+                
+                if existing_app:
+                    # Используем существующее приложение
+                    validated_data['application'] = existing_app
+                    logger.info(f"Using existing application {existing_app.id} for missing ID {missing_app_id}")
+                else:
+                    # Создаем новое приложение
+                    logger.info(f"Creating new application with process_name: {process_name}")
+                    try:
+                        new_app = Application.objects.create(
+                            user=request.user,
+                            name=f"Unknown Application {missing_app_id}",
+                            process_name=process_name,
+                            is_active=True,
+                            is_productive=False
+                        )
+                        
+                        # Устанавливаем новое приложение
+                        validated_data['application'] = new_app
+                        logger.info(f"Created new application {new_app.id} for missing ID {missing_app_id}")
+                    except Exception as create_error:
+                        logger.error(f"Error creating application: {create_error}")
+                        raise
+            
+            # Убираем все служебные поля перед созданием
+            clean_data = {k: v for k, v in validated_data.items() if not k.startswith('_')}
+            logger.info(f"Clean data for UserActivity.create: {clean_data}")
+            
+            # Сохраняем активность
+            activity = UserActivity.objects.create(user=request.user, **clean_data)
+            logger.info(f"Activity created successfully: {activity.id}")
+            
             return Response({
                 'success': True,
-                'data': serializer.data
+                'data': UserActivitySerializer(activity).data
             })
         else:
+            logger.error(f"Serializer errors: {serializer.errors}")
             return Response({
                 'success': False,
                 'errors': serializer.errors
@@ -1479,6 +1546,8 @@ def create_activity(request):
             
     except Exception as e:
         logger.error(f"Ошибка создания активности: {e}")
+        import traceback
+        logger.error(f"Traceback: {traceback.format_exc()}")
         return Response({
             'success': False,
             'error': str(e)
