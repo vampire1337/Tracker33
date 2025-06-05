@@ -3,10 +3,10 @@
 {% block title %}Главная - Time Tracker{% endblock %}
 
 {% block content %}
-<!-- Hero секция с объяснением -->
+<!-- Hero секция -->
 <div class="row mb-4">
     <div class="col-md-12">
-        <div class="card bg-gradient-primary text-white">
+        <div class="card bg-gradient-primary text-white border-0 shadow">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-start">
                     <div>
@@ -42,464 +42,241 @@
     </div>
 </div>
 
-<!-- Карточки статистики -->
+<!-- Основные карточки статистики -->
 <div class="row mb-4">
     <div class="col-md-3">
-        <div class="card h-100 border-0 shadow-sm bg-gradient-primary text-white">
-            <div class="card-body text-center">
-                <div class="row align-items-center">
-                    <div class="col">
-                        <h3 class="card-title mb-0">
-                            <i class="fas fa-clock fa-2x mb-2"></i>
-                        </h3>
-                        <h4 class="mb-0">{{ today_stats.formatted_time }}</h4>
-                        <small class="text-white-50">Время работы сегодня</small>
-                    </div>
-                </div>
+        <div class="card border-0 shadow-sm h-100" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+            <div class="card-body text-white text-center">
+                <i class="fas fa-clock fa-3x mb-3"></i>
+                <h3 class="mb-2">{{ today_stats.formatted_time|default:"00:00:00" }}</h3>
+                <p class="mb-0">Время работы</p>
+                <small class="text-white-50">За последние 30 дней</small>
             </div>
         </div>
     </div>
     
     <div class="col-md-3">
-        <div class="card h-100 border-0 shadow-sm bg-gradient-success text-white">
-            <div class="card-body text-center">
-                <div class="row align-items-center">
-                    <div class="col">
-                        <h3 class="card-title mb-0">
-                            <i class="fas fa-chart-line fa-2x mb-2"></i>
-                        </h3>
-                        <h4 class="mb-0">{{ today_stats.productivity_percent }}%</h4>
-                        <small class="text-white-50">Продуктивность</small>
-                    </div>
-                </div>
+        <div class="card border-0 shadow-sm h-100" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+            <div class="card-body text-white text-center">
+                <i class="fas fa-chart-line fa-3x mb-3"></i>
+                <h3 class="mb-2">{{ today_stats.productivity_percent|default:"0" }}%</h3>
+                <p class="mb-0">Продуктивность</p>
+                <small class="text-white-50">Полезная работа</small>
             </div>
         </div>
     </div>
     
     <div class="col-md-3">
-        <div class="card h-100 border-0 shadow-sm bg-gradient-info text-white">
-            <div class="card-body text-center">
-                <div class="row align-items-center">
-                    <div class="col">
-                        <h3 class="card-title mb-0">
-                            <i class="fas fa-desktop fa-2x mb-2"></i>
-                        </h3>
-                        <h4 class="mb-0">{{ today_stats.apps.count }}</h4>
-                        <small class="text-white-50">Приложений</small>
-                    </div>
-                </div>
+        <div class="card border-0 shadow-sm h-100" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+            <div class="card-body text-white text-center">
+                <i class="fas fa-desktop fa-3x mb-3"></i>
+                <h3 class="mb-2">{{ today_stats.apps.count|default:"0" }}</h3>
+                <p class="mb-0">Приложений</p>
+                <small class="text-white-50">Использовано</small>
             </div>
         </div>
     </div>
     
     <div class="col-md-3">
-        <div class="card h-100 border-0 shadow-sm bg-gradient-warning text-white">
-            <div class="card-body text-center">
-                <div class="row align-items-center">
-                    <div class="col">
-                        <h3 class="card-title mb-0">
-                            <i class="fas fa-keyboard fa-2x mb-2"></i>
-                        </h3>
-                        <h4 class="mb-0">{{ today_stats.keystrokes|floatformat:0 }}</h4>
-                        <small class="text-white-50">Нажатий клавиш</small>
-                    </div>
-                </div>
+        <div class="card border-0 shadow-sm h-100" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+            <div class="card-body text-white text-center">
+                <i class="fas fa-keyboard fa-3x mb-3"></i>
+                <h3 class="mb-2">{{ today_stats.keystrokes|default:"0"|floatformat:0 }}</h3>
+                <p class="mb-0">Нажатий клавиш</p>
+                <small class="text-white-50">Активность</small>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Основные метрики -->
+<!-- Основной контент -->
 <div class="row">
-    <div class="col-md-12">
-        <div class="card">
-            <div class="card-header">
-                <h3 class="card-title">
-                    <i class="fas fa-tachometer-alt me-2"></i>
-                    Активность за сегодня
-                </h3>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-3">
-                        <div class="card bg-primary text-white h-100">
-                            <div class="card-body text-center">
-                                <i class="fas fa-clock fa-2x mb-2"></i>
-                                <h5 class="card-title">Общее время</h5>
-                                <p class="card-text" style="font-size: 24px; font-weight: bold;">
-                                    {% if today_stats.formatted_time %}
-                                        {{ today_stats.formatted_time }}
-                                    {% else %}
-                                        00:00:00
-                                    {% endif %}
-                                </p>
-                                <small class="text-white-50">За текущий день</small>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="card bg-success text-white h-100">
-                            <div class="card-body text-center">
-                                <i class="fas fa-keyboard fa-2x mb-2"></i>
-                                <h5 class="card-title">Активность</h5>
-                                <p class="card-text" style="font-size: 24px; font-weight: bold;">
-                                    {{ today_stats.keystrokes }} 
-                                </p>
-                                <small class="text-white-50">нажатий клавиш</small>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="card bg-info text-white h-100">
-                            <div class="card-body text-center">
-                                <i class="fas fa-star fa-2x mb-2"></i>
-                                <h5 class="card-title">Продуктивность</h5>
-                                <p class="card-text" style="font-size: 24px; font-weight: bold;">
-                                    {% if today_stats.productivity_percent %}
-                                        {{ today_stats.productivity_percent }}%
-                                    {% else %}
-                                        0%
-                                    {% endif %}
-                                </p>
-                                <small class="text-white-50">полезного времени</small>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="card bg-warning text-white h-100">
-                            <div class="card-body text-center">
-                                <i class="fas fa-apps fa-2x mb-2"></i>
-                                <h5 class="card-title">Приложения</h5>
-                                <p class="card-text" style="font-size: 24px; font-weight: bold;">
-                                    {% if active_apps %}
-                                        {{ active_apps|length }}
-                                    {% else %}
-                                        0
-                                    {% endif %}
-                                </p>
-                                <small class="text-white-50">использовано сегодня</small>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- График активности по часам -->
-<div class="row mt-4">
-    <div class="col-md-6">
-        <div class="card h-100">
-            <div class="card-header">
-                <h3 class="card-title">
-                    <i class="fas fa-chart-bar me-2"></i>
+    <div class="col-md-8">
+        <!-- График активности -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white border-0">
+                <h3 class="card-title mb-0">
+                    <i class="fas fa-chart-bar me-2 text-primary"></i>
                     Активность по часам
                 </h3>
+                <small class="text-muted">Распределение рабочего времени в течение дня</small>
             </div>
             <div class="card-body">
-                <canvas id="hourlyChart" width="400" height="200"></canvas>
+                <canvas id="hourlyChart" height="300"></canvas>
             </div>
         </div>
-    </div>
-    <div class="col-md-6">
-        <!-- Две колонки: Последние действия и Топ приложений -->
-        <div class="card h-100">
-            <div class="card-header">
-                <h3 class="card-title">
-                    <i class="fas fa-history me-2"></i>
+        
+        <!-- Последние действия -->
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-0">
+                <h3 class="card-title mb-0">
+                    <i class="fas fa-history me-2 text-primary"></i>
                     Последние действия
                 </h3>
+                <small class="text-muted">Недавняя активность</small>
             </div>
             <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-sm">
-                        <thead>
-                            <tr>
-                                <th>Время</th>
-                                <th>Приложение</th>
-                                <th>Длительность</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for activity in today_activity %}
-                            <tr>
-                                <td class="text-muted">{{ activity.start_time|date:"H:i:s" }}</td>
-                                <td>
-                                    <span class="badge {% if activity.application.is_productive %}bg-success{% else %}bg-secondary{% endif %} me-1">
+                {% if today_activity %}
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Время</th>
+                                    <th>Приложение</th>
+                                    <th>Длительность</th>
+                                    <th>Статус</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for activity in today_activity %}
+                                <tr>
+                                    <td class="text-muted">{{ activity.start_time|date:"H:i:s" }}</td>
+                                    <td>
+                                        <strong>{{ activity.application.get_display_name }}</strong>
+                                    </td>
+                                    <td>
+                                        {% if activity.duration %}
+                                            {{ activity.formatted_duration|default:activity.duration }}
+                                        {% else %}
+                                            <span class="text-muted">00:00:00</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
                                         {% if activity.application.is_productive %}
-                                            <i class="fas fa-check"></i>
+                                            <span class="badge bg-success">
+                                                <i class="fas fa-check me-1"></i>Продуктивно
+                                            </span>
                                         {% else %}
-                                            <i class="fas fa-minus"></i>
+                                            <span class="badge bg-secondary">
+                                                <i class="fas fa-minus me-1"></i>Отдых
+                                            </span>
                                         {% endif %}
-                                    </span>
-                                    {{ activity.application.get_display_name }}
-                                </td>
-                                <td>
-                                    {% if activity.duration %}
-                                        {% if activity.formatted_duration %}
-                                            {{ activity.formatted_duration }}
-                                        {% else %}
-                                            {{ activity.duration }}
-                                        {% endif %}
-                                    {% elif activity.current_duration %}
-                                        <span class="text-success">
-                                            {% if activity.formatted_duration %}
-                                                {{ activity.formatted_duration }}
-                                            {% else %}
-                                                {{ activity.current_duration }}
-                                            {% endif %}
-                                            <i class="fas fa-circle text-success" style="font-size: 8px;"></i>
-                                        </span>
-                                    {% else %}
-                                        <span class="text-muted">00:00:00</span>
-                                    {% endif %}
-                                </td>
-                            </tr>
-                            {% empty %}
-                            <tr>
-                                <td colspan="3" class="text-center text-muted">
-                                    <i class="fas fa-info-circle me-1"></i>
-                                    Нет данных за сегодня
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-        <div class="card h-100">
-            <div class="card-header">
-                <h3 class="card-title">
-                    <i class="fas fa-trophy me-2"></i>
-                    Топ приложений сегодня
-                </h3>
-            </div>
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-sm">
-                        <thead>
-                            <tr>
-                                <th>Приложение</th>
-                                <th>Время</th>
-                                <th>Доля</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for app in today_stats.apps|slice:":10" %}
-                            <tr>
-                                <td>
-                                    <span class="badge {% if app.is_productive %}bg-success{% else %}bg-secondary{% endif %} me-1">
-                                        {% if app.is_productive %}
-                                            <i class="fas fa-check"></i>
-                                        {% else %}
-                                            <i class="fas fa-minus"></i>
-                                        {% endif %}
-                                    </span>
-                                    {{ app.name }}
-                                </td>
-                                <td>
-                                    <strong>
-                                        {% if app.formatted_time %}
-                                            {{ app.formatted_time }}
-                                        {% else %}
-                                            00:00:00
-                                        {% endif %}
-                                    </strong>
-                                </td>
-                                <td>
-                                    <div class="progress" style="height: 20px;">
-                                        <div class="progress-bar {% if app.is_productive %}bg-success{% else %}bg-secondary{% endif %}" 
-                                             role="progressbar" 
-                                             style="width: {{ app.percentage|default:0 }}%;" 
-                                             aria-valuenow="{{ app.percentage|default:0 }}" 
-                                             aria-valuemin="0" 
-                                             aria-valuemax="100">
-                                            {{ app.percentage|default:0 }}%
-                                        </div>
-                                    </div>
-                                </td>
-                            </tr>
-                            {% empty %}
-                            <tr>
-                                <td colspan="3" class="text-center text-muted">
-                                    <i class="fas fa-info-circle me-1"></i>
-                                    Нет данных за сегодня
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">Нет данных за последние 30 дней</h5>
+                        <p class="text-muted">Установите клиент трекинга для сбора данных</p>
+                        <a href="{% url 'download_tracker' %}" class="btn btn-primary">
+                            <i class="fas fa-download me-2"></i>Скачать клиент
+                        </a>
+                    </div>
+                {% endif %}
             </div>
         </div>
     </div>
-</div>
-
-<!-- Insights секция -->
-<div class="row mt-4">
-    <div class="col-md-12">
-        <div class="card bg-light">
-            <div class="card-header">
-                <h3 class="card-title text-dark">
-                    <i class="fas fa-lightbulb me-2 text-warning"></i>
-                    Умные выводы
-                </h3>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-4">
-                        <div class="text-center">
-                            <i class="fas fa-clock fa-3x text-primary mb-2"></i>
-                            <h5 class="text-dark">Пик активности</h5>
-                            <p class="text-muted">
-                                {% if today_stats.peak_hour %}
-                                    {{ today_stats.peak_hour }}:00
-                                {% else %}
-                                    Недостаточно данных
-                                {% endif %}
-                            </p>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="text-center">
-                            <i class="fas fa-chart-line fa-3x text-success mb-2"></i>
-                            <h5 class="text-dark">Время работы сегодня</h5>
-                            <p class="text-muted">
-                                {% if today_stats.formatted_time %}
-                                    {{ today_stats.formatted_time }}
-                                {% else %}
-                                    00:00:00
-                                {% endif %}
-                            </p>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="text-center">
-                            <i class="fas fa-target fa-3x text-info mb-2"></i>
-                            <h5 class="text-dark">Активных приложений</h5>
-                            <p class="text-muted">
-                                {% if today_stats.apps %}
-                                    {{ today_stats.apps|length }}
-                                {% else %}
-                                    0
-                                {% endif %}
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Секция целей и достижений -->
-<div class="row mt-4">
-    <div class="col-md-12">
-        <div class="card border-success">
-            <div class="card-header bg-success text-white">
+    
+    <div class="col-md-4">
+        <!-- Топ приложений -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white border-0">
                 <h3 class="card-title mb-0">
-                    <i class="fas fa-flag-checkered me-2"></i>
-                    Цели на сегодня
-                    <button class="btn btn-sm btn-outline-light ms-2" onclick="showGoalSetter()">
-                        <i class="fas fa-plus me-1"></i>
-                        Установить цель
-                    </button>
+                    <i class="fas fa-trophy me-2 text-warning"></i>
+                    Топ приложений
                 </h3>
+                <small class="text-muted">Самые используемые</small>
             </div>
             <div class="card-body">
-                <div class="row">
-                    <div class="col-md-4">
-                        <div class="card border-primary h-100">
-                            <div class="card-body text-center">
-                                <i class="fas fa-clock fa-2x text-primary mb-2"></i>
-                                <h6 class="card-title">Цель рабочего времени</h6>
-                                <div class="progress mb-2" style="height: 25px;">
-                                    {% if today_stats.formatted_time and today_stats.formatted_time != "00:00:00" %}
-                                        {% with work_hours=8 current_hours=today_stats.total_hours|default:0 %}
-                                            {% widthratio current_hours work_hours 100 as work_progress %}
-                                            <div class="progress-bar {% if work_progress >= 100 %}bg-success{% elif work_progress >= 75 %}bg-warning{% else %}bg-primary{% endif %}" 
-                                                 role="progressbar" 
-                                                 style="width: {% if work_progress > 100 %}100{% else %}{{ work_progress }}{% endif %}%;">
-                                                {{ current_hours|floatformat:1 }}ч / {{ work_hours }}ч
-                                            </div>
-                                        {% endwith %}
-                                    {% else %}
-                                        <div class="progress-bar bg-secondary" role="progressbar" style="width: 0%;">
-                                            0ч / 8ч
-                                        </div>
-                                    {% endif %}
+                {% if today_stats.apps %}
+                    {% for app in today_stats.apps|slice:":8" %}
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="me-3">
+                            {% if app.is_productive %}
+                                <div class="rounded-circle bg-success d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                    <i class="fas fa-check text-white"></i>
                                 </div>
-                                <small class="text-muted">Цель: 8 часов в день</small>
+                            {% else %}
+                                <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                    <i class="fas fa-minus text-white"></i>
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <strong class="text-dark">{{ app.name }}</strong>
+                                <span class="badge bg-light text-dark">{{ app.percentage|default:0 }}%</span>
                             </div>
+                            <div class="progress" style="height: 8px;">
+                                <div class="progress-bar {% if app.is_productive %}bg-success{% else %}bg-secondary{% endif %}" 
+                                     role="progressbar" 
+                                     style="width: {{ app.percentage|default:0 }}%;">
+                                </div>
+                            </div>
+                            <small class="text-muted">{{ app.formatted_time|default:"00:00:00" }}</small>
                         </div>
                     </div>
-                    <div class="col-md-4">
-                        <div class="card border-success h-100">
-                            <div class="card-body text-center">
-                                <i class="fas fa-star fa-2x text-success mb-2"></i>
-                                <h6 class="card-title">Цель продуктивности</h6>
-                                <div class="progress mb-2" style="height: 25px;">
-                                    {% with productivity_goal=75 current_productivity=today_stats.productivity_percent|default:0 %}
-                                        <div class="progress-bar {% if current_productivity >= productivity_goal %}bg-success{% elif current_productivity >= 50 %}bg-warning{% else %}bg-danger{% endif %}" 
-                                             role="progressbar" 
-                                             style="width: {% widthratio current_productivity productivity_goal 100 %}%;">
-                                            {{ current_productivity }}% / {{ productivity_goal }}%
-                                        </div>
-                                    {% endwith %}
-                                </div>
-                                <small class="text-muted">Цель: 75% продуктивного времени</small>
-                            </div>
-                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-chart-pie fa-2x text-muted mb-3"></i>
+                        <p class="text-muted">Нет данных о приложениях</p>
                     </div>
-                    <div class="col-md-4">
-                        <div class="card border-info h-100">
-                            <div class="card-body text-center">
-                                <i class="fas fa-keyboard fa-2x text-info mb-2"></i>
-                                <h6 class="card-title">Цель активности</h6>
-                                <div class="progress mb-2" style="height: 25px;">
-                                    {% with activity_goal=5000 current_activity=today_stats.keystrokes|default:0 %}
-                                        <div class="progress-bar {% if current_activity >= activity_goal %}bg-success{% elif current_activity >= 2500 %}bg-warning{% else %}bg-info{% endif %}" 
-                                             role="progressbar" 
-                                             style="width: {% widthratio current_activity activity_goal 100 %}%;">
-                                            {{ current_activity }} / {{ activity_goal }}
-                                        </div>
-                                    {% endwith %}
-                                </div>
-                                <small class="text-muted">Цель: 5000 нажатий клавиш</small>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Краткие цели -->
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-0">
+                <h3 class="card-title mb-0">
+                    <i class="fas fa-target me-2 text-success"></i>
+                    Быстрые цели
+                </h3>
+                <button class="btn btn-sm btn-outline-primary" onclick="showGoalSetter()">
+                    <i class="fas fa-plus me-1"></i>Настроить
+                </button>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="text-dark">Рабочее время</span>
+                        <span class="text-muted">{{ today_stats.total_hours|default:0|floatformat:1 }}ч / 8ч</span>
+                    </div>
+                    <div class="progress" style="height: 10px;">
+                        {% with work_hours=8 current_hours=today_stats.total_hours|default:0 %}
+                            {% widthratio current_hours work_hours 100 as work_progress %}
+                            <div class="progress-bar bg-primary" 
+                                 role="progressbar" 
+                                 style="width: {% if work_progress > 100 %}100{% else %}{{ work_progress }}{% endif %}%;">
                             </div>
-                        </div>
+                        {% endwith %}
                     </div>
                 </div>
                 
-                <!-- Достижения дня -->
-                <div class="row mt-3">
-                    <div class="col-md-12">
-                        <h6><i class="fas fa-trophy text-warning me-2"></i>Достижения сегодня:</h6>
-                        <div class="d-flex flex-wrap gap-2">
-                            {% if today_stats.productivity_percent and today_stats.productivity_percent >= 75 %}
-                                <span class="badge bg-success">
-                                    <i class="fas fa-star me-1"></i>Высокая продуктивность
-                                </span>
-                            {% endif %}
-                            {% if today_stats.total_hours and today_stats.total_hours >= 6 %}
-                                <span class="badge bg-primary">
-                                    <i class="fas fa-clock me-1"></i>Полный рабочий день
-                                </span>
-                            {% endif %}
-                            {% if today_stats.keystrokes and today_stats.keystrokes >= 3000 %}
-                                <span class="badge bg-info">
-                                    <i class="fas fa-keyboard me-1"></i>Активная работа
-                                </span>
-                            {% endif %}
-                            {% if not today_stats.productivity_percent and not today_stats.total_hours %}
-                                <span class="badge bg-secondary">
-                                    <i class="fas fa-play me-1"></i>Начните работать для получения достижений
-                                </span>
-                            {% endif %}
-                        </div>
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="text-dark">Продуктивность</span>
+                        <span class="text-muted">{{ today_stats.productivity_percent|default:0 }}% / 75%</span>
                     </div>
+                    <div class="progress" style="height: 10px;">
+                        {% with productivity_goal=75 current_productivity=today_stats.productivity_percent|default:0 %}
+                            <div class="progress-bar bg-success" 
+                                 role="progressbar" 
+                                 style="width: {% widthratio current_productivity productivity_goal 100 %}%;">
+                            </div>
+                        {% endwith %}
+                    </div>
+                </div>
+                
+                <div class="text-center">
+                    {% if today_stats.productivity_percent and today_stats.productivity_percent >= 75 %}
+                        <span class="badge bg-success">
+                            <i class="fas fa-star me-1"></i>Отличная продуктивность!
+                        </span>
+                    {% elif today_stats.productivity_percent and today_stats.productivity_percent >= 50 %}
+                        <span class="badge bg-warning">
+                            <i class="fas fa-arrow-up me-1"></i>Хорошо, но можно лучше
+                        </span>
+                    {% else %}
+                        <span class="badge bg-secondary">
+                            <i class="fas fa-play me-1"></i>Начните работать
+                        </span>
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -546,14 +323,13 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
-// JavaScript для дашборда с графиками
 document.addEventListener('DOMContentLoaded', function() {
     console.log('Дашборд загружен');
     
     // Создание графика активности по часам
     const ctx = document.getElementById('hourlyChart');
     if (ctx) {
-        // Данные для графика активности по часам
+        // Данные для графика
         const hourlyData = [
             {% for hour_data in hourly_activity %}
                 {{ hour_data.minutes|default:0 }}{% if not forloop.last %},{% endif %}
@@ -573,10 +349,22 @@ document.addEventListener('DOMContentLoaded', function() {
                 datasets: [{
                     label: 'Активность (минуты)',
                     data: hourlyData,
-                    backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                    backgroundColor: function(context) {
+                        const chart = context.chart;
+                        const {ctx, chartArea} = chart;
+                        if (!chartArea) return null;
+                        
+                        const gradient = ctx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
+                        gradient.addColorStop(0, 'rgba(54, 162, 235, 0.3)');
+                        gradient.addColorStop(1, 'rgba(54, 162, 235, 0.8)');
+                        return gradient;
+                    },
                     borderColor: 'rgba(54, 162, 235, 1)',
                     borderWidth: 2,
-                    borderRadius: 8,
+                    borderRadius: {
+                        topLeft: 8,
+                        topRight: 8
+                    },
                     borderSkipped: false,
                 }]
             },
@@ -588,21 +376,25 @@ document.addEventListener('DOMContentLoaded', function() {
                         display: false
                     },
                     tooltip: {
-                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        backgroundColor: 'rgba(0, 0, 0, 0.9)',
                         titleColor: '#fff',
                         bodyColor: '#fff',
                         borderColor: 'rgba(54, 162, 235, 1)',
                         borderWidth: 1,
                         cornerRadius: 8,
+                        displayColors: false,
                         callbacks: {
+                            title: function(context) {
+                                return `${context[0].label}`;
+                            },
                             label: function(context) {
                                 const minutes = context.raw;
                                 const hours = Math.floor(minutes / 60);
                                 const mins = minutes % 60;
                                 if (hours > 0) {
-                                    return `${hours}ч ${mins}мин`;
+                                    return `${hours}ч ${mins}мин активности`;
                                 }
-                                return `${mins} минут`;
+                                return `${mins} минут активности`;
                             }
                         }
                     }
@@ -611,10 +403,11 @@ document.addEventListener('DOMContentLoaded', function() {
                     y: {
                         beginAtZero: true,
                         grid: {
-                            color: 'rgba(0, 0, 0, 0.1)'
+                            color: 'rgba(0, 0, 0, 0.05)',
+                            drawBorder: false
                         },
                         ticks: {
-                            color: '#666',
+                            color: '#6c757d',
                             font: {
                                 size: 12
                             },
@@ -631,7 +424,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             display: false
                         },
                         ticks: {
-                            color: '#666',
+                            color: '#6c757d',
                             font: {
                                 size: 11
                             }
@@ -639,7 +432,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 },
                 animation: {
-                    duration: 1000,
+                    duration: 1200,
                     easing: 'easeInOutQuart'
                 },
                 interaction: {
@@ -649,25 +442,9 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
-    
-    // Обновление времени каждую секунду
-    function updateCurrentTime() {
-        const now = new Date();
-        const timeString = now.toLocaleTimeString('ru-RU', {
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit'
-        });
-        
-        const timeElement = document.getElementById('current-time');
-        if (timeElement) timeElement.textContent = timeString;
-    }
-    
-    updateCurrentTime();
-    setInterval(updateCurrentTime, 1000);
 });
 
-// Функция установки цели
+// Функции для целей
 function showGoalSetter() {
     const goalModal = new bootstrap.Modal(document.getElementById('goalModal'));
     goalModal.show();
@@ -678,7 +455,11 @@ function saveGoals() {
     const productivity = document.getElementById('productivityGoal').value;
     const activity = document.getElementById('activityGoal').value;
     
-    // Здесь можно добавить сохранение в localStorage или отправку на сервер
+    // Сохранение в localStorage
+    localStorage.setItem('workTimeGoal', workTime);
+    localStorage.setItem('productivityGoal', productivity);
+    localStorage.setItem('activityGoal', activity);
+    
     alert(`Цели сохранены: ${workTime}ч работы, ${productivity}% продуктивности, ${activity} нажатий клавиш`);
     
     const goalModal = bootstrap.Modal.getInstance(document.getElementById('goalModal'));
