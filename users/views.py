@@ -121,15 +121,18 @@ def download_tracker(request):
     Представление для скачивания файла трекера
     """
     # Сначала ищем в desktop_app/dist/ (там может быть более свежая версия)
-    tracker_path = os.path.join(settings.BASE_DIR, 'desktop_app', 'dist', 'Tracker33.exe')
+    tracker_path = os.path.join(settings.BASE_DIR, 'desktop_app', 'dist', 'TimeTracker.exe')
     if not os.path.exists(tracker_path):
-        # Если не найден, ищем в основной директории dist/
-        tracker_path = os.path.join(settings.BASE_DIR, 'dist', 'Tracker33.exe')
+        # Если не найден, ищем Tracker33.exe в desktop_app/dist/
+        tracker_path = os.path.join(settings.BASE_DIR, 'desktop_app', 'dist', 'Tracker33.exe')
         if not os.path.exists(tracker_path):
-            # Если и там не найден, ищем в static/
-            tracker_path = os.path.join(settings.BASE_DIR, 'static', 'TimeTracker.exe')
+            # Если и там не найден, ищем в основной директории dist/
+            tracker_path = os.path.join(settings.BASE_DIR, 'dist', 'Tracker33.exe')
             if not os.path.exists(tracker_path):
-                return render(request, 'errors/404.html', status=404)
+                # Если и там не найден, ищем в static/
+                tracker_path = os.path.join(settings.BASE_DIR, 'static', 'TimeTracker.exe')
+                if not os.path.exists(tracker_path):
+                    return render(request, 'errors/404.html', status=404)
     
     # Получаем информацию о файле для отображения в логах
     file_size = os.path.getsize(tracker_path)
