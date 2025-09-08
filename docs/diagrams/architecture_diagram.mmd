@@ -1,0 +1,30 @@
+graph TB
+    subgraph "Клиентская часть"
+        C[Desktop Client<br/>PyQt5]
+        D[Веб-браузер]
+    end
+    
+    subgraph "Серверная часть"
+        S[Django Server<br/>REST API]
+        DB[(PostgreSQL<br/>База данных)]
+        R[Redis<br/>Кэширование]
+    end
+    
+    subgraph "Мониторинг"
+        M[Система мониторинга<br/>Win32 API + psutil]
+    end
+    
+    C --> S
+    D --> S
+    S --> DB
+    S --> R
+    M --> C
+    
+    C -.->|Локальное хранение| L[(SQLite)]
+    
+    style C fill:#e1f5fe
+    style D fill:#e8f5e8
+    style S fill:#fff3e0
+    style DB fill:#f3e5f5
+    style R fill:#ffebee
+    style M fill:#e0f2f1 

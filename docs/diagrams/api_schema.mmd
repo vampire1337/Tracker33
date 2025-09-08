@@ -1,0 +1,31 @@
+sequenceDiagram
+    participant C as Desktop Client
+    participant A as Django API
+    participant D as Database
+    participant R as Redis Cache
+    
+    Note over C,D: Аутентификация
+    C->>A: POST /api/token/ (credentials)
+    A->>D: Проверка пользователя
+    D-->>A: Данные пользователя
+    A-->>C: JWT токен
+    
+    Note over C,D: Отправка данных активности
+    C->>A: POST /api/activities/ (с токеном)
+    A->>A: Валидация данных
+    A->>D: Сохранение активности
+    D-->>A: Подтверждение
+    A-->>C: 201 Created
+    
+    Note over C,D: Получение статистики
+    C->>A: GET /api/dashboard/ (с токеном)
+    A->>R: Проверка кэша
+    alt Кэш найден
+        R-->>A: Данные из кэша
+    else Кэш отсутствует
+        A->>D: Запрос к БД
+        D-->>A: Сырые данные
+        A->>A: Обработка данных
+        A->>R: Сохранение в кэш
+    end
+    A-->>C: JSON ответ 

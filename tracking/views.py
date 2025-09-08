@@ -180,9 +180,11 @@ class StatisticsView(LoginRequiredMixin, TemplateView):
             apps.append(AppMock(app_data))
         
         # ОТЛАДКА: Проверяем что передаем в контекст
-        print(f"[DEBUG] Statistics - Создано {len(apps)} приложений:")
+        import logging
+        logger = logging.getLogger('tracking.performance')
+        logger.debug(f"Statistics - Created {len(apps)} applications")
         for i, app in enumerate(apps[:5]):  # Показываем первые 5
-            print(f"  App {i}: name='{app.name}', process_name='{getattr(app, 'process_name', 'None')}', percentage={getattr(app, 'percentage', 0)}")
+            logger.debug(f"  App {i}: name='{app.name}', process_name='{getattr(app, 'process_name', 'None')}', percentage={getattr(app, 'percentage', 0)}")
         
         # Получаем данные по дням для графика
         daily_data = []
@@ -230,7 +232,7 @@ class StatisticsView(LoginRequiredMixin, TemplateView):
                     'minutes': 0
                 })
         
-        print(f"[DEBUG] StatisticsView - daily_data: {daily_data}")
+        logger.debug(f"[DEBUG] StatisticsView - daily_data: {daily_data}")
         
         # Рассчитываем продуктивность
         productive_seconds = sum(app['total_seconds'] for app in apps_data if app.get('is_productive', False))
@@ -248,7 +250,7 @@ class StatisticsView(LoginRequiredMixin, TemplateView):
             'productivity_percent': productivity_percent
         })
         
-        print(f"[DEBUG] Statistics - Apps found: {len(apps)}, Daily data: {len(daily_data)}, Total time: {formatted_time}, Productivity: {productivity_percent}%")
+        logger.debug(f"[DEBUG] Statistics - Apps found: {len(apps)}, Daily data: {len(daily_data)}, Total time: {formatted_time}, Productivity: {productivity_percent}%")
         
         return context
 
@@ -315,7 +317,7 @@ class UserActivityViewSet(viewsets.ModelViewSet):
                 keyboard_presses = 0
             
             # Логируем полученные данные для отладки
-            print(f"Получены данные: app_name={app_name}, process_name={process_name}, keyboard_presses={keyboard_presses}")
+            logger.debug(f"Получены данные: app_name={app_name}, process_name={process_name}, keyboard_presses={keyboard_presses}")
             
             # Получаем приложение из сериализатора (может быть None)
             application = serializer.validated_data.get('application')
@@ -337,9 +339,9 @@ class UserActivityViewSet(viewsets.ModelViewSet):
                     if application_id:
                         try:
                             application = Application.objects.get(id=application_id, user=self.request.user)
-                            print(f"Найдено приложение по ID={application_id}: {application}")
+                            logger.debug(f"Найдено приложение по ID={application_id}: {application}")
                         except Application.DoesNotExist:
-                            print(f"Приложение с ID={application_id} не найдено, создаем новое")
+                            logger.debug(f"Приложение с ID={application_id} не найдено, создаем новое")
                             # Создаем новое приложение с правильными данными
                             application_name = app_name or f"Восстановленное приложение {application_id}"
                             process_name_for_db = app_name or f"app_{application_id}.exe"
@@ -353,7 +355,7 @@ class UserActivityViewSet(viewsets.ModelViewSet):
                             if existing_app:
                                 # Используем существующее приложение
                                 application = existing_app
-                                print(f"Найдено существующее приложение с process_name {process_name_for_db}: {application}")
+                                logger.debug(f"Найдено существующее приложение с process_name {process_name_for_db}: {application}")
                             else:
                                 # Создаем новое приложение
                                 application = Application.objects.create(
@@ -362,9 +364,9 @@ class UserActivityViewSet(viewsets.ModelViewSet):
                                     process_name=process_name_for_db,
                                     is_productive=False  # По умолчанию не продуктивное
                                 )
-                                print(f"Создано новое приложение: {application}")
+                                logger.debug(f"Создано новое приложение: {application}")
                 except (TypeError, ValueError, AttributeError) as e:
-                    print(f"Ошибка при обработке ID приложения: {e}")
+                    logger.debug(f"Ошибка при обработке ID приложения: {e}")
                 
                 # Если до сих пор не нашли приложение, создаем по имени процесса
                 if not application:
@@ -387,7 +389,7 @@ class UserActivityViewSet(viewsets.ModelViewSet):
                                 process_name=process_name_str,
                                 is_productive=False
                             )
-                            print(f"Создано новое приложение по имени: {application}")
+                            logger.debug(f"Создано новое приложение по имени: {application}")
                     else:
                         # Создаем приложение с базовым именем
                         timestamp = timezone.now().timestamp()
@@ -397,7 +399,7 @@ class UserActivityViewSet(viewsets.ModelViewSet):
                             process_name="unknown.exe",
                             is_productive=False
                         )
-                        print(f"Создано fallback приложение: {application}")
+                        logger.debug(f"Создано fallback приложение: {application}")
             
             # Проверяем и устанавливаем даты для активности
             start_time = request_data.get('start_time')
@@ -417,7 +419,7 @@ class UserActivityViewSet(viewsets.ModelViewSet):
                         end_time = datetime.fromisoformat(end_time.replace('Z', '+00:00'))
                     duration = end_time - start_time
                 except (ValueError, TypeError) as e:
-                    print(f"Ошибка при вычислении duration: {e}")
+                    logger.debug(f"Ошибка при вычислении duration: {e}")
             
             # Сохраняем активность с правильным объектом приложения и всеми данными
             activity = serializer.save(
@@ -429,11 +431,11 @@ class UserActivityViewSet(viewsets.ModelViewSet):
                 duration=duration
             )
             
-            print(f"Активность успешно сохранена: {activity.id}, приложение: {application.name}")
+            logger.debug(f"Активность успешно сохранена: {activity.id}, приложение: {application.name}")
             return activity
             
         except Exception as e:
-            print(f"Ошибка при создании активности: {e}")
+            logger.debug(f"Ошибка при создании активности: {e}")
             # Логируем детальную ошибку, но возвращаем успешный ответ для клиента
             import traceback
             traceback.print_exc()
@@ -615,9 +617,9 @@ class DashboardView(LoginRequiredMixin, TemplateView):
             apps.append(AppMock(app_data))
         
         # ОТЛАДКА: Проверяем что передаем в контекст
-        print(f"[DEBUG] Dashboard - Создано {len(apps)} приложений:")
+        logger.debug(f"[DEBUG] Dashboard - Создано {len(apps)} приложений:")
         for i, app in enumerate(apps[:5]):  # Показываем первые 5
-            print(f"  App {i}: name='{app.name}', process_name='{getattr(app, 'process_name', 'None')}', percentage={getattr(app, 'percentage', 0)}")
+            logger.debug(f"  App {i}: name='{app.name}', process_name='{getattr(app, 'process_name', 'None')}', percentage={getattr(app, 'percentage', 0)}")
         
         # Создаем активность по часам - ОПТИМИЗИРОВАНО: один запрос вместо 24
         hourly_activity = []
@@ -672,7 +674,7 @@ class DashboardView(LoginRequiredMixin, TemplateView):
             'hourly_activity': hourly_activity
         })
         
-        print(f"[DEBUG] Dashboard - Apps: {len(apps)}, Time: {formatted_time}, Productivity: {productivity_percent}%")
+        logger.debug(f"[DEBUG] Dashboard - Apps: {len(apps)}, Time: {formatted_time}, Productivity: {productivity_percent}%")
         
         return context
 

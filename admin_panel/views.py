@@ -187,20 +187,33 @@ class DatabaseTablesView(LoginRequiredMixin, SuperUserRequiredMixin, TemplateVie
             cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
             tables = cursor.fetchall()
         
-        context['tables'] = [table[0] for table in tables if not table[0].startswith('sqlite_')]
+        # Белый список разрешенных таблиц для безопасности
+        ALLOWED_TABLES = [
+            'auth_user', 'auth_group', 'auth_permission',
+            'users_customuser', 'tracking_application', 'tracking_useractivity',
+            'tracking_keyboardactivity', 'tracking_timelog', 'django_session',
+            'django_admin_log', 'django_content_type'
+        ]
+        
+        available_tables = [t[0] for t in tables if not t[0].startswith('sqlite_')]
+        safe_tables = [t for t in available_tables if t in ALLOWED_TABLES]
+        context['tables'] = safe_tables
         
         # Выбранная таблица
         selected_table = self.request.GET.get('table')
         
-        if selected_table and selected_table in [t[0] for t in tables]:
-            # Получаем информацию о столбцах
+        if selected_table and selected_table in safe_tables:
+            # Получаем информацию о столбцах используя параметризованный запрос
             with connection.cursor() as cursor:
-                cursor.execute(f"PRAGMA table_info({selected_table});")
+                cursor.execute("SELECT * FROM pragma_table_info(?);", [selected_table])
                 columns = cursor.fetchall()
             
             # Получаем данные таблицы (ограничиваем 100 записями)
+            # Используем экранирование имени таблицы через identifier()
+            from django.db import connection
+            table_name = connection.ops.quote_name(selected_table)
             with connection.cursor() as cursor:
-                cursor.execute(f"SELECT * FROM {selected_table} LIMIT 100;")
+                cursor.execute(f"SELECT * FROM {table_name} LIMIT 100;")
                 rows = cursor.fetchall()
             
             context['selected_table'] = selected_table

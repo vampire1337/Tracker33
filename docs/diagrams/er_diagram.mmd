@@ -1,0 +1,41 @@
+erDiagram
+    CustomUser {
+        int id PK
+        string username
+        string email
+        datetime date_joined
+        boolean is_active
+    }
+    
+    Application {
+        int id PK
+        int user_id FK
+        string name
+        string process_name
+        boolean is_active
+        boolean is_productive
+        datetime created_at
+    }
+    
+    UserActivity {
+        int id PK
+        int user_id FK
+        int application_id FK
+        datetime start_time
+        datetime end_time
+        int duration
+        string window_title
+    }
+    
+    KeyboardActivity {
+        int id PK
+        int user_id FK
+        datetime timestamp
+        int key_count
+        int mouse_clicks
+    }
+    
+    CustomUser ||--o{ Application : "имеет"
+    CustomUser ||--o{ UserActivity : "создает"
+    CustomUser ||--o{ KeyboardActivity : "генерирует"
+    Application ||--o{ UserActivity : "связана с" 

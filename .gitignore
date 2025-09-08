@@ -42,7 +42,26 @@ Thumbs.db
 
 # Project specific
 server.pid
-logs/
+logs/*.log
 desktop_app/dist/
 desktop_app/build/
+desktop_app/venv/
+desktop_app/*.log
 *.spec
+staticfiles/
+
+# Temporary files
+*.pid
+*.tmp
+*.cache
+
+# Environment variables (keep .env.example)
+.env
+
+# Development tools
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Documentation builds
+docs/_build/
