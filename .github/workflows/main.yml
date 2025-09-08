@@ -1,0 +1,24 @@
+name: CI/CD Pipeline
+
+# Когда запускать
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch: # Ручной запуск
+
+jobs:
+  # Используем универсальный CI из мастер репо
+  universal-ci:
+    uses: vampire1337/.github/.github/workflows/universal-ci.yml@main
+    secrets: inherit # Передаём все секреты
+    
+  # Можно добавить свои дополнительные джобы
+  custom-deployment:
+    needs: universal-ci
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Custom deployment step
+        run: echo "Deploying specific project..."
