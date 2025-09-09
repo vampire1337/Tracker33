@@ -1,53 +1,204 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block content %}
-<div class="container mt-5">
-    <div class="row">
-        <div class="col-md-8 mx-auto text-center">
-            <h1 class="display-4 mb-4">Tracker33</h1>
-            <p class="lead mb-4">Мощный инструмент для отслеживания рабочего времени и активности</p>
-        </div>
-    </div>
-
-    <div class="row mt-5">
-        <div class="col-md-4 mb-4">
-            <div class="card h-100">
-                <div class="card-body text-center">
-                    <i class="fas fa-clock fa-3x mb-3 text-primary"></i>
-                    <h3 class="card-title">Отслеживание времени</h3>
-                    <p class="card-text">Автоматическое отслеживание времени, проведенного в различных приложениях</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4 mb-4">
-            <div class="card h-100">
-                <div class="card-body text-center">
-                    <i class="fas fa-keyboard fa-3x mb-3 text-primary"></i>
-                    <h3 class="card-title">Активность клавиатуры</h3>
-                    <p class="card-text">Мониторинг клавиатурной активности для анализа продуктивности</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4 mb-4">
-            <div class="card h-100">
-                <div class="card-body text-center">
-                    <i class="fas fa-chart-bar fa-3x mb-3 text-primary"></i>
-                    <h3 class="card-title">Подробная статистика</h3>
-                    <p class="card-text">Детальные отчеты и аналитика по использованию времени</p>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="row mt-5">
-        <div class="col-md-6 mx-auto text-center">
-            <h2 class="mb-4">Начните использовать прямо сейчас</h2>
-            <div class="d-grid gap-2 d-md-flex justify-content-md-center">
-                <a href="{% url 'login' %}" class="btn btn-primary btn-lg me-md-2">Войти</a>
-                <a href="{% url 'signup' %}" class="btn btn-outline-primary btn-lg me-md-2">Зарегистрироваться</a>
-                <a href="{% url 'download_tracker' %}" class="btn btn-success btn-lg">Скачать TimeTracker</a>
+<!-- Hero Section -->
+<div class="hero-section">
+    <div class="container">
+        <div class="fade-in">
+            <h1 class="hero-title">
+                <i class="fas fa-chart-line me-3"></i>
+                Tracker33
+            </h1>
+            <p class="hero-subtitle">
+                Профессиональная система отслеживания времени и анализа продуктивности. 
+                Превратите свой рабочий день в источник ценных данных.
+            </p>
+            <div class="d-flex justify-content-center gap-3 flex-wrap">
+                <a href="{% url 'login' %}" class="btn btn-primary btn-lg">
+                    <i class="fas fa-sign-in-alt me-2"></i>Войти в систему
+                </a>
+                <a href="{% url 'signup' %}" class="btn btn-outline">
+                    <i class="fas fa-user-plus me-2"></i>Регистрация
+                </a>
             </div>
         </div>
     </div>
 </div>
+
+<div class="container">
+    <!-- Основные возможности -->
+    <div class="feature-grid">
+        <div class="feature-card fade-in">
+            <div class="feature-icon">
+                <i class="fas fa-stopwatch"></i>
+            </div>
+            <h3 class="card-title">Точное отслеживание</h3>
+            <p class="text-muted">
+                Автоматический мониторинг времени работы в приложениях с точностью до секунды. 
+                Никаких ручных записей — всё происходит в фоновом режиме.
+            </p>
+        </div>
+        
+        <div class="feature-card fade-in">
+            <div class="feature-icon">
+                <i class="fas fa-keyboard"></i>
+            </div>
+            <h3 class="card-title">Анализ активности</h3>
+            <p class="text-muted">
+                Интеллектуальная оценка продуктивности на основе клавиатурной активности 
+                и времени работы в различных приложениях.
+            </p>
+        </div>
+        
+        <div class="feature-card fade-in">
+            <div class="feature-icon">
+                <i class="fas fa-chart-pie"></i>
+            </div>
+            <h3 class="card-title">Визуальная аналитика</h3>
+            <p class="text-muted">
+                Красивые интерактивные графики и диаграммы для анализа паттернов работы 
+                и выявления возможностей для повышения эффективности.
+            </p>
+        </div>
+    </div>
+
+    <!-- Статистика и преимущества -->
+    <div class="row mb-5">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h3 class="card-title">
+                        <i class="fas fa-rocket text-primary me-2"></i>
+                        Почему Tracker33?
+                    </h3>
+                    <ul class="list-unstyled mt-4">
+                        <li class="mb-3">
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            <strong>Простота использования:</strong> Установил и забыл — система работает сама
+                        </li>
+                        <li class="mb-3">
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            <strong>Конфиденциальность:</strong> Все данные хранятся локально и под вашим контролем
+                        </li>
+                        <li class="mb-3">
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            <strong>Детальная аналитика:</strong> Понимайте, куда уходит ваше время
+                        </li>
+                        <li class="mb-3">
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            <strong>Повышение продуктивности:</strong> Оптимизируйте рабочий процесс на основе данных
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value">24/7</div>
+                    <div class="stat-label">Мониторинг</div>
+                    <div class="stat-description">Непрерывное отслеживание активности</div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-value">100%</div>
+                    <div class="stat-label">Автоматизация</div>
+                    <div class="stat-description">Никаких ручных действий</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Призыв к действию -->
+    <div class="card mb-5">
+        <div class="card-body text-center py-5">
+            <h2 class="card-title mb-4">
+                <i class="fas fa-download text-primary me-2"></i>
+                Начните отслеживать время прямо сейчас
+            </h2>
+            <p class="text-muted mb-4 lead">
+                Скачайте клиент, зарегистрируйтесь и получите полную картину вашей продуктивности
+            </p>
+            
+            <div class="d-flex justify-content-center gap-3 flex-wrap">
+                <a href="{% url 'download_tracker' %}" class="btn btn-primary btn-lg pulse">
+                    <i class="fas fa-download me-2"></i>Скачать Tracker33
+                </a>
+                <a href="{% url 'signup' %}" class="btn btn-secondary btn-lg">
+                    <i class="fas fa-user-plus me-2"></i>Создать аккаунт
+                </a>
+            </div>
+            
+            <div class="mt-4">
+                <small class="text-muted">
+                    <i class="fas fa-shield-alt me-1"></i>
+                    Бесплатно • Безопасно • Без рекламы
+                </small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Дополнительная информация -->
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-cogs fa-2x text-primary mb-3"></i>
+                    <h5 class="card-title">Легкая настройка</h5>
+                    <p class="card-text text-muted">
+                        Установка занимает меньше минуты. Просто скачайте, запустите и войдите в систему.
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-mobile-alt fa-2x text-primary mb-3"></i>
+                    <h5 class="card-title">Веб-интерфейс</h5>
+                    <p class="card-text text-muted">
+                        Просматривайте статистику с любого устройства через современный веб-интерфейс.
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-headset fa-2x text-primary mb-3"></i>
+                    <h5 class="card-title">Поддержка</h5>
+                    <p class="card-text text-muted">
+                        Полная документация и техническая поддержка для решения любых вопросов.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Добавляем анимации при скролле
+document.addEventListener('DOMContentLoaded', function() {
+    const observerOptions = {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+    };
+
+    const observer = new IntersectionObserver(function(entries) {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('fade-in');
+            }
+        });
+    }, observerOptions);
+
+    document.querySelectorAll('.feature-card, .stat-card').forEach(el => {
+        observer.observe(el);
+    });
+});
+</script>
 {% endblock %} 

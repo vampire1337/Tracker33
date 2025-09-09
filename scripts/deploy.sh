@@ -1,139 +1,201 @@
 #!/bin/bash
 
-# Tracker33 Deployment Script
-# This script automates the deployment process for production
+# Скрипт развертывания Tracker33
+# Использование: ./scripts/deploy.sh [production|staging]
 
-set -e  # Exit on any error
+set -e
 
-echo "🚀 Starting Tracker33 deployment..."
+ENVIRONMENT=${1:-production}
+PROJECT_DIR="/home/tracker33/tracker33"
+BACKUP_DIR="/home/tracker33/backups"
+TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 
-# Configuration
-APP_NAME="tracker33"
-APP_USER="tracker33"
-APP_DIR="/home/$APP_USER/$APP_NAME"
-VENV_DIR="$APP_DIR/.venv"
-LOG_DIR="/var/log/$APP_NAME"
-RUN_DIR="/var/run/$APP_NAME"
+echo "🚀 Начало развертывания Tracker33 в режиме: $ENVIRONMENT"
 
-# Colors for output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-NC='\033[0m' # No Color
-
-log_info() {
-    echo -e "${BLUE}[INFO]${NC} $1"
+# Функция логирования
+log() {
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1"
 }
 
-log_success() {
-    echo -e "${GREEN}[SUCCESS]${NC} $1"
+# Создание резервных копий
+create_backup() {
+    log "📦 Создание резервной копии..."
+    mkdir -p $BACKUP_DIR
+    
+    # Резервная копия базы данных
+    if [ -f "$PROJECT_DIR/db.sqlite3" ]; then
+        cp "$PROJECT_DIR/db.sqlite3" "$BACKUP_DIR/db_backup_$TIMESTAMP.sqlite3"
+        log "✅ База данных скопирована"
+    fi
+    
+    # Резервная копия медиа файлов
+    if [ -d "$PROJECT_DIR/media" ]; then
+        tar -czf "$BACKUP_DIR/media_backup_$TIMESTAMP.tar.gz" -C "$PROJECT_DIR" media
+        log "✅ Медиа файлы скопированы"
+    fi
 }
 
-log_warning() {
-    echo -e "${YELLOW}[WARNING]${NC} $1"
+# Обновление кода
+update_code() {
+    log "📥 Обновление кода из репозитория..."
+    cd $PROJECT_DIR
+    
+    # Сохранение текущих изменений
+    git stash push -m "Auto stash before deployment $TIMESTAMP"
+    
+    # Получение последних изменений
+    git fetch origin
+    git checkout main
+    git pull origin main
+    
+    log "✅ Код обновлен"
 }
 
-log_error() {
-    echo -e "${RED}[ERROR]${NC} $1"
+# Обновление зависимостей
+update_dependencies() {
+    log "📚 Обновление зависимостей..."
+    cd $PROJECT_DIR
+    source venv/bin/activate
+    
+    pip install --upgrade pip
+    pip install -r requirements.txt
+    
+    log "✅ Зависимости обновлены"
 }
 
-# Check if running as root
-if [[ $EUID -eq 0 ]]; then
-   log_error "This script should not be run as root"
-   exit 1
-fi
+# Применение миграций
+apply_migrations() {
+    log "🗃️ Применение миграций базы данных..."
+    cd $PROJECT_DIR
+    source venv/bin/activate
+    
+    python manage.py migrate --noinput
+    
+    log "✅ Миграции применены"
+}
 
-# Check if environment file exists
-if [ ! -f "$APP_DIR/.env.production" ]; then
-    log_error "Production environment file not found at $APP_DIR/.env.production"
-    log_info "Please create the environment file first"
-    exit 1
-fi
+# Сбор статических файлов
+collect_static() {
+    log "🎨 Сбор статических файлов..."
+    cd $PROJECT_DIR
+    source venv/bin/activate
+    
+    python manage.py collectstatic --noinput --clear
+    
+    log "✅ Статические файлы собраны"
+}
 
-# Load environment variables
-source "$APP_DIR/.env.production"
+# Проверка конфигурации
+check_config() {
+    log "🔍 Проверка конфигурации Django..."
+    cd $PROJECT_DIR
+    source venv/bin/activate
+    
+    if [ "$ENVIRONMENT" = "production" ]; then
+        python manage.py check --deploy --fail-level WARNING
+    else
+        python manage.py check
+    fi
+    
+    log "✅ Конфигурация проверена"
+}
 
-log_info "Updating application code..."
-cd "$APP_DIR"
+# Перезапуск сервисов
+restart_services() {
+    log "🔄 Перезапуск сервисов..."
+    
+    # Проверка и перезапуск через supervisor
+    if command -v supervisorctl > /dev/null; then
+        sudo supervisorctl restart tracker33
+        log "✅ Supervisor сервис перезапущен"
+    fi
+    
+    # Проверка и перезапуск через systemd
+    if systemctl is-active --quiet Tracker33; then
+        sudo systemctl restart Tracker33
+        log "✅ Systemd сервис перезапущен"
+    fi
+    
+    # Перезапуск Nginx
+    if systemctl is-active --quiet nginx; then
+        sudo systemctl reload nginx
+        log "✅ Nginx перезагружен"
+    fi
+}
 
-# Pull latest changes
-git pull origin main
+# Проверка здоровья приложения
+health_check() {
+    log "🏥 Проверка здоровья приложения..."
+    
+    sleep 10  # Ждем запуска сервисов
+    
+    # Проверка HTTP ответа
+    if curl -f -s http://localhost:8001/api/health/ > /dev/null; then
+        log "✅ Приложение работает корректно"
+    else
+        log "❌ Приложение не отвечает на запросы"
+        exit 1
+    fi
+}
 
-log_info "Activating virtual environment..."
-source "$VENV_DIR/bin/activate"
+# Очистка старых резервных копий
+cleanup_backups() {
+    log "🧹 Очистка старых резервных копий (старше 30 дней)..."
+    find $BACKUP_DIR -name "*.sqlite3" -mtime +30 -delete 2>/dev/null || true
+    find $BACKUP_DIR -name "*.tar.gz" -mtime +30 -delete 2>/dev/null || true
+    log "✅ Очистка завершена"
+}
 
-# Install/update dependencies
-log_info "Installing Python dependencies..."
-pip install -r requirements.txt
+# Отправка уведомления
+send_notification() {
+    local status=$1
+    local message="Развертывание Tracker33 [$ENVIRONMENT]: $status"
+    
+    # Slack уведомление (если настроено)
+    if [ -n "${SLACK_WEBHOOK_URL}" ]; then
+        curl -X POST -H 'Content-type: application/json' \
+            --data "{\"text\":\"$message\"}" \
+            "$SLACK_WEBHOOK_URL" 2>/dev/null || true
+    fi
+    
+    log "📨 Уведомление отправлено: $message"
+}
 
-# Collect static files
-log_info "Collecting static files..."
-python manage.py collectstatic --noinput
+# Основная функция развертывания
+main() {
+    log "🎯 Начало развертывания в режиме: $ENVIRONMENT"
+    
+    # Проверка прав доступа
+    if [ ! -w "$PROJECT_DIR" ]; then
+        log "❌ Нет прав записи в директорию проекта"
+        exit 1
+    fi
+    
+    # Проверка окружения
+    if [ "$ENVIRONMENT" = "production" ] && [ -z "${SECRET_KEY}" ]; then
+        log "❌ Не установлен SECRET_KEY для продакшена"
+        exit 1
+    fi
+    
+    # Выполнение этапов развертывания
+    create_backup
+    update_code
+    update_dependencies
+    apply_migrations
+    collect_static
+    check_config
+    restart_services
+    health_check
+    cleanup_backups
+    
+    log "🎉 Развертывание успешно завершено!"
+    send_notification "УСПЕХ"
+}
 
-# Run database migrations
-log_info "Running database migrations..."
-python manage.py migrate --noinput
+# Обработка ошибок
+trap 'log "❌ Развертывание прервано из-за ошибки"; send_notification "ОШИБКА"; exit 1' ERR
 
-# Check for any issues
-log_info "Running system checks..."
-python manage.py check --deploy
+# Запуск основной функции
+main
 
-# Create log directories if they don't exist
-log_info "Setting up log directories..."
-sudo mkdir -p "$LOG_DIR"
-sudo mkdir -p "$RUN_DIR"
-sudo chown -R "$APP_USER:www-data" "$LOG_DIR"
-sudo chown -R "$APP_USER:www-data" "$RUN_DIR"
-
-# Restart services
-log_info "Restarting application services..."
-
-# Restart Gunicorn
-sudo systemctl restart "$APP_NAME"
-if systemctl is-active --quiet "$APP_NAME"; then
-    log_success "Gunicorn service restarted successfully"
-else
-    log_error "Failed to restart Gunicorn service"
-    sudo systemctl status "$APP_NAME"
-    exit 1
-fi
-
-# Restart Nginx
-sudo systemctl reload nginx
-if systemctl is-active --quiet nginx; then
-    log_success "Nginx reloaded successfully"
-else
-    log_error "Failed to reload Nginx"
-    sudo systemctl status nginx
-    exit 1
-fi
-
-# Health check
-log_info "Performing health check..."
-sleep 5  # Wait for services to start
-
-if curl -f -s http://localhost/health/ > /dev/null; then
-    log_success "Health check passed"
-else
-    log_error "Health check failed"
-    exit 1
-fi
-
-# Clean up old logs (keep last 30 days)
-log_info "Cleaning up old log files..."
-find "$LOG_DIR" -name "*.log" -type f -mtime +30 -delete
-
-# Display final status
-echo
-log_success "🎉 Deployment completed successfully!"
-log_info "Application is running at: $(curl -s http://localhost/)"
-log_info "Admin panel: http://yourdomain.com/admin/"
-log_info "API health check: http://yourdomain.com/health/"
-echo
-
-# Show service status
-echo "📊 Service Status:"
-systemctl status "$APP_NAME" --no-pager -l
-echo
-systemctl status nginx --no-pager -l
+log "✨ Развертывание Tracker33 завершено успешно!"

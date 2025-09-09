@@ -1,56 +1,52 @@
+# Используем официальный Python образ
 FROM python:3.11-slim
 
-# Set environment variables
+# Устанавливаем переменные окружения
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
+ENV DEBIAN_FRONTEND=noninteractive
 
-# Set work directory
+# Создаем рабочую директорию
 WORKDIR /app
 
-# Install system dependencies
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends \
-        build-essential \
-        libpq-dev \
-        curl \
-        netcat-openbsd \
+# Устанавливаем системные зависимости
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    libpq-dev \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Python dependencies
+# Копируем файлы зависимостей
 COPY requirements.txt .
+COPY env.example .env
+
+# Устанавливаем Python зависимости
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy project
+# Создаем пользователя для приложения
+RUN useradd --create-home --shell /bin/bash tracker33
+
+# Копируем код приложения
 COPY . .
 
-# Create logs directory
-RUN mkdir -p logs
+# Создаем необходимые директории
+RUN mkdir -p logs media staticfiles
 
-# Create static files directory
-RUN mkdir -p staticfiles
+# Устанавливаем права доступа
+RUN chown -R tracker33:tracker33 /app
 
-# Create media directory
-RUN mkdir -p media
+# Переключаемся на пользователя приложения
+USER tracker33
 
-# Create non-root user
-RUN addgroup --system django \
-    && adduser --system --ingroup django django
-
-# Change ownership of the app directory to the django user
-RUN chown -R django:django /app
-
-# Switch to non-root user
-USER django
-
-# Collect static files
+# Собираем статические файлы
 RUN python manage.py collectstatic --noinput
 
-# Expose port
-EXPOSE 8000
+# Открываем порт
+EXPOSE 8001
 
-# Health check
+# Проверка здоровья контейнера
 HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
-  CMD curl -f http://localhost:8000/health/ || exit 1
+    CMD curl -f http://localhost:8001/api/health/ || exit 1
 
-# Run the application
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "3", "Tracker33.wsgi:application"]
+# Команда запуска
+CMD ["python", "manage.py", "runserver", "0.0.0.0:8001"]

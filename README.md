@@ -1,305 +1,262 @@
-# Tracker33 - Employee Activity Monitoring System
+# Tracker33 - Система отслеживания времени и анализа продуктивности
 
-![Tracker33 Logo](desktop_app/tracker33_icon.png)
+![Python](https://img.shields.io/badge/python-v3.10+-blue.svg)
+![Django](https://img.shields.io/badge/django-v5.0+-green.svg)
+![License](https://img.shields.io/badge/license-MIT-blue.svg)
 
-## 🚀 Overview
+## 📋 Описание
 
-Tracker33 is a comprehensive employee activity monitoring system that tracks desktop application usage, generates productivity reports, and provides insights into work patterns. The system consists of a Django web application backend and a PyQt5 desktop client.
+Tracker33 - это комплексное решение для отслеживания рабочего времени и анализа продуктивности. Система состоит из веб-интерфейса для анализа данных и десктопного клиента для сбора информации о активности пользователя.
 
-## ✨ Features
+### ✨ Основные возможности
 
-### Web Application
-- **User Management**: Secure user registration and authentication
-- **Dashboard**: Real-time activity overview and productivity metrics  
-- **Statistics**: Detailed reports with charts and graphs
-- **Admin Panel**: Comprehensive administration tools
-- **Activity Tracking**: Detailed logs of application usage
-- **QR Code Authentication**: Secure desktop client authentication
+- 🕐 **Автоматическое отслеживание времени** - отслеживание времени, проведенного в различных приложениях
+- ⌨️ **Мониторинг активности клавиатуры** - анализ клавиатурной активности для оценки продуктивности
+- 📊 **Детальная статистика** - графики и отчеты по использованию времени
+- 🎯 **Управление продуктивностью** - классификация приложений на продуктивные и непродуктивные
+- 👥 **Многопользовательская система** - поддержка нескольких пользователей
+- 📱 **Адаптивный интерфейс** - работает на всех устройствах
+- 🔒 **Безопасность** - защита данных пользователей
 
-### Desktop Client
-- **Automatic Activity Tracking**: Monitor application usage and keyboard activity
-- **Background Operation**: Runs silently in system tray
-- **Secure Communication**: Encrypted data transmission to server
-- **Cross-platform**: Windows support with Linux/macOS compatibility
+## 🚀 Быстрый старт
 
-## 🛠 Technology Stack
+### Требования
 
-### Backend
-- **Django 5.0+**: Web framework
-- **Django REST Framework**: API development
-- **SQLite/PostgreSQL**: Database
-- **Redis**: Caching (optional)
-- **JWT**: Token-based authentication
+- Python 3.10+
+- Node.js (для фронтенда, опционально)
+- Git
 
-### Desktop Client
-- **PyQt5**: GUI framework
-- **Requests**: HTTP client
-- **psutil**: System monitoring
-- **pynput**: Input monitoring
-- **OpenCV**: Image processing
+### Установка
 
-## 📋 Prerequisites
-
-- Python 3.8+
-- Node.js 16+ (for frontend development)
-- PostgreSQL (production) or SQLite (development)
-- Redis (optional, for caching)
-
-## 🚀 Quick Start
-
-### 1. Clone the Repository
+1. **Клонирование репозитория**
 ```bash
 git clone https://github.com/your-username/tracker33.git
 cd tracker33
 ```
 
-### 2. Set up Virtual Environment
+2. **Создание виртуального окружения**
 ```bash
-python -m venv .venv
-source .venv/bin/activate  # On Windows: .venv\\Scripts\\activate
+python -m venv venv
+# Windows
+venv\Scripts\activate
+# Linux/Mac
+source venv/bin/activate
 ```
 
-### 3. Install Dependencies
+3. **Установка зависимостей**
 ```bash
-# Backend dependencies
 pip install -r requirements.txt
-
-# Development dependencies (optional)
-pip install -r requirements-dev.txt
-
-# Desktop client dependencies
-pip install -r desktop_app/requirements.txt
 ```
 
-### 4. Configure Environment
+4. **Настройка переменных окружения**
 ```bash
-# Copy environment template
-cp .env.example .env
-
-# Edit .env file with your settings
-SECRET_KEY=your-secret-key-here
-DEBUG=True
-ALLOWED_HOSTS=localhost,127.0.0.1
+# Скопируйте файл примера
+cp env.example .env
+# Отредактируйте .env файл под ваши нужды
 ```
 
-### 5. Setup Database
+5. **Применение миграций**
 ```bash
 python manage.py migrate
+```
+
+6. **Создание суперпользователя**
+```bash
 python manage.py createsuperuser
-python manage.py collectstatic --noinput
 ```
 
-### 6. Run the Development Server
+7. **Сбор статических файлов**
 ```bash
-python manage.py runserver 8000
+python manage.py collectstatic
 ```
 
-### 7. Launch Desktop Client
+8. **Запуск сервера**
 ```bash
-cd desktop_app
-python main.py
+python manage.py runserver 8001
 ```
 
-## 📖 Documentation
+Сервер будет доступен по адресу: http://localhost:8001
 
-### Project Structure
+## 📁 Структура проекта
+
 ```
 tracker33/
-├── Tracker33/           # Django project settings
-├── users/               # User management app
-├── tracking/            # Activity tracking app
-├── admin_panel/         # Administration interface
-├── templates/           # HTML templates
-├── static/              # Static files (CSS, JS, images)
-├── desktop_app/         # Desktop client application
-├── scripts/             # Deployment and utility scripts
-├── docs/                # Documentation and diagrams
-├── logs/                # Application logs
-└── requirements.txt     # Python dependencies
+├── 📁 config/              # Конфигурационные файлы
+│   └── Tracker33.service   # Systemd service файл
+├── 📁 docs/                # Документация
+│   ├── BUILD_INSTRUCTIONS.md
+│   ├── api_schema.mmd
+│   ├── architecture_diagram.mmd
+│   ├── er_diagram.mmd
+│   └── monitoring_algorithm.mmd
+├── 📁 scripts/             # Скрипты для развертывания
+│   ├── start_server.sh
+│   ├── stop_background.sh
+│   └── setup_service.sh
+├── 📁 desktop_app/         # Десктопный клиент
+├── 📁 Tracker33/           # Основные настройки Django
+├── 📁 tracking/            # Приложение для отслеживания
+├── 📁 users/               # Пользовательское приложение
+├── 📁 admin_panel/         # Административная панель
+├── 📁 templates/           # HTML шаблоны
+├── 📁 static/              # Статические файлы
+├── manage.py               # Django management
+├── requirements.txt        # Python зависимости
+└── env.example            # Пример переменных окружения
 ```
 
-### API Endpoints
+## 🖥️ Десктопный клиент
 
-#### Authentication
-- `POST /api/auth/login/` - User login
-- `POST /api/auth/logout/` - User logout
-- `POST /api/auth/register/` - User registration
-- `GET /api/auth/qr/` - Generate QR code for desktop client
+### Установка клиента
 
-#### Activity Tracking
-- `POST /api/tracking/activity/` - Submit activity data
-- `GET /api/tracking/statistics/` - Get user statistics
-- `GET /api/tracking/applications/` - List tracked applications
+1. Скачайте клиент через веб-интерфейс или соберите самостоятельно
+2. Запустите `TimeTracker.exe`
+3. Введите данные для входа
+4. Клиент автоматически начнет отслеживание
 
-#### User Management
-- `GET /api/users/profile/` - Get user profile
-- `PUT /api/users/profile/` - Update user profile
-- `GET /api/users/dashboard/` - Dashboard data
+### Настройка клиента
 
-### Desktop Client Configuration
-
-The desktop client can be configured via `desktop_app/config.ini`:
+Отредактируйте `config.ini` в папке клиента:
 
 ```ini
-[Server]
-host = localhost
-port = 8000
-use_https = false
+[API]
+base_url = http://your-server:8001
 
-[Client]
-tracking_interval = 5
-screenshot_enabled = false
-keyboard_logging = true
-
-[Security]
-auto_login = false
-remember_token = true
+[Settings]
+update_interval = 5
+auto_start = true
+minimize_to_tray = true
+idle_threshold_seconds = 300
 ```
 
-## 🔧 Development
+## 📊 API
 
-### Running Tests
+### Основные эндпоинты
+
+- `GET /api/activity/` - получение данных активности
+- `POST /api/activity/` - отправка данных активности
+- `GET /api/statistics/` - получение статистики
+- `POST /api/toggle-productive/` - переключение продуктивности приложения
+
+### Аутентификация
+
+API использует токенную аутентификацию. Получите токен через:
 ```bash
-# Run all tests
+curl -X POST http://localhost:8001/api-token-auth/ \
+     -H "Content-Type: application/json" \
+     -d '{"username": "your_username", "password": "your_password"}'
+```
+
+## 🚀 Развертывание
+
+### Разработка
+
+```bash
+# Запуск в режиме разработки
+python manage.py runserver 8001
+```
+
+### Продакшн
+
+1. **Настройте переменные окружения**:
+```bash
+export DEBUG=False
+export SECRET_KEY=your-secret-key
+export ALLOWED_HOSTS=your-domain.com,your-ip
+```
+
+2. **Используйте WSGI сервер**:
+```bash
+# Gunicorn
+pip install gunicorn
+gunicorn Tracker33.wsgi:application --bind 0.0.0.0:8001
+
+# Или используйте готовые скрипты
+chmod +x scripts/start_server.sh
+./scripts/start_server.sh
+```
+
+3. **Настройте systemd service** (Linux):
+```bash
+sudo cp config/Tracker33.service /etc/systemd/system/
+sudo systemctl enable Tracker33
+sudo systemctl start Tracker33
+```
+
+## 🧪 Тестирование
+
+```bash
+# Запуск всех тестов
 python manage.py test
 
-# Run specific app tests
-python manage.py test users
+# Тестирование конкретного приложения
 python manage.py test tracking
 
-# Run with coverage
-pytest --cov=./ --cov-report=html
+# Тестирование с покрытием
+pip install coverage
+coverage run manage.py test
+coverage report
 ```
 
-### Code Quality
-```bash
-# Format code
-black .
-isort .
+## 📈 Мониторинг
 
-# Lint code
-flake8 .
+Система включает встроенный мониторинг производительности:
 
-# Type checking
-mypy .
+- Логирование медленных запросов
+- Отслеживание времени выполнения
+- Алерты при превышении порогов
+- Детальные логи активности
 
-# Security scan
-bandit -r .
-```
+Логи сохраняются в папке `logs/`:
+- `activity.log` - логи активности пользователей
+- `performance.log` - логи производительности
+- `error.log` - логи ошибок
 
-### Database Migrations
-```bash
-# Create migrations
-python manage.py makemigrations
+## 🔧 Конфигурация
 
-# Apply migrations
-python manage.py migrate
+### Основные настройки
 
-# Show migration status
-python manage.py showmigrations
-```
+- `SECRET_KEY` - секретный ключ Django (обязательно)
+- `DEBUG` - режим отладки (по умолчанию False)
+- `ALLOWED_HOSTS` - разрешенные хосты
+- `CORS_ALLOWED_ORIGINS` - разрешенные CORS источники
 
-## 🚀 Deployment
+### Мониторинг
 
-### Production Environment Setup
+- `SLOW_REQUEST_THRESHOLD` - порог медленных запросов (сек)
+- `SLOW_QUERY_THRESHOLD` - порог медленных запросов к БД (сек)
 
-1. **Environment Variables**
-```bash
-SECRET_KEY=your-production-secret-key
-DEBUG=False
-ALLOWED_HOSTS=yourdomain.com,www.yourdomain.com
-DATABASE_URL=postgres://user:password@localhost:5432/tracker33
-```
+### Email уведомления
 
-2. **Database Setup**
-```bash
-# PostgreSQL setup
-python manage.py migrate --settings=Tracker33.settings_production
-```
+- `EMAIL_HOST_USER` - email для отправки
+- `EMAIL_HOST_PASSWORD` - пароль email
 
-3. **Static Files**
-```bash
-python manage.py collectstatic --noinput
-```
+## 🤝 Участие в разработке
 
-4. **Web Server Configuration**
+1. Форкните репозиторий
+2. Создайте ветку для новой функции (`git checkout -b feature/amazing-feature`)
+3. Зафиксируйте изменения (`git commit -m 'Add amazing feature'`)
+4. Отправьте в ветку (`git push origin feature/amazing-feature`)
+5. Откройте Pull Request
 
-See `deployment/nginx.conf` and `deployment/gunicorn.conf` for example configurations.
+## 📝 Лицензия
 
-### Desktop Client Distribution
+Этот проект распространяется под лицензией MIT. См. файл `LICENSE` для подробностей.
 
-Build executable for distribution:
-```bash
-cd desktop_app
-pyinstaller --onefile --windowed --icon=tracker33_icon.ico main.py
-```
+## 🆘 Поддержка
 
-## 📊 Monitoring and Logging
+Если у вас возникли проблемы или вопросы:
 
-### Application Logs
-- `logs/activity.log` - User activity events
-- `logs/performance.log` - Performance metrics
-- `logs/error.log` - Error messages
+1. Проверьте [документацию](docs/)
+2. Создайте [Issue](https://github.com/your-username/tracker33/issues)
+3. Свяжитесь с командой разработки
 
-### Performance Monitoring
-The system includes built-in performance monitoring:
-- Request/response times
-- Database query performance
-- Cache hit ratios
-- Memory usage
+## 📞 Контакты
 
-### Health Checks
-- `/health/` - Application health status
-- `/api/health/` - API health status
-
-## 🔒 Security
-
-### Security Features
-- CSRF protection
-- SQL injection prevention
-- XSS protection
-- Secure authentication tokens
-- Input validation and sanitization
-- Rate limiting
-
-### Security Considerations
-- Regular security updates
-- Strong password policies
-- Secure communication (HTTPS)
-- Data encryption at rest
-- Access logging and monitoring
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-### Development Guidelines
-- Follow PEP 8 style guide
-- Write comprehensive tests
-- Update documentation
-- Use meaningful commit messages
-
-## 📝 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 📧 Support
-
-For support and questions:
-- Create an issue on GitHub
-- Contact: support@tracker33.local
-- Documentation: [docs/](docs/)
-
-## 🏆 Acknowledgments
-
-- Django community for the excellent framework
-- PyQt5 for the desktop application framework
-- All contributors who helped improve this project
+- **Разработчик**: Ваше имя
+- **Email**: your-email@example.com
+- **GitHub**: https://github.com/your-username
 
 ---
 
-**Tracker33** - Monitoring productivity, one activity at a time. 📈
+⭐ Если проект был полезен, поставьте звездочку!
