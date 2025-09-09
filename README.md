@@ -156,24 +156,28 @@ curl -X POST http://localhost:8001/api-token-auth/ \
 python manage.py runserver 8001
 ```
 
-### Railway (Рекомендуется)
+### Railway (Рекомендуется для портфолио)
 
-Самый простой способ развертывания в продакшн:
+**Бесплатное развертывание с минимальными ресурсами:**
 
 ```bash
-# Автоматический скрипт
+# Автоматический скрипт - всё настроит сам!
 ./scripts/railway-deploy.sh    # Linux/Mac
 scripts\railway-deploy.bat     # Windows
 
-# Или вручную
+# Или вручную (3 команды)
 npm install -g @railway/cli
-railway login
-railway init
-railway add postgresql
+railway login && railway init
 railway up
 ```
 
-Подробнее: [docs/RAILWAY_DEPLOYMENT.md](docs/RAILWAY_DEPLOYMENT.md)
+**Особенности:**
+- ✅ SQLite база данных (бесплатно, быстро)
+- ✅ Минимальное потребление ресурсов (~50MB RAM)
+- ✅ Идеально для демонстрации в портфолио
+- ✅ 500 часов бесплатно в месяц
+
+Подробнее: [docs/RAILWAY_SIMPLE.md](docs/RAILWAY_SIMPLE.md)
 
 ### Docker
 

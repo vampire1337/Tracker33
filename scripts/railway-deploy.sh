@@ -51,11 +51,8 @@ railway variables set CORS_ALLOWED_ORIGINS="https://tracker33-production.up.rail
 
 echo "✅ Переменные окружения настроены"
 
-# Добавление PostgreSQL базы данных
-echo "🗄️ Добавление PostgreSQL базы данных..."
-railway add postgresql
-
-echo "✅ PostgreSQL добавлен"
+# Используем SQLite для минимального потребления ресурсов
+echo "🗄️ Используем SQLite базу данных (встроенная, без дополнительных ресурсов)"
 
 # Развертывание
 echo "🚀 Развертывание приложения..."

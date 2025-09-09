@@ -112,6 +112,7 @@ DEBUG = os.getenv('DEBUG', 'True') == 'True'
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1,*.railway.app').split(',')
 
 
+
 # Application definition
 
 INSTALLED_APPS = [
@@ -167,16 +168,19 @@ CORS_ALLOW_HEADERS = [
     'x-requested-with',
 ]
 
-# Cache settings
+# Cache settings - оптимизировано для минимального потребления памяти
 CACHES = {
     'default': {
         'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
-        'LOCATION': 'unique-snowflake',
+        'LOCATION': 'tracker33-cache',
+        'OPTIONS': {
+            'MAX_ENTRIES': 500,  # Уменьшаем для экономии памяти
+        }
     }
 }
 
-# Cache time to live is 15 minutes
-CACHE_TTL = 60 * 15
+# Cache time to live is 10 minutes (короче для экономии памяти)
+CACHE_TTL = 60 * 10
 
 ROOT_URLCONF = 'Tracker33.urls'
 
@@ -204,20 +208,13 @@ WSGI_APPLICATION = 'Tracker33.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
-import dj_database_url
-
-# Для Railway используем PostgreSQL, для локальной разработки - SQLite
-if os.getenv('DATABASE_URL'):
-    DATABASES = {
-        'default': dj_database_url.parse(os.getenv('DATABASE_URL'))
+# Используем SQLite для минимального потребления ресурсов
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
-else:
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'db.sqlite3',
-        }
-    }
+}
 
 
 # Password validation
@@ -271,6 +268,24 @@ MEDIA_ROOT = BASE_DIR / 'media'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Оптимизации для минимального потребления ресурсов на Railway
+if not DEBUG:
+    # Минимизируем логирование
+    LOGGING = {
+        'version': 1,
+        'disable_existing_loggers': False,
+        'handlers': {
+            'console': {
+                'class': 'logging.StreamHandler',
+                'level': 'WARNING',  # Только предупреждения и ошибки
+            },
+        },
+        'root': {
+            'handlers': ['console'],
+            'level': 'WARNING',
+        },
+    }
 
 # Allauth settings
 ACCOUNT_EMAIL_VERIFICATION = 'none'
