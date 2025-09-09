@@ -1,6 +1,7 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from rest_framework.authtoken.views import obtain_auth_token
+from .health import health_check
 from .views import (
     ApplicationViewSet,
     UserActivityViewSet,
@@ -30,6 +31,9 @@ api_router.register(r'keyboard', KeyboardActivityViewSet)
 urlpatterns = [
     # DRF router URLs
     path('', include(api_router.urls)),
+    
+    # Health check
+    path('health/', health_check, name='health-check'),
     
     # Auth endpoints
     path('token/', obtain_auth_token, name='api_token_auth'),

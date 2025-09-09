@@ -156,7 +156,37 @@ curl -X POST http://localhost:8001/api-token-auth/ \
 python manage.py runserver 8001
 ```
 
-### Продакшн
+### Railway (Рекомендуется)
+
+Самый простой способ развертывания в продакшн:
+
+```bash
+# Автоматический скрипт
+./scripts/railway-deploy.sh    # Linux/Mac
+scripts\railway-deploy.bat     # Windows
+
+# Или вручную
+npm install -g @railway/cli
+railway login
+railway init
+railway add postgresql
+railway up
+```
+
+Подробнее: [docs/RAILWAY_DEPLOYMENT.md](docs/RAILWAY_DEPLOYMENT.md)
+
+### Docker
+
+```bash
+# Простой запуск
+docker-compose up -d
+
+# Тестирование
+./scripts/test-docker.sh    # Linux/Mac
+scripts\test-docker.bat     # Windows
+```
+
+### Традиционный сервер
 
 1. **Настройте переменные окружения**:
 ```bash
